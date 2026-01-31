@@ -61,14 +61,7 @@ import { MODULE_TABS, getModuleTabIds } from '@/lib/data/moduleTabs';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-
-const SETTINGS_NAV = [
-  { label: 'General', href: '/settings' },
-  { label: 'Users', href: '/settings/users' },
-  { label: 'Roles', href: '/settings/roles' },
-  { label: 'Audit Logs', href: '/settings/audit' },
-  { label: 'Backups', href: '/settings/backups' },
-];
+import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 const PERMISSION_LEVELS: { id: PermissionLevel; label: string; color: string }[] = [
   { id: 'none', label: 'None', color: 'text-muted-foreground' },
@@ -666,21 +659,23 @@ export default function RolesManagement() {
                         <TableRow key={module}>
                           <TableCell className="font-medium capitalize">{module}</TableCell>
                           <TableCell>
-                            <Select
-                              value={getEditPermissionLevel(module)}
-                              onValueChange={(v) => handlePermissionChange(module, v as PermissionLevel)}
-                            >
-                              <SelectTrigger className="w-[150px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map((level) => (
-                                  <SelectItem key={level.id} value={level.id}>
-                                    <span className={level.color}>{level.label}</span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div>
+                              <Select
+                                value={getEditPermissionLevel(module)}
+                                onValueChange={(v) => handlePermissionChange(module, v as PermissionLevel)}
+                              >
+                                <SelectTrigger className="w-[150px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PERMISSION_LEVELS.map((level) => (
+                                    <SelectItem key={level.id} value={level.id}>
+                                      <span className={level.color}>{level.label}</span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

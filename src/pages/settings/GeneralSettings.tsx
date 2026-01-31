@@ -22,13 +22,7 @@ import {
   Save,
 } from 'lucide-react';
 
-const SETTINGS_NAV = [
-  { label: 'General', href: '/settings' },
-  { label: 'Customization', href: '/settings/customization' },
-  { label: 'Users', href: '/settings/users' },
-  { label: 'Roles', href: '/settings/roles' },
-  { label: 'Audit Logs', href: '/settings/audit' },
-];
+import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 export default function GeneralSettings() {
   return (
