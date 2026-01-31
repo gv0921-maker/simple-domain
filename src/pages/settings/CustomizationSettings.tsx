@@ -7,13 +7,7 @@ import { useCustomization } from '@/contexts/CustomizationContext';
 import { RotateCcw, Palette, Layout, FileEdit } from 'lucide-react';
 import { toast } from 'sonner';
 
-const SETTINGS_NAV = [
-  { label: 'General', href: '/settings' },
-  { label: 'Customization', href: '/settings/customization' },
-  { label: 'Users', href: '/settings/users' },
-  { label: 'Roles', href: '/settings/roles' },
-  { label: 'Audit Logs', href: '/settings/audit' },
-];
+import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 export default function CustomizationSettings() {
   const { resetAll } = useCustomization();

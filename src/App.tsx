@@ -64,6 +64,7 @@ import CustomizationSettings from "@/pages/settings/CustomizationSettings";
 import UsersManagement from "@/pages/settings/UsersManagement";
 import RolesManagement from "@/pages/settings/RolesManagement";
 import AuditLogs from "@/pages/settings/AuditLogs";
+import BackupsSettings from "@/pages/settings/BackupsSettings";
 
 import NotFound from "@/pages/NotFound";
 
@@ -325,7 +326,7 @@ const App = () => (
               path="/settings/backups"
               element={
                 <ProtectedRoute>
-                  <GeneralSettings />
+                  <BackupsSettings />
                 </ProtectedRoute>
               }
             />

@@ -42,14 +42,7 @@ import {
 } from 'lucide-react';
 import { DEMO_USERS, type User } from '@/lib/storage';
 import { getRoles, getUserRole, type Role } from '@/lib/data/rbac';
-
-const SETTINGS_NAV = [
-  { label: 'General', href: '/settings' },
-  { label: 'Users', href: '/settings/users' },
-  { label: 'Roles', href: '/settings/roles' },
-  { label: 'Audit Logs', href: '/settings/audit' },
-  { label: 'Backups', href: '/settings/backups' },
-];
+import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 export default function UsersManagement() {
   const [search, setSearch] = useState('');

@@ -32,14 +32,7 @@ import {
 import { getAuditLogs, type AuditLog } from '@/lib/data/rbac';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-const SETTINGS_NAV = [
-  { label: 'General', href: '/settings' },
-  { label: 'Users', href: '/settings/users' },
-  { label: 'Roles', href: '/settings/roles' },
-  { label: 'Audit Logs', href: '/settings/audit' },
-  { label: 'Backups', href: '/settings/backups' },
-];
+import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
   create: <Database className="h-4 w-4 text-success" />,
