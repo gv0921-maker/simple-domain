@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,14 +50,17 @@ import {
 import { 
   getRoles, 
   saveRole,
+  deleteRole,
   MODULES, 
   type Role, 
   type PermissionLevel, 
+  type Permission,
   type TabPermission,
 } from '@/lib/data/rbac';
 import { MODULE_TABS, getModuleTabIds } from '@/lib/data/moduleTabs';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 const SETTINGS_NAV = [
   { label: 'General', href: '/settings' },
@@ -68,6 +87,15 @@ export default function RolesManagement() {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [editingTabPermissions, setEditingTabPermissions] = useState<TabPermission[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Edit role dialog state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isNewRole, setIsNewRole] = useState(false);
+  const [editFormData, setEditFormData] = useState<{
+    name: string;
+    description: string;
+    permissions: Permission[];
+  }>({ name: '', description: '', permissions: [] });
 
   const filteredRoles = roles.filter(
     (r) =>
@@ -194,6 +222,99 @@ export default function RolesManagement() {
     return MODULES.filter((m) => getPermissionLevel(selectedRole, m) !== 'none');
   };
 
+  // Open edit dialog
+  const handleEditRole = (role: Role) => {
+    setEditFormData({
+      name: role.name,
+      description: role.description,
+      permissions: [...role.permissions],
+    });
+    setIsNewRole(false);
+    setIsEditDialogOpen(true);
+  };
+
+  // Open new role dialog
+  const handleNewRole = () => {
+    setEditFormData({
+      name: '',
+      description: '',
+      permissions: MODULES.map((m) => ({ module: m, level: 'none' as PermissionLevel, scope: 'own' as const })),
+    });
+    setIsNewRole(true);
+    setIsEditDialogOpen(true);
+  };
+
+  // Save role changes
+  const handleSaveRole = () => {
+    if (!editFormData.name.trim()) {
+      toast({ title: 'Name is required', variant: 'destructive' });
+      return;
+    }
+
+    if (isNewRole) {
+      const newRole: Role = {
+        id: crypto.randomUUID(),
+        name: editFormData.name,
+        description: editFormData.description,
+        isSystem: false,
+        permissions: editFormData.permissions.filter((p) => p.level !== 'none'),
+        tabPermissions: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      saveRole(newRole);
+      toast({ title: 'Role created' });
+    } else if (selectedRole) {
+      const updatedRole: Role = {
+        ...selectedRole,
+        name: editFormData.name,
+        description: editFormData.description,
+        permissions: editFormData.permissions.filter((p) => p.level !== 'none'),
+      };
+      saveRole(updatedRole);
+      setSelectedRole(updatedRole);
+      toast({ title: 'Role updated' });
+    }
+
+    setRoles(getRoles());
+    setIsEditDialogOpen(false);
+  };
+
+  // Update permission in edit form
+  const handlePermissionChange = (module: string, level: PermissionLevel) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      permissions: prev.permissions.map((p) =>
+        p.module === module ? { ...p, level } : p
+      ).concat(
+        prev.permissions.find((p) => p.module === module)
+          ? []
+          : [{ module, level, scope: 'own' as const }]
+      ),
+    }));
+  };
+
+  // Delete role
+  const handleDeleteRole = (role: Role) => {
+    if (role.isSystem) {
+      toast({ title: 'Cannot delete system roles', variant: 'destructive' });
+      return;
+    }
+    if (deleteRole(role.id)) {
+      setRoles(getRoles());
+      if (selectedRole?.id === role.id) {
+        setSelectedRole(null);
+      }
+      toast({ title: 'Role deleted' });
+    }
+  };
+
+  // Get permission level for edit form
+  const getEditPermissionLevel = (module: string): PermissionLevel => {
+    const perm = editFormData.permissions.find((p) => p.module === module);
+    return perm?.level || 'none';
+  };
+
   return (
     <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>
       <div className="p-4">
@@ -219,7 +340,7 @@ export default function RolesManagement() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button className="gap-1">
+            <Button className="gap-1" onClick={handleNewRole}>
               <Plus className="h-4 w-4" />
               New Role
             </Button>
@@ -277,12 +398,22 @@ export default function RolesManagement() {
                     <p className="text-sm text-muted-foreground">{selectedRole.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-1"
+                      onClick={() => handleEditRole(selectedRole)}
+                    >
                       <Edit className="h-4 w-4" />
                       Edit
                     </Button>
                     {!selectedRole.isSystem && (
-                      <Button variant="outline" size="sm" className="gap-1 text-destructive">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-1 text-destructive"
+                        onClick={() => handleDeleteRole(selectedRole)}
+                      >
                         <Trash2 className="h-4 w-4" />
                         Delete
                       </Button>
@@ -486,6 +617,89 @@ export default function RolesManagement() {
             )}
           </div>
         </div>
+
+        {/* Edit Role Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{isNewRole ? 'Create New Role' : 'Edit Role'}</DialogTitle>
+              <DialogDescription>
+                {isNewRole 
+                  ? 'Define a new role with specific module permissions' 
+                  : 'Modify role details and module permissions'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Role Name *</Label>
+                  <Input
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    placeholder="e.g., Sales Manager"
+                    disabled={selectedRole?.isSystem && !isNewRole}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Description</Label>
+                  <Input
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                    placeholder="Brief description of this role"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Module Permissions</Label>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">Module</TableHead>
+                        <TableHead>Permission Level</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {MODULES.map((module) => (
+                        <TableRow key={module}>
+                          <TableCell className="font-medium capitalize">{module}</TableCell>
+                          <TableCell>
+                            <Select
+                              value={getEditPermissionLevel(module)}
+                              onValueChange={(v) => handlePermissionChange(module, v as PermissionLevel)}
+                            >
+                              <SelectTrigger className="w-[150px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PERMISSION_LEVELS.map((level) => (
+                                  <SelectItem key={level.id} value={level.id}>
+                                    <span className={level.color}>{level.label}</span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveRole}>
+                {isNewRole ? 'Create Role' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
