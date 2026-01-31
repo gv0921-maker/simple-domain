@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CustomizationProvider } from "@/contexts/CustomizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Auth pages
@@ -52,6 +53,7 @@ import FinancialReports from "@/pages/accounting/FinancialReports";
 
 // Settings pages
 import GeneralSettings from "@/pages/settings/GeneralSettings";
+import CustomizationSettings from "@/pages/settings/CustomizationSettings";
 import UsersManagement from "@/pages/settings/UsersManagement";
 import RolesManagement from "@/pages/settings/RolesManagement";
 import AuditLogs from "@/pages/settings/AuditLogs";
@@ -63,10 +65,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <CustomizationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             {/* Auth routes */}
             <Route path="/select-user" element={<UserSelectPage />} />
@@ -280,6 +283,14 @@ const App = () => (
               }
             />
             <Route
+              path="/settings/customization"
+              element={
+                <ProtectedRoute>
+                  <CustomizationSettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/settings/users"
               element={
                 <ProtectedRoute>
@@ -350,8 +361,9 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+    </CustomizationProvider>
+  </AuthProvider>
+</QueryClientProvider>
 );
 
 export default App;

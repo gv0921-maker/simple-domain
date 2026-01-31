@@ -24,10 +24,10 @@ import {
 
 const SETTINGS_NAV = [
   { label: 'General', href: '/settings' },
+  { label: 'Customization', href: '/settings/customization' },
   { label: 'Users', href: '/settings/users' },
   { label: 'Roles', href: '/settings/roles' },
   { label: 'Audit Logs', href: '/settings/audit' },
-  { label: 'Backups', href: '/settings/backups' },
 ];
 
 export default function GeneralSettings() {
