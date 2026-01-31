@@ -2,15 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Auth pages
 import UserSelectPage from "@/pages/auth/UserSelectPage";
 import LoginPage from "@/pages/auth/LoginPage";
-
-// Main pages
 import HomePage from "@/pages/HomePage";
 
 // Inventory pages
@@ -34,6 +32,23 @@ import OpportunitiesList from "@/pages/sales/OpportunitiesList";
 import CustomersList from "@/pages/sales/CustomersList";
 import QuotationsList from "@/pages/sales/QuotationsList";
 import SalesOrdersList from "@/pages/sales/SalesOrdersList";
+
+// Manufacturing pages
+import ManufacturingOverview from "@/pages/manufacturing/ManufacturingOverview";
+import WorkOrdersList from "@/pages/manufacturing/WorkOrdersList";
+import BOMList from "@/pages/manufacturing/BOMList";
+import WorkCenters from "@/pages/manufacturing/WorkCenters";
+import ProductionPlanning from "@/pages/manufacturing/ProductionPlanning";
+import ShopFloor from "@/pages/manufacturing/ShopFloor";
+import PLMOverview from "@/pages/plm/PLMOverview";
+
+// Accounting pages
+import AccountingOverview from "@/pages/accounting/AccountingOverview";
+import ChartOfAccounts from "@/pages/accounting/ChartOfAccounts";
+import JournalEntries from "@/pages/accounting/JournalEntries";
+import InvoicesList from "@/pages/accounting/InvoicesList";
+import Payments from "@/pages/accounting/Payments";
+import FinancialReports from "@/pages/accounting/FinancialReports";
 
 // Settings pages
 import GeneralSettings from "@/pages/settings/GeneralSettings";
@@ -298,126 +313,37 @@ const App = () => (
             />
 
             {/* Placeholder routes for other modules */}
-            <Route
-              path="/dashboards"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/manufacturing"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/shop-floor"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/barcode"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/plm"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/employees"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/apps"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/discuss"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/invoicing"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/accounting"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/maintenance"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/calendar"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/helpdesk"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/email-marketing"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/website"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/barcode" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/apps" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/discuss" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/maintenance" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/helpdesk" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/email-marketing" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/website" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+
+            {/* Manufacturing module */}
+            <Route path="/manufacturing" element={<ProtectedRoute><ManufacturingOverview /></ProtectedRoute>} />
+            <Route path="/manufacturing/work-orders" element={<ProtectedRoute><WorkOrdersList /></ProtectedRoute>} />
+            <Route path="/manufacturing/bom" element={<ProtectedRoute><BOMList /></ProtectedRoute>} />
+            <Route path="/manufacturing/work-centers" element={<ProtectedRoute><WorkCenters /></ProtectedRoute>} />
+            <Route path="/manufacturing/planning" element={<ProtectedRoute><ProductionPlanning /></ProtectedRoute>} />
+            <Route path="/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
+            <Route path="/plm" element={<ProtectedRoute><PLMOverview /></ProtectedRoute>} />
+            <Route path="/plm/*" element={<ProtectedRoute><PLMOverview /></ProtectedRoute>} />
+
+            {/* Accounting module */}
+            <Route path="/accounting" element={<ProtectedRoute><AccountingOverview /></ProtectedRoute>} />
+            <Route path="/accounting/chart" element={<ProtectedRoute><ChartOfAccounts /></ProtectedRoute>} />
+            <Route path="/accounting/journal" element={<ProtectedRoute><JournalEntries /></ProtectedRoute>} />
+            <Route path="/accounting/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+            <Route path="/accounting/reports" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
+            <Route path="/accounting/bills" element={<ProtectedRoute><AccountingOverview /></ProtectedRoute>} />
+            <Route path="/invoicing" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
+            <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
