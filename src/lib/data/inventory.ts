@@ -280,3 +280,13 @@ export function saveWarehouse(warehouse: Warehouse): void {
   }
   setItem('warehouses', warehouses);
 }
+
+export function deleteWarehouse(id: string): void {
+  const warehouses = getWarehouses().filter((w) => w.id !== id);
+  setItem('warehouses', warehouses);
+}
+
+export function deleteTransfer(id: string): void {
+  const transfers = getTransfers().filter((t) => t.id !== id);
+  setItem('transfers', transfers);
+}

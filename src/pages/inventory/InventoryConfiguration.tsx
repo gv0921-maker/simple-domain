@@ -32,6 +32,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Plus,
   Trash2,
   Package,
@@ -39,6 +45,8 @@ import {
   Tag,
   ArrowLeftRight,
   AlertTriangle,
+  MoreHorizontal,
+  Pencil,
 } from 'lucide-react';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { getItem, setItem } from '@/lib/storage';
@@ -119,6 +127,8 @@ export default function InventoryConfiguration() {
   // Dialog states
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
+  const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
+  const [editingOperation, setEditingOperation] = useState<OperationType | null>(null);
   const [newCategory, setNewCategory] = useState('');
   const [newRule, setNewRule] = useState({
     productId: '',
@@ -126,6 +136,13 @@ export default function InventoryConfiguration() {
     minQty: '',
     maxQty: '',
     triggerQty: '',
+  });
+  const [operationForm, setOperationForm] = useState({
+    name: '',
+    code: '',
+    type: 'internal' as OperationType['type'],
+    sequence: 1,
+    isActive: true,
   });
 
   const handleAddCategory = () => {
@@ -156,6 +173,68 @@ export default function InventoryConfiguration() {
     );
     setOperationTypes(updated);
     setItem('operation_types', updated);
+  };
+
+  const handleOpenOperationDialog = (op?: OperationType) => {
+    if (op) {
+      setEditingOperation(op);
+      setOperationForm({
+        name: op.name,
+        code: op.code,
+        type: op.type,
+        sequence: op.sequence,
+        isActive: op.isActive,
+      });
+    } else {
+      setEditingOperation(null);
+      setOperationForm({
+        name: '',
+        code: '',
+        type: 'internal',
+        sequence: operationTypes.length + 1,
+        isActive: true,
+      });
+    }
+    setIsOperationDialogOpen(true);
+  };
+
+  const handleSaveOperation = () => {
+    if (!operationForm.name || !operationForm.code) {
+      toast({ title: 'Name and code are required', variant: 'destructive' });
+      return;
+    }
+
+    const opData: OperationType = {
+      id: editingOperation?.id || crypto.randomUUID(),
+      name: operationForm.name,
+      code: operationForm.code,
+      type: operationForm.type,
+      warehouseId: '1',
+      sequence: operationForm.sequence,
+      isActive: operationForm.isActive,
+    };
+
+    let updated: OperationType[];
+    if (editingOperation) {
+      updated = operationTypes.map((o) => (o.id === editingOperation.id ? opData : o));
+    } else {
+      updated = [...operationTypes, opData];
+    }
+
+    setOperationTypes(updated);
+    setItem('operation_types', updated);
+    setIsOperationDialogOpen(false);
+    toast({
+      title: editingOperation ? 'Operation Type Updated' : 'Operation Type Created',
+      description: `${operationForm.name} has been saved.`,
+    });
+  };
+
+  const handleDeleteOperation = (id: string) => {
+    const updated = operationTypes.filter((o) => o.id !== id);
+    setOperationTypes(updated);
+    setItem('operation_types', updated);
+    toast({ title: 'Operation Type Deleted' });
   };
 
   const handleAddRule = () => {
@@ -279,7 +358,78 @@ export default function InventoryConfiguration() {
 
           {/* Operation Types Tab */}
           <TabsContent value="operations" className="space-y-4 animate-fade-in">
-            <h2 className="text-lg font-medium">Operation Types</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-medium">Operation Types</h2>
+              <Dialog open={isOperationDialogOpen} onOpenChange={setIsOperationDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-2" onClick={() => handleOpenOperationDialog()}>
+                    <Plus className="h-4 w-4" />
+                    Add Operation Type
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{editingOperation ? 'Edit Operation Type' : 'New Operation Type'}</DialogTitle>
+                    <DialogDescription>
+                      {editingOperation ? 'Update the operation type details' : 'Create a new operation type'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label>Name *</Label>
+                      <Input
+                        value={operationForm.name}
+                        onChange={(e) => setOperationForm({ ...operationForm, name: e.target.value })}
+                        placeholder="e.g., Manufacturing Orders"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Code *</Label>
+                      <Input
+                        value={operationForm.code}
+                        onChange={(e) => setOperationForm({ ...operationForm, code: e.target.value.toUpperCase() })}
+                        placeholder="e.g., MFG"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Type</Label>
+                      <Select
+                        value={operationForm.type}
+                        onValueChange={(v) => setOperationForm({ ...operationForm, type: v as OperationType['type'] })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="incoming">Incoming</SelectItem>
+                          <SelectItem value="outgoing">Outgoing</SelectItem>
+                          <SelectItem value="internal">Internal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Sequence</Label>
+                      <Input
+                        type="number"
+                        value={operationForm.sequence}
+                        onChange={(e) => setOperationForm({ ...operationForm, sequence: parseInt(e.target.value) || 1 })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Active</Label>
+                      <Switch
+                        checked={operationForm.isActive}
+                        onCheckedChange={(checked) => setOperationForm({ ...operationForm, isActive: checked })}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsOperationDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSaveOperation}>{editingOperation ? 'Update' : 'Create'}</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
             <Card>
               <Table>
                 <TableHeader>
@@ -289,6 +439,7 @@ export default function InventoryConfiguration() {
                     <TableHead>Type</TableHead>
                     <TableHead>Sequence</TableHead>
                     <TableHead>Active</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -305,6 +456,25 @@ export default function InventoryConfiguration() {
                           checked={op.isActive}
                           onCheckedChange={(checked) => handleToggleOperationType(op.id, checked)}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleOpenOperationDialog(op)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteOperation(op.id)} className="text-destructive">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}

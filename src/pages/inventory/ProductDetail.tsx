@@ -33,10 +33,21 @@ import {
   History,
   Plus,
 } from 'lucide-react';
-import { getProduct, saveProduct, type Product, type ProductVariant } from '@/lib/data/inventory';
+import { getProduct, saveProduct, deleteProduct, type Product, type ProductVariant } from '@/lib/data/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const CATEGORIES = ['Furniture', 'Accessories', 'Lighting', 'Electronics', 'Office Supplies'];
 const UNITS = ['Units', 'Pieces', 'Kg', 'Liters', 'Meters', 'Boxes'];
@@ -167,10 +178,35 @@ export default function ProductDetail() {
               </Badge>
             )}
             {!isNew && (
-              <Button variant="outline" className="gap-2 text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete "{product.name}" and all its variants.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => {
+                        deleteProduct(product.id);
+                        toast({ title: 'Product Deleted', description: `${product.name} has been removed.` });
+                        navigate('/inventory/products');
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
             <Button onClick={handleSave} className="gap-2">
               <Save className="h-4 w-4" />

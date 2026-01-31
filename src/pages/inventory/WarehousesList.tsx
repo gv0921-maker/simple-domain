@@ -31,7 +31,7 @@ import {
   MapPin,
   Package,
 } from 'lucide-react';
-import { getWarehouses, saveWarehouse, type Warehouse as WarehouseType } from '@/lib/data/inventory';
+import { getWarehouses, saveWarehouse, deleteWarehouse, type Warehouse as WarehouseType } from '@/lib/data/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -105,6 +105,12 @@ export default function WarehousesList() {
       title: editingWarehouse ? 'Warehouse Updated' : 'Warehouse Created',
       description: `${formData.name} has been ${editingWarehouse ? 'updated' : 'created'} successfully.`,
     });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteWarehouse(id);
+    setWarehouses(getWarehouses());
+    toast({ title: 'Warehouse Deleted' });
   };
 
   return (
@@ -224,7 +230,10 @@ export default function WarehousesList() {
                       <Pencil className="h-4 w-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
+                    <DropdownMenuItem 
+                      onClick={() => handleDelete(warehouse.id)}
+                      className="text-destructive"
+                    >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete
                     </DropdownMenuItem>

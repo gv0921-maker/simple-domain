@@ -16,10 +16,12 @@ import HomePage from "@/pages/HomePage";
 // Inventory pages
 import InventoryOverview from "@/pages/inventory/InventoryOverview";
 import TransferDetail from "@/pages/inventory/TransferDetail";
+import TransferForm from "@/pages/inventory/TransferForm";
 import ProductsList from "@/pages/inventory/ProductsList";
 import ProductDetail from "@/pages/inventory/ProductDetail";
 import OperationsList from "@/pages/inventory/OperationsList";
 import WarehousesList from "@/pages/inventory/WarehousesList";
+import WarehouseLocations from "@/pages/inventory/WarehouseLocations";
 import StockMoves from "@/pages/inventory/StockMoves";
 import InventoryConfiguration from "@/pages/inventory/InventoryConfiguration";
 import InventoryReporting from "@/pages/inventory/InventoryReporting";
@@ -102,10 +104,34 @@ const App = () => (
               }
             />
             <Route
+              path="/inventory/transfers/new"
+              element={
+                <ProtectedRoute>
+                  <TransferForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/transfers/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <TransferForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/inventory/warehouses"
               element={
                 <ProtectedRoute>
                   <WarehousesList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/locations"
+              element={
+                <ProtectedRoute>
+                  <WarehouseLocations />
                 </ProtectedRoute>
               }
             />

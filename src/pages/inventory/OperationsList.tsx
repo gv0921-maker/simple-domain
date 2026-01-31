@@ -40,7 +40,7 @@ import {
   TruckIcon,
   RotateCcw,
 } from 'lucide-react';
-import { getTransfers, type InventoryTransfer, type TransferStatus } from '@/lib/data/inventory';
+import { getTransfers, deleteTransfer, type InventoryTransfer, type TransferStatus } from '@/lib/data/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -63,7 +63,7 @@ const OPERATION_TYPES = [
 
 export default function OperationsList() {
   const navigate = useNavigate();
-  const [transfers] = useState<InventoryTransfer[]>(getTransfers());
+  const [transfers, setTransfers] = useState<InventoryTransfer[]>(getTransfers());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -105,6 +105,12 @@ export default function OperationsList() {
       setSortField(field);
       setSortOrder('desc');
     }
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteTransfer(id);
+    setTransfers(getTransfers());
   };
 
   return (
@@ -268,11 +274,14 @@ export default function OperationsList() {
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/inventory/transfers/${transfer.id}/edit`)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem 
+                            onClick={(e) => handleDelete(transfer.id, e)}
+                            className="text-destructive"
+                          >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
