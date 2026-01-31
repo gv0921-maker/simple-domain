@@ -31,8 +31,12 @@ import SalesPipeline from "@/pages/sales/SalesPipeline";
 import LeadDetail from "@/pages/sales/LeadDetail";
 import OpportunitiesList from "@/pages/sales/OpportunitiesList";
 import CustomersList from "@/pages/sales/CustomersList";
-import QuotationsList from "@/pages/sales/QuotationsList";
-import SalesOrdersList from "@/pages/sales/SalesOrdersList";
+import QuotationsList from "@/pages/sales/QuotationsListNew";
+import QuotationForm from "@/pages/sales/QuotationForm";
+import SalesOrdersList from "@/pages/sales/SalesOrdersListNew";
+import SubscriptionsList from "@/pages/sales/SubscriptionsList";
+import PricelistsPage from "@/pages/sales/PricelistsPage";
+import SalesReports from "@/pages/sales/SalesReports";
 
 // Manufacturing pages
 import ManufacturingOverview from "@/pages/manufacturing/ManufacturingOverview";
@@ -249,10 +253,18 @@ const App = () => (
               }
             />
             <Route
+              path="/sales/quotations/new"
+              element={
+                <ProtectedRoute>
+                  <QuotationForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/sales/quotations/:id"
               element={
                 <ProtectedRoute>
-                  <QuotationsList />
+                  <QuotationForm />
                 </ProtectedRoute>
               }
             />
@@ -269,6 +281,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SalesOrdersList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sales/subscriptions"
+              element={
+                <ProtectedRoute>
+                  <SubscriptionsList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sales/pricelists"
+              element={
+                <ProtectedRoute>
+                  <PricelistsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sales/reports"
+              element={
+                <ProtectedRoute>
+                  <SalesReports />
                 </ProtectedRoute>
               }
             />
