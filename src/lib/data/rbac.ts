@@ -1,9 +1,15 @@
 // Role-Based Access Control data management
 
 import { getItem, setItem } from '../storage';
+import { getModuleTabIds } from './moduleTabs';
 
 export type PermissionLevel = 'none' | 'view' | 'create' | 'edit' | 'delete' | 'admin';
 export type RecordScope = 'own' | 'department' | 'all';
+
+export interface TabPermission {
+  moduleId: string;
+  allowedTabs: string[]; // Tab IDs that are allowed, empty = all allowed
+}
 
 export interface Permission {
   module: string;
@@ -17,6 +23,7 @@ export interface Role {
   description: string;
   isSystem: boolean; // System roles can't be deleted
   permissions: Permission[];
+  tabPermissions?: TabPermission[]; // Tab-level permissions per module
   inheritsFrom?: string[]; // Role IDs this role inherits from
   createdAt: string;
   updatedAt: string;
@@ -272,6 +279,85 @@ export function hasPermission(userId: string, module: string, requiredLevel: Per
   const modulePermission = permissions.find((p) => p.module === module);
   if (!modulePermission) return false;
   return getPermissionWeight(modulePermission.level) >= getPermissionWeight(requiredLevel);
+}
+
+// Tab permission checking
+export function getUserTabPermissions(userId: string): TabPermission[] {
+  const userRole = getUserRole(userId);
+  if (!userRole) return [];
+
+  const tabPermissions: TabPermission[] = [];
+  const processedRoles = new Set<string>();
+
+  function processRole(roleId: string) {
+    if (processedRoles.has(roleId)) return;
+    processedRoles.add(roleId);
+
+    const role = getRole(roleId);
+    if (!role) return;
+
+    // Process inherited roles first
+    role.inheritsFrom?.forEach(processRole);
+
+    // Merge tab permissions - union of all allowed tabs
+    role.tabPermissions?.forEach((tp) => {
+      const existing = tabPermissions.find((e) => e.moduleId === tp.moduleId);
+      if (existing) {
+        // Merge allowed tabs (union)
+        const mergedTabs = new Set([...existing.allowedTabs, ...tp.allowedTabs]);
+        existing.allowedTabs = Array.from(mergedTabs);
+      } else {
+        tabPermissions.push({ ...tp, allowedTabs: [...tp.allowedTabs] });
+      }
+    });
+  }
+
+  userRole.roleIds.forEach(processRole);
+  return tabPermissions;
+}
+
+export function hasTabAccess(userId: string, moduleId: string, tabId: string): boolean {
+  // First check if user has module access
+  if (!hasPermission(userId, moduleId, 'view')) return false;
+
+  const tabPermissions = getUserTabPermissions(userId);
+  const moduleTabPerm = tabPermissions.find((tp) => tp.moduleId === moduleId);
+
+  // If no tab permissions defined for this module, all tabs are allowed (admin default)
+  if (!moduleTabPerm || moduleTabPerm.allowedTabs.length === 0) {
+    // Check if user is admin - admins get all tabs
+    const permissions = getUserPermissions(userId);
+    const modulePerm = permissions.find((p) => p.module === moduleId);
+    if (modulePerm?.level === 'admin') return true;
+    
+    // For non-admins without explicit tab permissions, check if any restrictions exist
+    if (!moduleTabPerm) return true; // No restrictions = all allowed
+    if (moduleTabPerm.allowedTabs.length === 0) return true; // Empty array = all allowed
+  }
+
+  return moduleTabPerm.allowedTabs.includes(tabId);
+}
+
+export function getAccessibleTabs(userId: string, moduleId: string): string[] {
+  if (!hasPermission(userId, moduleId, 'view')) return [];
+
+  const permissions = getUserPermissions(userId);
+  const modulePerm = permissions.find((p) => p.module === moduleId);
+  
+  // Admins get all tabs
+  if (modulePerm?.level === 'admin') {
+    return getModuleTabIds(moduleId);
+  }
+
+  const tabPermissions = getUserTabPermissions(userId);
+  const moduleTabPerm = tabPermissions.find((tp) => tp.moduleId === moduleId);
+
+  // If no restrictions, return all tabs
+  if (!moduleTabPerm || moduleTabPerm.allowedTabs.length === 0) {
+    return getModuleTabIds(moduleId);
+  }
+
+  return moduleTabPerm.allowedTabs;
 }
 
 // Audit logging
