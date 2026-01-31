@@ -62,13 +62,18 @@ export default function ProductDetail() {
     id: '',
     sku: '',
     name: '',
+    type: 'stockable',
     category: 'Furniture',
     unitOfMeasure: 'Units',
+    costMethod: 'average',
     costPrice: 0,
     salePrice: 0,
     stockOnHand: 0,
     reorderLevel: 10,
     barcode: '',
+    trackInventory: true,
+    trackLots: false,
+    trackSerials: false,
     variants: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -110,6 +115,7 @@ export default function ProductDetail() {
       sku: newVariant.sku,
       additionalPrice: newVariant.additionalPrice,
       stockOnHand: 0,
+      attributes: {},
     };
     setVariants((prev) => [...prev, variant]);
     setNewVariant({ name: '', sku: '', additionalPrice: 0 });

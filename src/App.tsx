@@ -24,6 +24,9 @@ import WarehouseLocations from "@/pages/inventory/WarehouseLocations";
 import StockMoves from "@/pages/inventory/StockMoves";
 import InventoryConfiguration from "@/pages/inventory/InventoryConfiguration";
 import InventoryReporting from "@/pages/inventory/InventoryReporting";
+import InventoryAdjustments from "@/pages/inventory/InventoryAdjustments";
+import ReorderRules from "@/pages/inventory/ReorderRules";
+import BarcodeOperations from "@/pages/inventory/BarcodeOperations";
 
 // Sales pages
 import SalesOverview from "@/pages/sales/SalesOverview";
@@ -192,6 +195,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <InventoryConfiguration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/adjustments"
+              element={
+                <ProtectedRoute>
+                  <InventoryAdjustments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/reorder-rules"
+              element={
+                <ProtectedRoute>
+                  <ReorderRules />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/barcode"
+              element={
+                <ProtectedRoute>
+                  <BarcodeOperations />
                 </ProtectedRoute>
               }
             />
