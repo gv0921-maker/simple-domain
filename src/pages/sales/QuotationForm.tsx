@@ -89,7 +89,7 @@ export default function QuotationForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const isNew = id === 'new';
+  const isNew = !id || id === 'new';
   
   const [contacts] = useState(() => getContacts());
   const [products] = useState(() => getProducts());
