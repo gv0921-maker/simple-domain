@@ -34,6 +34,7 @@ import CustomersList from "@/pages/sales/CustomersList";
 import QuotationsList from "@/pages/sales/QuotationsListNew";
 import QuotationForm from "@/pages/sales/QuotationForm";
 import SalesOrdersList from "@/pages/sales/SalesOrdersListNew";
+import SalesOrderForm from "@/pages/sales/SalesOrderForm";
 import SubscriptionsList from "@/pages/sales/SubscriptionsList";
 import PricelistsPage from "@/pages/sales/PricelistsPage";
 import SalesReports from "@/pages/sales/SalesReports";
@@ -277,10 +278,26 @@ const App = () => (
               }
             />
             <Route
+              path="/sales/orders/new"
+              element={
+                <ProtectedRoute>
+                  <SalesOrderForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/sales/orders/:id"
               element={
                 <ProtectedRoute>
-                  <SalesOrdersList />
+                  <SalesOrderForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sales/orders/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <SalesOrderForm />
                 </ProtectedRoute>
               }
             />
