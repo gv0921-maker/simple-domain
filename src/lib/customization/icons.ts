@@ -9,6 +9,7 @@ import {
   Cpu, Monitor, Printer, Phone, Tablet, Watch, Camera,
   Video, Music, Image, File, Folder, Clipboard, Book,
   Bookmark, Flag, Tag, Award, Trophy, Target, Activity,
+  TrendingUp,
   LucideIcon,
 } from 'lucide-react';
 import { IconName } from './types';
