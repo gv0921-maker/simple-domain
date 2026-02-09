@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCustomization } from '@/contexts/CustomizationContext';
 import { ModuleConfig, COLOR_PRESETS, AVAILABLE_ICONS, IconName } from '@/lib/customization/types';
 import { getIcon, getAllIcons } from '@/lib/customization/icons';
+import { MODULE_ICONS } from '@/components/icons/ModuleIcons';
 import { GripVertical, Pencil, RotateCcw, Eye, EyeOff, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -76,7 +77,8 @@ export function ModuleCustomization() {
 
       <Card className="divide-y divide-border">
         {sortedModules.map((module) => {
-          const Icon = getIcon(module.icon);
+          const CustomIcon = MODULE_ICONS[module.id];
+          const FallbackIcon = getIcon(module.icon);
           return (
             <div
               key={module.id}
@@ -90,11 +92,17 @@ export function ModuleCustomization() {
             >
               <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
               
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: module.iconBg }}
-              >
-                <Icon className="w-5 h-5" style={{ color: module.iconColor }} />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                {CustomIcon ? (
+                  <CustomIcon />
+                ) : (
+                  <div
+                    className="w-full h-full rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: module.iconBg }}
+                  >
+                    <FallbackIcon className="w-5 h-5" style={{ color: module.iconColor }} />
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-w-0">
@@ -172,7 +180,8 @@ function ModuleEditForm({
   onSave: (module: ModuleConfig) => void;
 }) {
   const [showIconPicker, setShowIconPicker] = useState(false);
-  const Icon = getIcon(module.icon);
+  const CustomIcon = MODULE_ICONS[module.id];
+  const FallbackIcon = getIcon(module.icon);
   const allIcons = getAllIcons();
 
   return (
@@ -188,11 +197,17 @@ function ModuleEditForm({
       <div className="space-y-2">
         <Label>Icon</Label>
         <div className="flex items-center gap-2">
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center border border-border"
-            style={{ backgroundColor: module.iconBg }}
-          >
-            <Icon className="w-6 h-6" style={{ color: module.iconColor }} />
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-border overflow-hidden">
+            {CustomIcon ? (
+              <CustomIcon />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ backgroundColor: module.iconBg }}
+              >
+                <FallbackIcon className="w-6 h-6" style={{ color: module.iconColor }} />
+              </div>
+            )}
           </div>
           <Button
             variant="outline"
