@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import glfLogo from '@/assets/glf-logo.png';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +40,8 @@ export function TopNav({ title, subtitle }: TopNavProps) {
       {/* Left side - title and breadcrumb */}
       <div className="flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Grid3X3 className="h-5 w-5 text-primary" />
+          <img src={glfLogo} alt="GLF Logo" className="h-8 w-8 rounded-full object-contain" />
+          <span className="text-sm font-bold text-foreground hidden sm:inline">GLF</span>
         </Link>
         {title && (
           <div className="flex items-center gap-2">
@@ -70,7 +72,7 @@ export function TopNav({ title, subtitle }: TopNavProps) {
         </Button>
 
         <span className="text-sm text-foreground font-medium ml-2">
-          My Company
+          GLF
         </span>
 
         {/* User menu */}
