@@ -30,9 +30,6 @@ import BarcodeOperations from "@/pages/inventory/BarcodeOperations";
 
 // Sales pages
 import SalesOverview from "@/pages/sales/SalesOverview";
-import SalesPipeline from "@/pages/sales/SalesPipeline";
-import LeadDetail from "@/pages/sales/LeadDetail";
-import OpportunitiesList from "@/pages/sales/OpportunitiesList";
 import CustomersList from "@/pages/sales/CustomersList";
 import QuotationsList from "@/pages/sales/QuotationsListNew";
 import QuotationForm from "@/pages/sales/QuotationForm";
@@ -229,46 +226,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SalesOverview />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sales/pipeline"
-              element={
-                <ProtectedRoute>
-                  <SalesPipeline />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sales/leads"
-              element={
-                <ProtectedRoute>
-                  <SalesPipeline />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sales/leads/:id"
-              element={
-                <ProtectedRoute>
-                  <LeadDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sales/opportunities"
-              element={
-                <ProtectedRoute>
-                  <OpportunitiesList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sales/opportunities/:id"
-              element={
-                <ProtectedRoute>
-                  <OpportunitiesList />
                 </ProtectedRoute>
               }
             />

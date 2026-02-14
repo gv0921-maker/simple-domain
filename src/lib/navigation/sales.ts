@@ -1,7 +1,6 @@
-// Sales Navigation - Updated with all tabs
+// Sales Navigation - Sales-specific tabs only (CRM has its own module)
 export const SALES_NAV = [
   { label: 'Overview', href: '/sales' },
-  { label: 'Pipeline', href: '/sales/pipeline' },
   { label: 'Quotations', href: '/sales/quotations' },
   { label: 'Orders', href: '/sales/orders' },
   { label: 'Subscriptions', href: '/sales/subscriptions' },
