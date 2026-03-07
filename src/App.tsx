@@ -27,6 +27,9 @@ import InventoryReporting from "@/pages/inventory/InventoryReporting";
 import InventoryAdjustments from "@/pages/inventory/InventoryAdjustments";
 import ReorderRules from "@/pages/inventory/ReorderRules";
 import BarcodeOperations from "@/pages/inventory/BarcodeOperations";
+import BarcodeLabels from "@/pages/inventory/BarcodeLabels";
+import ProductScanLookup from "@/pages/inventory/ProductScanLookup";
+import StockDashboard from "@/pages/inventory/StockDashboard";
 
 // Sales pages
 import SalesOverview from "@/pages/sales/SalesOverview";
@@ -216,6 +219,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BarcodeOperations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/barcode-labels"
+              element={
+                <ProtectedRoute>
+                  <BarcodeLabels />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/scan-lookup"
+              element={
+                <ProtectedRoute>
+                  <ProductScanLookup />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/stock-dashboard"
+              element={
+                <ProtectedRoute>
+                  <StockDashboard />
                 </ProtectedRoute>
               }
             />
