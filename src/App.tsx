@@ -222,6 +222,30 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/inventory/barcode-labels"
+              element={
+                <ProtectedRoute>
+                  <BarcodeLabels />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/scan-lookup"
+              element={
+                <ProtectedRoute>
+                  <ProductScanLookup />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/stock-dashboard"
+              element={
+                <ProtectedRoute>
+                  <StockDashboard />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Sales module */}
             <Route
