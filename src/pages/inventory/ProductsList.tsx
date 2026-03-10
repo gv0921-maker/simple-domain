@@ -114,7 +114,7 @@ export default function ProductsList() {
         </div>
 
         {/* Products table */}
-        <div className="border rounded-lg bg-card">
+        <div className="border rounded-lg bg-card overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
