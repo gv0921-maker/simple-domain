@@ -9,9 +9,13 @@ export const INVENTORY_NAV = [
   { label: 'Locations', href: '/inventory/locations' },
   { label: 'Adjustments', href: '/inventory/adjustments' },
   { label: 'Reorder Rules', href: '/inventory/reorder-rules' },
-  { label: 'Barcode Ops', href: '/inventory/barcode' },
-  { label: 'Scan & Lookup', href: '/inventory/scan-lookup' },
-  { label: 'Labels', href: '/inventory/barcode-labels' },
   { label: 'Reporting', href: '/inventory/reporting' },
   { label: 'Configuration', href: '/inventory/configuration' },
+];
+
+// Shared navigation items for the Barcode module
+export const BARCODE_NAV = [
+  { label: 'Overview', href: '/barcode' },
+  { label: 'Scan & Lookup', href: '/barcode/scan-lookup' },
+  { label: 'Labels', href: '/barcode/labels' },
 ];

@@ -149,7 +149,7 @@ export default function BarcodeLabels() {
   const sizeMap = { small: { w: 180, h: 40 }, medium: { w: 260, h: 60 }, large: { w: 360, h: 80 } };
 
   return (
-    <AppLayout title="Inventory" moduleNav={INVENTORY_NAV}>
+    <AppLayout title="Barcode" moduleNav={BARCODE_NAV}>
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
