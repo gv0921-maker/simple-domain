@@ -102,7 +102,7 @@ export default function InventoryOverview() {
     <AppLayout title="Inventory" moduleNav={INVENTORY_NAV}>
       <div className="p-4">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-medium text-foreground">Inventory Overview</h1>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -110,13 +110,13 @@ export default function InventoryOverview() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="relative w-64">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search..." className="pl-9" />
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>1-7 / 7</span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+              <span className="hidden sm:inline">1-7 / 7</span>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
