@@ -399,7 +399,6 @@ const App = () => (
 
             {/* Placeholder routes for other modules */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/barcode" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/apps" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/discuss" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/maintenance" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
