@@ -312,19 +312,19 @@ export default function RolesManagement() {
     <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>
       <div className="p-4">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <Shield className="h-6 w-6 text-primary" />
+            <Shield className="h-6 w-6 text-primary shrink-0" />
             <div>
               <h1 className="text-lg font-medium text-foreground">Roles & Permissions</h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground hidden sm:block">
                 Manage access control for your organization
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative w-64">
+            <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search roles..."
@@ -333,9 +333,9 @@ export default function RolesManagement() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button className="gap-1" onClick={handleNewRole}>
+            <Button className="gap-1 shrink-0" onClick={handleNewRole}>
               <Plus className="h-4 w-4" />
-              New Role
+              <span className="hidden sm:inline">New Role</span>
             </Button>
           </div>
         </div>
