@@ -246,6 +246,15 @@
       opacity: 0.7;
     }
   }
+
+  /* Hide scrollbar for horizontal-scroll navs */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Lavender gradient background */
