@@ -124,12 +124,12 @@ export default function AuditLogs() {
     <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>
       <div className="p-4">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <ClipboardList className="h-6 w-6 text-primary" />
+            <ClipboardList className="h-6 w-6 text-primary shrink-0" />
             <div>
               <h1 className="text-lg font-medium text-foreground">Audit Logs</h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground hidden sm:block">
                 Track all user actions and system changes
               </p>
             </div>
