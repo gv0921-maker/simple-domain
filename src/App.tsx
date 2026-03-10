@@ -214,8 +214,10 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+
+            {/* Barcode module */}
             <Route
-              path="/inventory/barcode"
+              path="/barcode"
               element={
                 <ProtectedRoute>
                   <BarcodeOperations />
@@ -223,7 +225,7 @@ const App = () => (
               }
             />
             <Route
-              path="/inventory/barcode-labels"
+              path="/barcode/labels"
               element={
                 <ProtectedRoute>
                   <BarcodeLabels />
@@ -231,18 +233,10 @@ const App = () => (
               }
             />
             <Route
-              path="/inventory/scan-lookup"
+              path="/barcode/scan-lookup"
               element={
                 <ProtectedRoute>
                   <ProductScanLookup />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/inventory/stock-dashboard"
-              element={
-                <ProtectedRoute>
-                  <StockDashboard />
                 </ProtectedRoute>
               }
             />
