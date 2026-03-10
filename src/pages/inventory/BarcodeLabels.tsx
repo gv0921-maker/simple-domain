@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { getProducts } from '@/lib/data/inventory/storage';
 import type { Product } from '@/lib/data/inventory/types';
-import { INVENTORY_NAV } from '@/lib/navigation';
+import { BARCODE_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import JsBarcode from 'jsbarcode';
 import { QRCodeSVG } from 'qrcode.react';
