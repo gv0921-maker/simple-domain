@@ -88,13 +88,13 @@ export default function ProductsList() {
     <AppLayout title="Inventory" moduleNav={INVENTORY_NAV}>
       <div className="p-4">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-medium text-foreground">Products</h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative w-64">
+            <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search products..."
@@ -103,12 +103,12 @@ export default function ProductsList() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className="shrink-0">
               <Filter className="h-4 w-4" />
             </Button>
-            <Button onClick={() => navigate('/inventory/products/new')} className="gap-1">
+            <Button onClick={() => navigate('/inventory/products/new')} className="gap-1 shrink-0">
               <Plus className="h-4 w-4" />
-              New Product
+              <span className="hidden sm:inline">New Product</span>
             </Button>
           </div>
         </div>
