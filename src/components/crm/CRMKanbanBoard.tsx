@@ -1,4 +1,4 @@
-// Odoo-style CRM Kanban Board with revenue bars, star ratings, colored tags, activity icons
+// Odoo-style CRM Kanban Board — pixel-perfect replica
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -13,17 +13,28 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Plus,
   Search,
-  Filter,
   Star,
-  Mail,
-  Phone,
   Clock,
   MoreVertical,
   List,
   LayoutGrid,
   ChevronDown,
+  GripVertical,
+  Activity,
+  Phone,
+  Mail,
+  CalendarClock,
+  BarChart3,
+  Users,
+  SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import {
   getOpportunities,
@@ -39,25 +50,25 @@ import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { cn } from '@/lib/utils';
 
-// Odoo tag colors
-const TAG_COLORS: Record<string, { bg: string; text: string }> = {
-  'Design': { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400' },
-  'Product': { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400' },
-  'Information': { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
-  'Training': { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
-  'Consulting': { bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-700 dark:text-pink-400' },
-  'Services': { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-700 dark:text-cyan-400' },
-  'Other': { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-400' },
+// Odoo tag color palette (exact Odoo colors)
+const TAG_COLORS: Record<string, string> = {
+  'Design': 'bg-[#00A09D] text-white',
+  'Product': 'bg-[#F06050] text-white',
+  'Information': 'bg-[#6CC1ED] text-white',
+  'Training': 'bg-[#F7CD1F] text-[#4c4c4c]',
+  'Consulting': 'bg-[#814968] text-white',
+  'Services': 'bg-[#EB7E7F] text-white',
+  'Other': 'bg-[#2C8397] text-white',
 };
 
 function getTagColor(tag: string) {
-  return TAG_COLORS[tag] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+  return TAG_COLORS[tag] || 'bg-muted text-muted-foreground';
 }
 
-// Star rating component (like Odoo)
-function StarRating({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
+// Star rating (Odoo-style)
+export function StarRating({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center">
       {[1, 2, 3].map((star) => (
         <button
           key={star}
@@ -76,7 +87,7 @@ function StarRating({ value, onChange, readonly = false }: { value: number; onCh
           <Star
             className={cn(
               'h-3.5 w-3.5',
-              star <= value ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'
+              star <= value ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'
             )}
           />
         </button>
@@ -85,52 +96,44 @@ function StarRating({ value, onChange, readonly = false }: { value: number; onCh
   );
 }
 
-// Revenue progress bar for column header (Odoo-style segmented bar)
-function RevenueBar({ opportunities, stage }: { opportunities: Opportunity[]; stage: PipelineStage }) {
+// Odoo-style revenue progress bar (segmented colored bar)
+function RevenueBar({ opportunities }: { opportunities: Opportunity[] }) {
   if (opportunities.length === 0) return null;
+  const maxRev = Math.max(...opportunities.map(o => o.expectedRevenue), 1);
 
-  // Each segment represents an opportunity, colored by probability
-  const maxRevenue = Math.max(...opportunities.map(o => o.expectedRevenue), 1);
-  
   return (
-    <div className="flex h-1 w-full rounded-full overflow-hidden gap-px mt-1">
+    <div className="flex h-[3px] w-full rounded-full overflow-hidden gap-[1px] mt-1.5">
       {opportunities.map((opp) => {
-        const width = Math.max((opp.expectedRevenue / maxRevenue) * 100, 8);
-        const color = opp.probability >= 60 ? 'bg-emerald-500' : opp.probability >= 30 ? 'bg-amber-500' : 'bg-red-400';
+        const width = Math.max((opp.expectedRevenue / maxRev) * 100, 8);
+        const color = opp.probability >= 60 ? 'bg-[#00A09D]' : opp.probability >= 30 ? 'bg-[#F7CD1F]' : 'bg-[#F06050]';
         return (
-          <div
-            key={opp.id}
-            className={cn('h-full rounded-sm', color)}
-            style={{ flex: `${width} 0 0%` }}
-          />
+          <div key={opp.id} className={cn('h-full rounded-sm', color)} style={{ flex: `${width} 0 0%` }} />
         );
       })}
     </div>
   );
 }
 
-// Contact avatar
-function ContactAvatar({ name }: { name: string }) {
+// Contact avatar (Odoo circle avatar)
+function ContactAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md' }) {
   const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const colors = ['bg-[#00A09D]', 'bg-[#875A7B]', 'bg-[#F06050]', 'bg-[#6CC1ED]', 'bg-[#F7CD1F]', 'bg-[#2C8397]'];
+  const colorIndex = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
+  const s = size === 'md' ? 'h-8 w-8 text-xs' : 'h-6 w-6 text-[10px]';
   return (
-    <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium shrink-0">
+    <div className={cn('rounded-full text-white flex items-center justify-center font-medium shrink-0', colors[colorIndex], s)}>
       {initials}
     </div>
   );
 }
 
-// Kanban card (Odoo-style)
-interface KanbanCardProps {
-  opportunity: Opportunity;
-  onPriorityChange: (priority: 0 | 1 | 2 | 3) => void;
-}
-
-function KanbanCard({ opportunity, onPriorityChange }: KanbanCardProps) {
+// Kanban card — Odoo exact style
+function KanbanCard({ opportunity, onPriorityChange }: { opportunity: Opportunity; onPriorityChange: (p: 0 | 1 | 2 | 3) => void }) {
   const navigate = useNavigate();
-  
+
   return (
-    <Card
-      className="p-3 cursor-pointer hover:shadow-md transition-shadow border border-border group"
+    <div
+      className="bg-card border border-border rounded px-3 py-2.5 cursor-pointer hover:shadow-sm transition-shadow group"
       onClick={() => navigate(`/crm/opportunities/${opportunity.id}`)}
       draggable
       onDragStart={(e) => {
@@ -138,77 +141,95 @@ function KanbanCard({ opportunity, onPriorityChange }: KanbanCardProps) {
         e.dataTransfer.effectAllowed = 'move';
       }}
     >
-      {/* Title & Revenue */}
-      <div className="flex justify-between items-start gap-2">
-        <h4 className="font-medium text-sm text-foreground leading-tight line-clamp-2 flex-1">
-          {opportunity.name}
-        </h4>
+      {/* Title */}
+      <div className="font-semibold text-[13px] text-foreground leading-snug line-clamp-2">
+        {opportunity.name}
       </div>
 
       {/* Revenue */}
-      <p className="text-sm font-semibold text-foreground mt-1">
+      <div className="text-[13px] text-foreground mt-0.5">
         $ {opportunity.expectedRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-      </p>
+      </div>
 
       {/* Company */}
       {opportunity.companyName && (
-        <p className="text-xs text-muted-foreground mt-0.5">{opportunity.companyName}</p>
+        <div className="text-xs text-muted-foreground mt-0.5">{opportunity.companyName}</div>
       )}
 
-      {/* Tags */}
+      {/* Tags row */}
       {opportunity.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {opportunity.tags.map((tag) => {
-            const c = getTagColor(tag);
-            return (
-              <span key={tag} className={cn('text-[10px] px-1.5 py-0.5 rounded-sm font-medium', c.bg, c.text)}>
-                {tag}
-              </span>
-            );
-          })}
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {opportunity.tags.map((tag) => (
+            <span key={tag} className={cn('text-[10px] px-1.5 py-[1px] rounded-sm font-medium', getTagColor(tag))}>
+              {tag}
+            </span>
+          ))}
         </div>
       )}
 
-      {/* Bottom row: stars, activity icons, avatar */}
-      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border/50">
-        <div className="flex items-center gap-2">
-          <StarRating
-            value={opportunity.priority}
-            onChange={onPriorityChange}
-          />
-          <div className="flex items-center gap-1.5 text-muted-foreground/60">
-            <Clock className="h-3 w-3" />
-            <Phone className="h-3 w-3" />
-            <Mail className="h-3 w-3" />
+      {/* Bottom: priority stars + activity icons + avatar */}
+      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/40">
+        <div className="flex items-center gap-1.5">
+          <StarRating value={opportunity.priority} onChange={onPriorityChange} />
+          <div className="flex items-center gap-1 ml-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="text-muted-foreground/40 hover:text-[#00A09D] transition-colors" onClick={(e) => e.stopPropagation()}>
+                  <Clock className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Schedule Activity</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="text-muted-foreground/40 hover:text-[#00A09D] transition-colors" onClick={(e) => e.stopPropagation()}>
+                  <Phone className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Log Call</TooltipContent>
+            </Tooltip>
           </div>
         </div>
         <ContactAvatar name={opportunity.contactName || opportunity.companyName || 'U'} />
       </div>
-    </Card>
+    </div>
   );
 }
 
-// Kanban column
-interface KanbanColumnProps {
+// Kanban column — Odoo style with colored top border
+function KanbanColumn({
+  stage,
+  opportunities,
+  onDrop,
+  onPriorityChange,
+  onQuickCreate,
+}: {
   stage: PipelineStage;
   opportunities: Opportunity[];
   onDrop: (oppId: string, stageId: string, stage: OpportunityStage) => void;
   onPriorityChange: (oppId: string, priority: 0 | 1 | 2 | 3) => void;
   onQuickCreate: (stageId: string, stage: OpportunityStage) => void;
-}
-
-function KanbanColumn({ stage, opportunities, onDrop, onPriorityChange, onQuickCreate }: KanbanColumnProps) {
+}) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickName, setQuickName] = useState('');
+  const [quickRevenue, setQuickRevenue] = useState('');
   const totalValue = opportunities.reduce((sum, o) => sum + o.expectedRevenue, 0);
   const stageMap: Record<string, OpportunityStage> = {
     new: 'new', qualified: 'qualified', proposition: 'proposition', won: 'won',
   };
 
+  const handleQuickAdd = () => {
+    if (quickName.trim()) {
+      onQuickCreate(stage.id, stageMap[stage.id] || 'new');
+    }
+  };
+
   return (
     <div
       className={cn(
-        'w-[280px] md:w-[300px] flex flex-col rounded-t-md shrink-0 transition-all',
-        isDragOver && 'ring-2 ring-primary/30 bg-primary/5'
+        'w-[272px] flex flex-col shrink-0 transition-all rounded-sm',
+        isDragOver && 'bg-primary/5'
       )}
       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
       onDragLeave={() => setIsDragOver(false)}
@@ -219,27 +240,39 @@ function KanbanColumn({ stage, opportunities, onDrop, onPriorityChange, onQuickC
         if (oppId) onDrop(oppId, stage.id, stageMap[stage.id] || 'new');
       }}
     >
-      {/* Column header - Odoo-style */}
-      <div className="px-3 py-2.5 bg-muted/50 rounded-t-md border-b border-border">
+      {/* Column header — Odoo style */}
+      <div
+        className="px-2 py-2 rounded-t-sm"
+        style={{ borderTop: `3px solid ${stage.color}` }}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-foreground">{stage.name}</h3>
+          <span className="font-bold text-[13px] text-foreground tracking-tight">{stage.name}</span>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => onQuickCreate(stage.id, stageMap[stage.id] || 'new')}
-              className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-            <span className="text-xs font-medium text-muted-foreground ml-1">
-              {totalValue > 0 && `${(totalValue / 1000).toFixed(0)}k`}
-            </span>
+            {totalValue > 0 && (
+              <span className="text-xs text-muted-foreground font-medium">
+                ${(totalValue / 1000).toFixed(0)}k
+              </span>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem>Fold</DropdownMenuItem>
+                <DropdownMenuItem>Edit Stage</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-        <RevenueBar opportunities={opportunities} stage={stage} />
+        <RevenueBar opportunities={opportunities} />
       </div>
 
-      {/* Cards */}
-      <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5 min-h-[200px] bg-muted/20">
+      {/* Cards area */}
+      <div className="flex-1 overflow-y-auto px-1 pb-1 space-y-1 min-h-[120px]">
         {opportunities.map((opp) => (
           <KanbanCard
             key={opp.id}
@@ -247,34 +280,46 @@ function KanbanColumn({ stage, opportunities, onDrop, onPriorityChange, onQuickC
             onPriorityChange={(p) => onPriorityChange(opp.id, p)}
           />
         ))}
-        {opportunities.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground/50 text-sm">
-            No opportunities
+
+        {/* Quick add inline — Odoo style */}
+        {showQuickAdd ? (
+          <div className="bg-card border border-border rounded p-2 space-y-1.5">
+            <Input
+              placeholder="Opportunity..."
+              className="h-7 text-xs"
+              value={quickName}
+              onChange={(e) => setQuickName(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleQuickAdd();
+                if (e.key === 'Escape') { setShowQuickAdd(false); setQuickName(''); setQuickRevenue(''); }
+              }}
+            />
+            <div className="flex items-center gap-1">
+              <Input
+                placeholder="Expected Revenue"
+                className="h-7 text-xs flex-1"
+                type="number"
+                value={quickRevenue}
+                onChange={(e) => setQuickRevenue(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-1 pt-0.5">
+              <Button size="sm" className="h-6 text-xs px-2" onClick={handleQuickAdd}>Add</Button>
+              <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => { setShowQuickAdd(false); setQuickName(''); setQuickRevenue(''); }}>
+                Discard
+              </Button>
+            </div>
           </div>
+        ) : (
+          <button
+            onClick={() => setShowQuickAdd(true)}
+            className="w-full text-xs text-muted-foreground hover:text-foreground py-2 flex items-center justify-center gap-1 hover:bg-muted/30 rounded transition-colors"
+          >
+            <Plus className="h-3 w-3" /> Quick add
+          </button>
         )}
       </div>
-    </div>
-  );
-}
-
-// Quick create inline form
-function QuickCreateForm({ onSubmit, onCancel }: { onSubmit: (name: string, companyName: string, revenue: number) => void; onCancel: () => void }) {
-  const [name, setName] = useState('');
-  const [company, setCompany] = useState('');
-  const [revenue, setRevenue] = useState('');
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80" onClick={onCancel}>
-      <Card className="p-4 w-[360px] space-y-3 shadow-lg" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-semibold text-sm">New Opportunity</h3>
-        <Input placeholder="Opportunity name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-        <Input placeholder="Company name" value={company} onChange={(e) => setCompany(e.target.value)} />
-        <Input placeholder="Expected Revenue" type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} />
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-          <Button size="sm" onClick={() => { if (name) onSubmit(name, company, parseFloat(revenue) || 0); }}>Add</Button>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -289,13 +334,12 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const navigate = useNavigate();
   const { toast } = useToast();
   const { canCreateOpportunities, canEditOpportunities } = useCRMPermissions();
-  
+
   const [opportunities, setOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const [pipeline] = useState<Pipeline>(() => getDefaultPipeline());
   const [search, setSearch] = useState('');
-  const [quickCreate, setQuickCreate] = useState<{ stageId: string; stage: OpportunityStage } | null>(null);
+  const [searchFilters, setSearchFilters] = useState<string[]>([]);
 
-  // Filter out lost opportunities from main kanban (they go to a separate archive)
   const activeStages = useMemo(() => pipeline.stages.filter(s => s.id !== 'lost'), [pipeline.stages]);
 
   const filteredOpportunities = useMemo(() => {
@@ -339,97 +383,140 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   );
 
   const handleQuickCreate = useCallback(
-    (name: string, companyName: string, revenue: number) => {
-      if (!quickCreate) return;
-      saveOpportunity({
-        name,
-        companyName,
-        contactName: '',
-        expectedRevenue: revenue,
-        stageId: quickCreate.stageId,
-        stage: quickCreate.stage,
-      });
-      setOpportunities(getOpportunities());
-      setQuickCreate(null);
-      toast({ title: 'Opportunity created' });
+    (stageId: string, stage: OpportunityStage) => {
+      // This triggers the main dialog via parent
+      onNewOpportunity?.();
     },
-    [quickCreate, toast]
+    [onNewOpportunity]
   );
 
   return (
     <div className="h-full flex flex-col">
-      {/* Odoo-style toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 pt-4 pb-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={onNewOpportunity}
-            className="gap-1"
-            disabled={!canCreateOpportunities}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-                Opportunities <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => navigate('/crm/pipeline')}>
-                My Pipeline
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/crm/pipeline')}>
-                All Opportunities
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Search with filter tags (Odoo-style) */}
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="pl-8 h-8 w-48 md:w-56 text-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      {/* Odoo-style control panel / toolbar */}
+      <div className="border-b border-border bg-card px-4 py-2">
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: breadcrumb + new */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={onNewOpportunity}
+              className="gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 text-xs font-semibold"
+              disabled={!canCreateOpportunities}
+            >
+              New
+            </Button>
+            <div className="h-4 w-px bg-border" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground h-8 text-xs">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  Filters <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem>My Pipeline</DropdownMenuItem>
+                <DropdownMenuItem>Unassigned</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Won</DropdownMenuItem>
+                <DropdownMenuItem>Lost</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Creation Date</DropdownMenuItem>
+                <DropdownMenuItem>Closing Date</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground h-8 text-xs">
+                  <Users className="h-3.5 w-3.5" />
+                  Group By <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem>Salesperson</DropdownMenuItem>
+                <DropdownMenuItem>Sales Team</DropdownMenuItem>
+                <DropdownMenuItem>Stage</DropdownMenuItem>
+                <DropdownMenuItem>City</DropdownMenuItem>
+                <DropdownMenuItem>Country</DropdownMenuItem>
+                <DropdownMenuItem>Lost Reason</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Creation Date</DropdownMenuItem>
+                <DropdownMenuItem>Closing Date</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground h-8 text-xs">
+                  <Star className="h-3.5 w-3.5" />
+                  Favorites <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem>Save current search</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>My Pipeline</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <Button variant="outline" size="sm" className="h-8 gap-1">
-            <Filter className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Filters</span>
-          </Button>
 
-          {/* View toggle */}
-          <div className="flex items-center border border-border rounded-md overflow-hidden">
-            <button
-              onClick={() => onViewChange?.('kanban')}
-              className={cn(
-                'h-8 w-8 flex items-center justify-center transition-colors',
-                view === 'kanban' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
-              )}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => onViewChange?.('list')}
-              className={cn(
-                'h-8 w-8 flex items-center justify-center transition-colors',
-                view === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
-              )}
-            >
-              <List className="h-3.5 w-3.5" />
-            </button>
+          {/* Right: search + views */}
+          <div className="flex items-center gap-2">
+            {/* Odoo search bar with filter chips */}
+            <div className="relative flex items-center border border-border rounded bg-card overflow-hidden">
+              {searchFilters.map((f, i) => (
+                <span key={i} className="flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 mx-0.5 rounded-sm font-medium">
+                  {f}
+                  <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => setSearchFilters(prev => prev.filter((_, idx) => idx !== i))} />
+                </span>
+              ))}
+              <Search className="h-3.5 w-3.5 text-muted-foreground ml-2" />
+              <input
+                placeholder="Search..."
+                className="h-7 w-40 text-xs bg-transparent border-0 outline-none px-1.5 placeholder:text-muted-foreground"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            {/* View toggle — Odoo style */}
+            <div className="flex items-center border border-border rounded overflow-hidden">
+              <button
+                onClick={() => onViewChange?.('list')}
+                className={cn(
+                  'h-7 w-7 flex items-center justify-center transition-colors',
+                  view === 'list' ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground'
+                )}
+              >
+                <List className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => onViewChange?.('kanban')}
+                className={cn(
+                  'h-7 w-7 flex items-center justify-center transition-colors',
+                  view === 'kanban' ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground'
+                )}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="h-7 w-7 flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
+                title="Pivot"
+              >
+                <BarChart3 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="h-7 w-7 flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
+                title="Activity"
+              >
+                <Activity className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Kanban board */}
-      <div className="flex-1 overflow-x-auto px-4 pb-4 pt-2">
-        <div className="flex gap-2 h-full min-w-max">
+      <div className="flex-1 overflow-x-auto px-3 pb-3 pt-2 bg-muted/20">
+        <div className="flex gap-1.5 h-full min-w-max">
           {activeStages.map((stage) => (
             <KanbanColumn
               key={stage.id}
@@ -437,21 +524,11 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
               opportunities={opportunitiesByStage[stage.id] || []}
               onDrop={handleDrop}
               onPriorityChange={handlePriorityChange}
-              onQuickCreate={(stageId, stageType) => setQuickCreate({ stageId, stage: stageType })}
+              onQuickCreate={handleQuickCreate}
             />
           ))}
         </div>
       </div>
-
-      {/* Quick create modal */}
-      {quickCreate && (
-        <QuickCreateForm
-          onSubmit={handleQuickCreate}
-          onCancel={() => setQuickCreate(null)}
-        />
-      )}
     </div>
   );
 }
-
-export { StarRating };

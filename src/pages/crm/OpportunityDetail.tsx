@@ -1,4 +1,4 @@
-// Odoo-style Opportunity Detail Form
+// Odoo-style Opportunity Detail Form — pixel-perfect replica
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -36,6 +36,9 @@ import {
   Clock,
   MessageSquare,
   Send,
+  Pencil,
+  CalendarClock,
+  ChevronRight,
 } from 'lucide-react';
 import {
   getOpportunity,
@@ -67,20 +70,15 @@ export default function OpportunityDetail() {
     id ? getOpportunity(id) : undefined
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<Partial<Opportunity>>({});
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [newNote, setNewNote] = useState('');
   const [newLogMessage, setNewLogMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('internal');
 
-  const activities = useMemo(() =>
-    id ? getActivities('opportunity', id) : [],
-    [id]
-  );
-
-  const notes = useMemo(() =>
-    id ? getNotes('opportunity', id) : [],
-    [id]
-  );
+  const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id]);
+  const notes = useMemo(() => id ? getNotes('opportunity', id) : [], [id]);
 
   if (!opportunity) {
     return (
@@ -123,10 +121,11 @@ export default function OpportunityDetail() {
     toast({ title: 'Opportunity marked as lost' });
   };
 
-  const handleSave = (updates: Partial<Opportunity>) => {
-    saveOpportunity({ ...opportunity, ...updates });
+  const handleSave = () => {
+    saveOpportunity({ ...opportunity, ...editData });
     setOpportunity(getOpportunity(opportunity.id));
     setIsEditing(false);
+    setEditData({});
     toast({ title: 'Opportunity updated' });
   };
 
@@ -165,336 +164,421 @@ export default function OpportunityDetail() {
 
   return (
     <AppLayout title="CRM" moduleNav={CRM_NAV}>
-      <div className="p-4 md:p-6 space-y-4 max-w-5xl mx-auto">
-        {/* Top bar: back, actions */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/crm/pipeline')}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">{opportunity.name}</h1>
-              {opportunity.companyName && (
-                <p className="text-sm text-muted-foreground">{opportunity.companyName}</p>
+      <div className="flex flex-col h-full">
+        {/* Top control panel — Odoo style */}
+        <div className="border-b border-border bg-card px-4 py-2 shrink-0">
+          <div className="flex items-center justify-between">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-sm">
+              <button
+                onClick={() => navigate('/crm/pipeline')}
+                className="text-primary hover:underline font-medium"
+              >
+                Pipeline
+              </button>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-foreground font-medium">{opportunity.name}</span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              {!isWon && !isLost && (
+                <>
+                  {isEditing ? (
+                    <>
+                      <Button size="sm" className="h-7 text-xs" onClick={handleSave}>Save</Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setIsEditing(false); setEditData({}); }}>Discard</Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => setIsEditing(true)}>
+                      <Pencil className="h-3 w-3" /> Edit
+                    </Button>
+                  )}
+                  <div className="h-4 w-px bg-border" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-[#00A09D] border-[#00A09D]/30 hover:bg-[#00A09D]/10"
+                    onClick={handleWon}
+                  >
+                    <Trophy className="h-3 w-3" />
+                    Won
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={() => setShowLostDialog(true)}
+                  >
+                    <XCircle className="h-3 w-3" />
+                    Lost
+                  </Button>
+                </>
+              )}
+              {(isWon || isLost) && (
+                <Badge className={cn(
+                  'text-xs px-2.5 py-0.5',
+                  isWon ? 'bg-[#00A09D] text-white' : 'bg-destructive text-destructive-foreground'
+                )}>
+                  {isWon ? '🏆 Won' : '❌ Lost'}
+                </Badge>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {!isWon && !isLost && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950"
-                  onClick={handleWon}
-                >
-                  <Trophy className="h-3.5 w-3.5" />
-                  Won
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={() => setShowLostDialog(true)}
-                >
-                  <XCircle className="h-3.5 w-3.5" />
-                  Lost
-                </Button>
-              </>
-            )}
-            {(isWon || isLost) && (
-              <Badge className={cn(
-                'text-sm px-3 py-1',
-                isWon ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              )}>
-                {isWon ? '🏆 Won' : '❌ Lost'}
-              </Badge>
-            )}
-          </div>
         </div>
 
-        {/* Stage progress bar (Odoo-style clickable stages) */}
-        {!isLost && (
-          <div className="flex items-center gap-0 bg-muted/50 rounded-lg overflow-hidden border border-border">
-            {activeStages.map((stage, index) => {
-              const isActive = stage.id === opportunity.stageId;
-              const isPast = index < currentStageIndex;
-              const isFuture = index > currentStageIndex;
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
+            {/* Odoo-style Chevron Stage Bar */}
+            {!isLost && (
+              <div className="flex items-stretch overflow-hidden">
+                {activeStages.map((stage, index) => {
+                  const isActive = stage.id === opportunity.stageId;
+                  const isPast = index < currentStageIndex;
+                  const isLast = index === activeStages.length - 1;
 
-              return (
-                <button
-                  key={stage.id}
-                  onClick={() => handleStageClick(stage.id)}
-                  className={cn(
-                    'flex-1 py-2 px-3 text-xs font-medium text-center transition-all relative',
-                    'border-r border-border last:border-r-0',
-                    isActive && 'bg-primary text-primary-foreground',
-                    isPast && 'bg-primary/20 text-primary',
-                    isFuture && 'text-muted-foreground hover:bg-muted',
-                  )}
-                >
-                  {stage.name}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Main form */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left: form fields */}
-          <Card className="lg:col-span-2 p-4 md:p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Contact */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Contact Name</Label>
-                {isEditing ? (
-                  <Input defaultValue={opportunity.contactName} onChange={(e) => handleSave({ contactName: e.target.value })} />
-                ) : (
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
-                    {opportunity.contactName || '—'}
-                  </div>
-                )}
+                  return (
+                    <button
+                      key={stage.id}
+                      onClick={() => handleStageClick(stage.id)}
+                      className={cn(
+                        'relative flex-1 py-1.5 text-center text-xs font-semibold transition-all',
+                        'clip-chevron',
+                        isActive && 'bg-primary text-primary-foreground z-10',
+                        isPast && 'bg-primary/20 text-primary',
+                        !isActive && !isPast && 'bg-muted/60 text-muted-foreground hover:bg-muted',
+                      )}
+                      style={{
+                        clipPath: isLast
+                          ? 'polygon(0 0, calc(100% - 0px) 0, 100% 50%, calc(100% - 0px) 100%, 0 100%, 12px 50%)'
+                          : index === 0
+                            ? 'polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%)'
+                            : 'polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%)',
+                      }}
+                    >
+                      {stage.name}
+                    </button>
+                  );
+                })}
               </div>
+            )}
 
-              {/* Email */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Email</Label>
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                  {opportunity.email ? (
-                    <a href={`mailto:${opportunity.email}`} className="text-primary hover:underline">{opportunity.email}</a>
-                  ) : '—'}
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Phone</Label>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                  {opportunity.phone || '—'}
-                </div>
-              </div>
-
-              {/* Company */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Company</Label>
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Building className="h-3.5 w-3.5 text-muted-foreground" />
-                  {opportunity.companyName || '—'}
-                </div>
-              </div>
-
-              {/* Expected Revenue */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Expected Revenue</Label>
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                  {opportunity.expectedRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-
-              {/* Probability */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Probability</Label>
-                <p className="text-sm font-medium">{opportunity.probability}%</p>
-              </div>
-
-              {/* Close Date */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Expected Closing</Label>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                  {format(parseISO(opportunity.expectedCloseDate), 'MMM d, yyyy')}
-                </div>
-              </div>
-
-              {/* Priority */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Priority</Label>
+            {/* Main form — Odoo 2-column layout */}
+            <div className="bg-card border border-border rounded-sm p-5">
+              {/* Title */}
+              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border">
                 <StarRating
                   value={opportunity.priority}
-                  onChange={(p) => handleSave({ priority: p as 0 | 1 | 2 | 3 })}
+                  onChange={(p) => {
+                    saveOpportunity({ ...opportunity, priority: p as 0 | 1 | 2 | 3 });
+                    setOpportunity(getOpportunity(opportunity.id));
+                  }}
                 />
+                <h1 className="text-xl font-bold text-foreground flex-1">{opportunity.name}</h1>
+                {opportunity.tags.map(tag => (
+                  <Badge key={tag} variant="secondary" className="text-[10px] font-medium">{tag}</Badge>
+                ))}
+              </div>
+
+              {/* Two-column form fields — Odoo style */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                {/* Left column */}
+                <FormField label="Contact Name" icon={User}>
+                  {isEditing ? (
+                    <Input defaultValue={opportunity.contactName} className="h-8 text-sm" onChange={e => setEditData({...editData, contactName: e.target.value})} />
+                  ) : (
+                    <span className="text-sm text-primary hover:underline cursor-pointer">{opportunity.contactName || '—'}</span>
+                  )}
+                </FormField>
+
+                <FormField label="Expected Revenue" icon={DollarSign}>
+                  {isEditing ? (
+                    <Input type="number" defaultValue={opportunity.expectedRevenue} className="h-8 text-sm" onChange={e => setEditData({...editData, expectedRevenue: parseFloat(e.target.value) || 0})} />
+                  ) : (
+                    <span className="text-sm font-semibold">${opportunity.expectedRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  )}
+                </FormField>
+
+                <FormField label="Email" icon={Mail}>
+                  {isEditing ? (
+                    <Input defaultValue={opportunity.email} className="h-8 text-sm" onChange={e => setEditData({...editData, email: e.target.value})} />
+                  ) : (
+                    opportunity.email ? <a href={`mailto:${opportunity.email}`} className="text-sm text-primary hover:underline">{opportunity.email}</a> : <span className="text-sm text-muted-foreground">—</span>
+                  )}
+                </FormField>
+
+                <FormField label="Probability" icon={BarChart3Icon}>
+                  {isEditing ? (
+                    <Input type="number" defaultValue={opportunity.probability} className="h-8 text-sm w-20" onChange={e => setEditData({...editData, probability: parseInt(e.target.value) || 0})} />
+                  ) : (
+                    <span className="text-sm">{opportunity.probability} %</span>
+                  )}
+                </FormField>
+
+                <FormField label="Phone" icon={Phone}>
+                  {isEditing ? (
+                    <Input defaultValue={opportunity.phone} className="h-8 text-sm" onChange={e => setEditData({...editData, phone: e.target.value})} />
+                  ) : (
+                    <span className="text-sm">{opportunity.phone || '—'}</span>
+                  )}
+                </FormField>
+
+                <FormField label="Expected Closing" icon={Calendar}>
+                  {isEditing ? (
+                    <Input type="date" defaultValue={opportunity.expectedCloseDate} className="h-8 text-sm" onChange={e => setEditData({...editData, expectedCloseDate: e.target.value})} />
+                  ) : (
+                    <span className="text-sm">{format(parseISO(opportunity.expectedCloseDate), 'MM/dd/yyyy')}</span>
+                  )}
+                </FormField>
+
+                <FormField label="Company" icon={Building}>
+                  {isEditing ? (
+                    <Input defaultValue={opportunity.companyName} className="h-8 text-sm" onChange={e => setEditData({...editData, companyName: e.target.value})} />
+                  ) : (
+                    <span className="text-sm text-primary hover:underline cursor-pointer">{opportunity.companyName || '—'}</span>
+                  )}
+                </FormField>
+
+                <FormField label="Salesperson" icon={User}>
+                  {isEditing ? (
+                    <Input defaultValue={opportunity.assignedTo} className="h-8 text-sm" onChange={e => setEditData({...editData, assignedTo: e.target.value})} />
+                  ) : (
+                    <span className="text-sm">{opportunity.assignedTo || '—'}</span>
+                  )}
+                </FormField>
+
+                <div /> {/* spacer */}
+
+                <FormField label="Sales Team" icon={Users}>
+                  {isEditing ? (
+                    <Input defaultValue={opportunity.salesTeam} className="h-8 text-sm" onChange={e => setEditData({...editData, salesTeam: e.target.value})} />
+                  ) : (
+                    <span className="text-sm">{opportunity.salesTeam || '—'}</span>
+                  )}
+                </FormField>
               </div>
             </div>
 
-            {/* Tags */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Tags</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {opportunity.tags.length > 0 ? opportunity.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                )) : (
-                  <span className="text-xs text-muted-foreground">No tags</span>
+            {/* Notebook tabs — Odoo style */}
+            <div className="bg-card border border-border rounded-sm">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <div className="border-b border-border">
+                  <TabsList className="bg-transparent h-auto p-0 rounded-none">
+                    <TabsTrigger
+                      value="internal"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-xs font-semibold"
+                    >
+                      Internal Notes
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="extra"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-xs font-semibold"
+                    >
+                      Extra Info
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="internal" className="p-4 mt-0">
+                  {isEditing ? (
+                    <Textarea
+                      placeholder="Internal notes..."
+                      defaultValue={opportunity.internalNotes}
+                      className="min-h-[80px] text-sm"
+                      onChange={e => setEditData({...editData, internalNotes: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {opportunity.internalNotes || 'No internal notes yet.'}
+                    </p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="extra" className="p-4 mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                    <FormField label="Created on">
+                      <span className="text-sm">{format(parseISO(opportunity.createdAt), 'MM/dd/yyyy HH:mm:ss')}</span>
+                    </FormField>
+                    <FormField label="Last Updated">
+                      <span className="text-sm">{format(parseISO(opportunity.updatedAt), 'MM/dd/yyyy HH:mm:ss')}</span>
+                    </FormField>
+                    {isWon && opportunity.wonAt && (
+                      <FormField label="Won on">
+                        <span className="text-sm">{format(parseISO(opportunity.wonAt), 'MM/dd/yyyy HH:mm:ss')}</span>
+                      </FormField>
+                    )}
+                    {isLost && opportunity.lostAt && (
+                      <>
+                        <FormField label="Lost on">
+                          <span className="text-sm">{format(parseISO(opportunity.lostAt), 'MM/dd/yyyy HH:mm:ss')}</span>
+                        </FormField>
+                        <FormField label="Lost Reason">
+                          <span className="text-sm text-destructive">{opportunity.lostReason || '—'}</span>
+                        </FormField>
+                      </>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Chatter — Odoo style */}
+            <div className="bg-card border border-border rounded-sm p-4">
+              {/* Chatter action buttons */}
+              <div className="flex items-center gap-2 mb-4">
+                <Button
+                  variant={newNote !== '' || (newLogMessage === '' && newNote === '') ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs gap-1"
+                  onClick={() => setNewLogMessage('')}
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  Send message
+                </Button>
+                <Button
+                  variant={newLogMessage !== '' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs gap-1"
+                  onClick={() => setNewNote('')}
+                >
+                  <Clock className="h-3 w-3" />
+                  Log note
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1"
+                >
+                  <CalendarClock className="h-3 w-3" />
+                  Activities
+                </Button>
+              </div>
+
+              {/* Compose area */}
+              <div className="flex gap-3 mb-4">
+                <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                  Y
+                </div>
+                <div className="flex-1">
+                  <Textarea
+                    placeholder="Write a note..."
+                    value={newNote || newLogMessage}
+                    onChange={(e) => {
+                      if (newLogMessage !== '') setNewLogMessage(e.target.value);
+                      else setNewNote(e.target.value);
+                    }}
+                    className="min-h-[50px] text-sm border-border"
+                  />
+                  <div className="flex justify-end mt-1.5">
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      disabled={!(newNote || newLogMessage).trim()}
+                      onClick={() => {
+                        if (newLogMessage) handleLogMessage();
+                        else handleSendNote();
+                      }}
+                    >
+                      <Send className="h-3 w-3 mr-1" />
+                      {newLogMessage ? 'Log' : 'Send'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="space-y-3 border-t border-border pt-4">
+                {[...notes, ...activities.filter(a => a.completed)]
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .slice(0, 10)
+                  .map((item) => {
+                    const isNoteItem = 'content' in item;
+                    return (
+                      <div key={item.id} className="flex gap-3">
+                        <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0 text-muted-foreground">
+                          {isNoteItem ? '📝' : '📋'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="font-semibold text-foreground">{(item as any).userName || 'System'}</span>
+                            <span className="text-muted-foreground">{format(parseISO(item.createdAt), 'MM/dd/yyyy HH:mm:ss')}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {isNoteItem ? (item as Note).content : (item as Activity).subject}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                {notes.length === 0 && activities.filter(a => a.completed).length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">No messages yet.</p>
                 )}
               </div>
             </div>
-
-            {/* Salesperson */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Salesperson</Label>
-                <p className="text-sm">{opportunity.assignedTo || '—'}</p>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Sales Team</Label>
-                <p className="text-sm">{opportunity.salesTeam || '—'}</p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Right: quick info */}
-          <div className="space-y-4">
-            <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm">Summary</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Stage</span>
-                  <span className="font-medium capitalize">{opportunity.stage}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Revenue</span>
-                  <span className="font-semibold">${opportunity.expectedRevenue.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Probability</span>
-                  <span>{opportunity.probability}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Weighted</span>
-                  <span>${Math.round(opportunity.expectedRevenue * opportunity.probability / 100).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Created</span>
-                  <span>{format(parseISO(opportunity.createdAt), 'MMM d, yyyy')}</span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Schedule activity */}
-            <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" /> Activities
-              </h3>
-              {activities.filter(a => !a.completed).length > 0 ? (
-                <div className="space-y-2">
-                  {activities.filter(a => !a.completed).slice(0, 3).map(a => (
-                    <div key={a.id} className="text-xs p-2 bg-muted/50 rounded">
-                      <p className="font-medium">{a.subject}</p>
-                      {a.dueDate && <p className="text-muted-foreground mt-0.5">Due {format(parseISO(a.dueDate), 'MMM d')}</p>}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">No pending activities</p>
-              )}
-            </Card>
           </div>
         </div>
-
-        {/* Bottom: Chatter (Odoo-style tabs) */}
-        <Card className="p-4">
-          <Tabs defaultValue="notes">
-            <TabsList className="mb-3">
-              <TabsTrigger value="notes" className="gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5" />
-                Send message
-              </TabsTrigger>
-              <TabsTrigger value="log" className="gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                Log note
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="notes">
-              <div className="flex gap-2">
-                <Textarea
-                  placeholder="Write a message..."
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  className="min-h-[60px] text-sm"
-                />
-                <Button size="icon" onClick={handleSendNote} disabled={!newNote.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="log">
-              <div className="flex gap-2">
-                <Textarea
-                  placeholder="Log an internal note..."
-                  value={newLogMessage}
-                  onChange={(e) => setNewLogMessage(e.target.value)}
-                  className="min-h-[60px] text-sm"
-                />
-                <Button size="icon" onClick={handleLogMessage} disabled={!newLogMessage.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          {/* Activity/Notes timeline */}
-          <div className="mt-4 space-y-3 border-t border-border pt-4">
-            {[...notes, ...activities.filter(a => a.completed)]
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-              .slice(0, 10)
-              .map((item) => {
-                const isNote = 'content' in item;
-                return (
-                  <div key={item.id} className="flex gap-3 text-sm">
-                    <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
-                      {isNote ? 'N' : 'A'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{(item as any).userName || 'System'}</span>
-                        <span className="text-xs text-muted-foreground">{format(parseISO(item.createdAt), 'MMM d, h:mm a')}</span>
-                      </div>
-                      <p className="text-muted-foreground mt-0.5">
-                        {isNote ? (item as Note).content : (item as Activity).subject}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </Card>
       </div>
 
       {/* Lost reason dialog */}
       <Dialog open={showLostDialog} onOpenChange={setShowLostDialog}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Mark as Lost</DialogTitle>
+            <DialogTitle>Lost Reason</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <Label>Lost Reason</Label>
+            <Label className="text-xs font-semibold">Why was this opportunity lost?</Label>
             <Select value={lostReason} onValueChange={setLostReason}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select reason..." />
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Select a lost reason..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Too expensive">Too expensive</SelectItem>
-                <SelectItem value="No budget">No budget</SelectItem>
-                <SelectItem value="Competitor won">Competitor won</SelectItem>
-                <SelectItem value="No decision">No decision</SelectItem>
-                <SelectItem value="Not interested">Not interested</SelectItem>
+                <SelectItem value="We don't have people/skills">We don't have people/skills</SelectItem>
+                <SelectItem value="Not enough direct benefit">Not enough direct benefit</SelectItem>
+                <SelectItem value="Customer not interested">Customer not interested</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowLostDialog(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleLost}>Mark as Lost</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowLostDialog(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={handleLost}>Mark as Lost</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppLayout>
+  );
+}
+
+// Helper: Odoo-style form field row
+function FormField({ label, icon: Icon, children }: { label: string; icon?: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <label className="text-xs font-semibold text-muted-foreground w-32 shrink-0 text-right">
+        {label}
+      </label>
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Inline icon component
+function BarChart3Icon(props: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+    </svg>
+  );
+}
+
+function Users(props: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
   );
 }
