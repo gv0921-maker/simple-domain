@@ -234,7 +234,7 @@ export function CRMDashboard() {
             <SimpleBarChart data={pipelineChartData} height={180} />
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
               {opportunitiesByStage
-                .filter((s) => !s.stageId.startsWith('closed'))
+                .filter((s) => s.stageId !== 'lost')
                 .map((stage) => (
                   <div key={stage.stageId} className="flex justify-between">
                     <span className="text-muted-foreground">{stage.stage}</span>
