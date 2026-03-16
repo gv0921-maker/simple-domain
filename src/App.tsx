@@ -425,8 +425,6 @@ const App = () => (
             <Route path="/manufacturing/work-centers" element={<ProtectedRoute><WorkCenters /></ProtectedRoute>} />
             <Route path="/manufacturing/planning" element={<ProtectedRoute><ProductionPlanning /></ProtectedRoute>} />
             <Route path="/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
-            <Route path="/plm" element={<ProtectedRoute><PLMOverview /></ProtectedRoute>} />
-            <Route path="/plm/*" element={<ProtectedRoute><PLMOverview /></ProtectedRoute>} />
 
             {/* Accounting module */}
             <Route path="/accounting" element={<ProtectedRoute><AccountingOverview /></ProtectedRoute>} />
