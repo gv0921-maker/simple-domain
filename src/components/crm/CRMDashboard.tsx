@@ -75,7 +75,7 @@ export function CRMDashboard() {
 
   const upcomingDeals = useMemo(() => {
     return opportunities
-      .filter((o) => !o.stage.startsWith('closed'))
+      .filter((o) => o.stage !== 'won' && o.stage !== 'lost')
       .sort((a, b) => new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime())
       .slice(0, 5);
   }, [opportunities]);
