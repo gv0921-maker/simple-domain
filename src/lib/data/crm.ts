@@ -9,7 +9,7 @@ export type ContactStatus = 'active' | 'archived';
 export type LeadSource = 'website' | 'referral' | 'social_media' | 'trade_show' | 'cold_call' | 'email_campaign' | 'import' | 'manual' | 'other';
 export type LeadPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted' | 'lost';
-export type OpportunityStage = 'qualification' | 'needs_analysis' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
+export type OpportunityStage = 'new' | 'qualified' | 'proposition' | 'won' | 'lost';
 export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note' | 'follow_up';
 export type NoteVisibility = 'private' | 'team' | 'public';
 
@@ -130,17 +130,22 @@ export interface Opportunity {
   contactName: string;
   companyId?: string;
   companyName?: string;
+  email?: string;
+  phone?: string;
   pipelineId: string;
   stageId: string;
   stage: OpportunityStage;
   expectedRevenue: number;
   probability: number;
+  priority: 0 | 1 | 2 | 3; // star rating (0=none, 1-3 stars like Odoo)
   expectedCloseDate: string;
   assignedTo?: string;
+  salesTeam?: string;
   teamId?: string;
   products: OpportunityProduct[];
   tags: string[];
   notes?: string;
+  internalNotes?: string;
   lostReason?: string;
   wonAt?: string;
   lostAt?: string;
@@ -195,12 +200,10 @@ const DEFAULT_PIPELINES: Pipeline[] = [
     description: 'Standard sales pipeline for all opportunities',
     isDefault: true,
     stages: [
-      { id: 'qual', pipelineId: 'default', name: 'Qualification', order: 1, probability: 10, color: 'hsl(var(--info))' },
-      { id: 'needs', pipelineId: 'default', name: 'Needs Analysis', order: 2, probability: 25, color: 'hsl(var(--accent))' },
-      { id: 'proposal', pipelineId: 'default', name: 'Proposal', order: 3, probability: 50, color: 'hsl(var(--warning))' },
-      { id: 'nego', pipelineId: 'default', name: 'Negotiation', order: 4, probability: 75, color: 'hsl(var(--chart-orange))' },
-      { id: 'closed_won', pipelineId: 'default', name: 'Closed Won', order: 5, probability: 100, color: 'hsl(var(--success))' },
-      { id: 'closed_lost', pipelineId: 'default', name: 'Closed Lost', order: 6, probability: 0, color: 'hsl(var(--destructive))' },
+      { id: 'new', pipelineId: 'default', name: 'New', order: 1, probability: 10, color: 'hsl(210, 70%, 55%)' },
+      { id: 'qualified', pipelineId: 'default', name: 'Qualified', order: 2, probability: 30, color: 'hsl(174, 60%, 45%)' },
+      { id: 'proposition', pipelineId: 'default', name: 'Proposition', order: 3, probability: 60, color: 'hsl(38, 90%, 55%)' },
+      { id: 'won', pipelineId: 'default', name: 'Won', order: 4, probability: 100, color: 'hsl(142, 60%, 45%)' },
     ],
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-01T00:00:00Z',
@@ -398,62 +401,164 @@ const DEFAULT_LEADS: Lead[] = [
 const DEFAULT_OPPORTUNITIES: Opportunity[] = [
   {
     id: 'o1',
-    name: 'Acme Corp - Q1 Furniture Order',
+    name: 'Office Design Project',
     contactId: '1',
     contactName: 'John Smith',
+    email: 'john.smith@acme.example.com',
+    phone: '+1 555-0123',
     companyId: 'c1',
     companyName: 'Acme Corporation',
     pipelineId: 'default',
-    stageId: 'proposal',
-    stage: 'proposal',
-    expectedRevenue: 45000,
-    probability: 50,
+    stageId: 'new',
+    stage: 'new',
+    expectedRevenue: 24000,
+    probability: 10,
+    priority: 2,
     expectedCloseDate: '2025-02-28',
     assignedTo: 'Sales Manager',
-    products: [
-      { id: 'p1', productId: '2', productName: 'Wooden Chair - Oak', quantity: 20, unitPrice: 4999, discount: 10, total: 89982 },
-      { id: 'p2', productId: '3', productName: 'Office Desk - Modern', quantity: 10, unitPrice: 15999, discount: 15, total: 135991.5 },
-    ],
-    tags: ['Priority', 'Q1'],
+    salesTeam: 'Pre-Sales',
+    products: [],
+    tags: ['Design'],
     createdAt: '2025-01-08T10:00:00Z',
     updatedAt: '2025-01-26T14:00:00Z',
   },
   {
     id: 'o2',
-    name: 'TechStart Office Redesign',
+    name: 'Quote for 150 carpets',
     contactId: '2',
     contactName: 'Sarah Johnson',
+    email: 'sarah.j@techstart.example.io',
     companyId: 'c2',
     companyName: 'TechStart Inc',
     pipelineId: 'default',
-    stageId: 'needs',
-    stage: 'needs_analysis',
-    expectedRevenue: 28000,
-    probability: 25,
+    stageId: 'new',
+    stage: 'new',
+    expectedRevenue: 40000,
+    probability: 10,
+    priority: 1,
     expectedCloseDate: '2025-03-15',
+    salesTeam: 'Pre-Sales',
     products: [],
-    tags: ['Startup'],
+    tags: ['Product'],
     createdAt: '2025-01-16T09:00:00Z',
     updatedAt: '2025-01-23T11:00:00Z',
   },
   {
     id: 'o3',
-    name: 'Global Retail - Store Fixtures',
+    name: 'Interest in your products',
     contactId: '3',
     contactName: 'Michael Chen',
+    email: 'mchen@globalretail.example.com',
+    phone: '+1 555-0789',
     companyId: 'c3',
-    companyName: 'Global Retail Group',
+    companyName: 'The Jackson Group',
     pipelineId: 'default',
-    stageId: 'nego',
-    stage: 'negotiation',
-    expectedRevenue: 125000,
-    probability: 75,
+    stageId: 'qualified',
+    stage: 'qualified',
+    expectedRevenue: 2000,
+    probability: 30,
+    priority: 2,
     expectedCloseDate: '2025-02-15',
     assignedTo: 'Sales Manager',
+    salesTeam: 'Pre-Sales',
     products: [],
-    tags: ['Enterprise', 'Priority'],
+    tags: ['Product', 'Information'],
     createdAt: '2025-01-10T08:00:00Z',
     updatedAt: '2025-01-27T10:00:00Z',
+  },
+  {
+    id: 'o4',
+    name: 'DeltaPC: 10 Computer Desks',
+    contactName: 'Lisa Brown',
+    email: 'lisa@deltapc.example.com',
+    companyName: 'DeltaPC',
+    pipelineId: 'default',
+    stageId: 'qualified',
+    stage: 'qualified',
+    expectedRevenue: 35000,
+    probability: 30,
+    priority: 1,
+    expectedCloseDate: '2025-03-20',
+    salesTeam: 'Sales',
+    products: [],
+    tags: ['Information', 'Training'],
+    createdAt: '2025-01-12T09:00:00Z',
+    updatedAt: '2025-01-24T11:00:00Z',
+  },
+  {
+    id: 'o5',
+    name: 'Open Space Design',
+    contactName: 'Robert Wilson',
+    email: 'rwilson@deco.example.com',
+    companyName: 'Deco Addict',
+    pipelineId: 'default',
+    stageId: 'proposition',
+    stage: 'proposition',
+    expectedRevenue: 11000,
+    probability: 60,
+    priority: 3,
+    expectedCloseDate: '2025-02-20',
+    assignedTo: 'Sales Manager',
+    salesTeam: 'Pre-Sales',
+    products: [],
+    tags: ['Design'],
+    createdAt: '2025-01-05T10:00:00Z',
+    updatedAt: '2025-01-25T16:00:00Z',
+  },
+  {
+    id: 'o6',
+    name: 'Office Design and Architecture',
+    contactName: 'James Anderson',
+    email: 'janderson@bigcorp.example.com',
+    companyName: 'Azure Interior',
+    pipelineId: 'default',
+    stageId: 'proposition',
+    stage: 'proposition',
+    expectedRevenue: 9000,
+    probability: 60,
+    priority: 2,
+    expectedCloseDate: '2025-03-01',
+    products: [],
+    tags: ['Design', 'Consulting'],
+    createdAt: '2025-01-20T11:00:00Z',
+    updatedAt: '2025-01-26T09:00:00Z',
+  },
+  {
+    id: 'o7',
+    name: 'Need 20 Desks',
+    contactName: 'Emily Davis',
+    email: 'emily@newstartup.example.com',
+    companyName: 'Ready Mat',
+    pipelineId: 'default',
+    stageId: 'qualified',
+    stage: 'qualified',
+    expectedRevenue: 60000,
+    probability: 30,
+    priority: 1,
+    expectedCloseDate: '2025-04-15',
+    products: [],
+    tags: ['Product', 'Consulting'],
+    createdAt: '2025-01-22T14:00:00Z',
+    updatedAt: '2025-01-28T09:00:00Z',
+  },
+  {
+    id: 'o8',
+    name: 'Distributor Contract',
+    contactName: 'Alex Thompson',
+    email: 'alex@gemini.example.com',
+    companyName: 'Gemini Furniture',
+    pipelineId: 'default',
+    stageId: 'won',
+    stage: 'won',
+    expectedRevenue: 19800,
+    probability: 100,
+    priority: 3,
+    expectedCloseDate: '2025-01-20',
+    wonAt: '2025-01-20T10:00:00Z',
+    products: [],
+    tags: ['Information', 'Other'],
+    createdAt: '2024-12-15T10:00:00Z',
+    updatedAt: '2025-01-20T10:00:00Z',
   },
 ];
 
@@ -771,8 +876,22 @@ export function savePipeline(pipeline: Partial<Pipeline> & { id?: string }): Pip
   return newPipeline;
 }
 
-// Opportunities
+// Force reset CRM data to new Odoo-style pipeline on version change
+const CRM_VERSION_KEY = 'crm_data_version';
+const CRM_CURRENT_VERSION = 2;
+
+function ensureCRMVersion() {
+  const stored = getItem<number>(CRM_VERSION_KEY, 0);
+  if (stored < CRM_CURRENT_VERSION) {
+    // Clear old CRM data to use new defaults
+    setItem('crm_opportunities', DEFAULT_OPPORTUNITIES);
+    setItem('crm_pipelines', DEFAULT_PIPELINES);
+    setItem(CRM_VERSION_KEY, CRM_CURRENT_VERSION);
+  }
+}
+
 export function getOpportunities(): Opportunity[] {
+  ensureCRMVersion();
   return getItem<Opportunity[]>('crm_opportunities', DEFAULT_OPPORTUNITIES);
 }
 
@@ -799,10 +918,11 @@ export function saveOpportunity(opp: Partial<Opportunity> & { id?: string }): Op
     name: opp.name || '',
     contactName: opp.contactName || '',
     pipelineId: defaultPipeline.id,
-    stageId: defaultPipeline.stages[0]?.id || 'qual',
-    stage: 'qualification',
+    stageId: defaultPipeline.stages[0]?.id || 'new',
+    stage: 'new',
     expectedRevenue: 0,
     probability: 10,
+    priority: 0,
     expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     products: [],
     tags: [],
@@ -821,10 +941,10 @@ export function updateOpportunityStage(id: string, stageId: string, stage: Oppor
   
   const updates: Partial<Opportunity> = { stageId, stage };
   
-  if (stage === 'closed_won') {
+  if (stage === 'won') {
     updates.wonAt = new Date().toISOString();
     updates.probability = 100;
-  } else if (stage === 'closed_lost') {
+  } else if (stage === 'lost') {
     updates.lostAt = new Date().toISOString();
     updates.probability = 0;
   }
@@ -999,9 +1119,9 @@ export function getCRMStats(): CRMStats {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   
-  const activeOpps = opportunities.filter(o => !o.stage.startsWith('closed'));
-  const wonOpps = opportunities.filter(o => o.stage === 'closed_won');
-  const lostOpps = opportunities.filter(o => o.stage === 'closed_lost');
+  const activeOpps = opportunities.filter(o => o.stage !== 'won' && o.stage !== 'lost');
+  const wonOpps = opportunities.filter(o => o.stage === 'won');
+  const lostOpps = opportunities.filter(o => o.stage === 'lost');
   const closedOpps = [...wonOpps, ...lostOpps];
   
   return {

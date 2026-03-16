@@ -75,7 +75,7 @@ export function CRMDashboard() {
 
   const upcomingDeals = useMemo(() => {
     return opportunities
-      .filter((o) => !o.stage.startsWith('closed'))
+      .filter((o) => o.stage !== 'won' && o.stage !== 'lost')
       .sort((a, b) => new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime())
       .slice(0, 5);
   }, [opportunities]);
@@ -96,13 +96,13 @@ export function CRMDashboard() {
 
   const pipelineChartData = useMemo(() => {
     const colors: Record<string, 'blue' | 'teal' | 'orange' | 'coral'> = {
-      qual: 'blue',
-      needs: 'teal',
-      proposal: 'orange',
-      nego: 'coral',
+      new: 'blue',
+      qualified: 'teal',
+      proposition: 'orange',
+      won: 'coral',
     };
     return opportunitiesByStage
-      .filter((s) => !s.stageId.startsWith('closed'))
+      .filter((s) => s.stageId !== 'lost')
       .map((stage) => ({
         value: stage.count,
         color: colors[stage.stageId] || 'blue',
@@ -219,7 +219,7 @@ export function CRMDashboard() {
           <CardContent>
             <div className="flex justify-center gap-4 mb-4">
               {opportunitiesByStage
-                .filter((s) => !s.stageId.startsWith('closed'))
+                .filter((s) => s.stageId !== 'lost')
                 .map((stage, i) => (
                   <div key={stage.stageId} className="flex items-center gap-1 text-xs text-muted-foreground">
                     <div className={cn('w-2 h-2 rounded-full',
@@ -234,7 +234,7 @@ export function CRMDashboard() {
             <SimpleBarChart data={pipelineChartData} height={180} />
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
               {opportunitiesByStage
-                .filter((s) => !s.stageId.startsWith('closed'))
+                .filter((s) => s.stageId !== 'lost')
                 .map((stage) => (
                   <div key={stage.stageId} className="flex justify-between">
                     <span className="text-muted-foreground">{stage.stage}</span>

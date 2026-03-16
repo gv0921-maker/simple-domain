@@ -1,8 +1,9 @@
-// CRM Pipeline Page - Kanban view for opportunities
+// CRM Pipeline Page - Odoo-style with Kanban + List views
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CRMKanbanBoard } from '@/components/crm/CRMKanbanBoard';
+import { CRMPipelineListView } from '@/components/crm/CRMPipelineListView';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import {
   Dialog,
@@ -28,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function CRMPipeline() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [contacts] = useState(() => getContacts());
   const [companies] = useState(() => getCompanies());
@@ -67,13 +69,24 @@ export default function CRMPipeline() {
       expectedRevenue: 0,
       expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
-    // Force re-render by navigating
     navigate('/crm/pipeline');
   };
 
   return (
     <AppLayout title="CRM" moduleNav={CRM_NAV}>
-      <CRMKanbanBoard onNewOpportunity={() => setIsNewDialogOpen(true)} />
+      {view === 'kanban' ? (
+        <CRMKanbanBoard
+          onNewOpportunity={() => setIsNewDialogOpen(true)}
+          view={view}
+          onViewChange={setView}
+        />
+      ) : (
+        <CRMPipelineListView
+          onNewOpportunity={() => setIsNewDialogOpen(true)}
+          view={view}
+          onViewChange={setView}
+        />
+      )}
 
       <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -87,7 +100,7 @@ export default function CRMPipeline() {
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Acme Corp - Q1 Order"
+                placeholder="e.g., Office Design Project"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
