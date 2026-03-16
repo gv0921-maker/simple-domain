@@ -1105,9 +1105,9 @@ export function getCRMStats(): CRMStats {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   
-  const activeOpps = opportunities.filter(o => !o.stage.startsWith('closed'));
-  const wonOpps = opportunities.filter(o => o.stage === 'closed_won');
-  const lostOpps = opportunities.filter(o => o.stage === 'closed_lost');
+  const activeOpps = opportunities.filter(o => o.stage !== 'won' && o.stage !== 'lost');
+  const wonOpps = opportunities.filter(o => o.stage === 'won');
+  const lostOpps = opportunities.filter(o => o.stage === 'lost');
   const closedOpps = [...wonOpps, ...lostOpps];
   
   return {
