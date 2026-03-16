@@ -9,7 +9,7 @@ export type ContactStatus = 'active' | 'archived';
 export type LeadSource = 'website' | 'referral' | 'social_media' | 'trade_show' | 'cold_call' | 'email_campaign' | 'import' | 'manual' | 'other';
 export type LeadPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted' | 'lost';
-export type OpportunityStage = 'qualification' | 'needs_analysis' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
+export type OpportunityStage = 'new' | 'qualified' | 'proposition' | 'won' | 'lost';
 export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note' | 'follow_up';
 export type NoteVisibility = 'private' | 'team' | 'public';
 
