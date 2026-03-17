@@ -19,13 +19,10 @@ export const MODULE_TABS: ModuleTabsConfig[] = [
     moduleId: 'crm',
     moduleName: 'CRM',
     tabs: [
-      { id: 'dashboard', label: 'Dashboard', href: '/crm' },
-      { id: 'pipeline', label: 'Pipeline', href: '/crm/pipeline' },
+      { id: 'pipeline', label: 'Pipeline', href: '/crm' },
       { id: 'leads', label: 'Leads', href: '/crm/leads' },
-      { id: 'opportunities', label: 'Opportunities', href: '/crm/opportunities' },
       { id: 'contacts', label: 'Contacts', href: '/crm/contacts' },
       { id: 'companies', label: 'Companies', href: '/crm/companies' },
-      { id: 'activities', label: 'Activities', href: '/crm/activities' },
     ],
   },
   {

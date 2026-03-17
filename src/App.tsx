@@ -407,17 +407,15 @@ const App = () => (
             <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
             {/* CRM module */}
-            <Route path="/crm" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
+            <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/pipeline" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
             <Route path="/crm/leads/:id" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
-            <Route path="/crm/opportunities" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
             <Route path="/crm/companies" element={<ProtectedRoute><CRMCompaniesList /></ProtectedRoute>} />
             <Route path="/crm/companies/:id" element={<ProtectedRoute><CRMCompaniesList /></ProtectedRoute>} />
-            <Route path="/crm/activities" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
 
             {/* Manufacturing module */}
             <Route path="/manufacturing" element={<ProtectedRoute><ManufacturingOverview /></ProtectedRoute>} />
