@@ -497,14 +497,14 @@ export function CRMImportDialog({ open, onOpenChange, onImportComplete, defaultR
             <div className="grid grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-6 text-center">
-                  <Check className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                  <Check className="h-8 w-8 text-primary mx-auto mb-2" />
                   <p className="text-2xl font-bold">{importResult.success}</p>
                   <p className="text-sm text-muted-foreground">Imported</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-6 text-center">
-                  <AlertTriangle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+                  <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-2xl font-bold">{importResult.duplicates}</p>
                   <p className="text-sm text-muted-foreground">Duplicates</p>
                 </CardContent>
