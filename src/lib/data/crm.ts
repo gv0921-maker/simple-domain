@@ -1229,6 +1229,85 @@ export function importContacts(data: Partial<Contact>[]): ImportResult {
   return result;
 }
 
+export function importOpportunities(data: Partial<Opportunity>[]): ImportResult {
+  const result: ImportResult = { success: 0, failed: 0, duplicates: 0, errors: [] };
+  
+  data.forEach((row, index) => {
+    try {
+      if (!row.name && !row.contactName) {
+        result.failed++;
+        result.errors.push(`Row ${index + 1}: Opportunity name or contact name is required`);
+        return;
+      }
+      
+      // Check for duplicate by name
+      const existing = getOpportunities().find(o => 
+        o.name === row.name && o.contactName === row.contactName
+      );
+      if (existing) {
+        result.duplicates++;
+        return;
+      }
+      
+      // Map stage name to stage ID
+      const pipeline = getDefaultPipeline();
+      let stageId = pipeline.stages[0]?.id || 'new';
+      let stage: OpportunityStage = 'new';
+      
+      if (row.stageId) {
+        const matchedStage = pipeline.stages.find(s => 
+          s.name.toLowerCase() === row.stageId?.toLowerCase() ||
+          s.id === row.stageId
+        );
+        if (matchedStage) {
+          stageId = matchedStage.id;
+          stage = matchedStage.id as OpportunityStage;
+        }
+      }
+      
+      saveOpportunity({
+        ...row,
+        name: row.name || `${row.contactName}'s opportunity`,
+        stageId,
+        stage,
+      });
+      result.success++;
+    } catch (e) {
+      result.failed++;
+      result.errors.push(`Row ${index + 1}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+  });
+  
+  return result;
+}
+
+export function importLeads(data: Partial<Lead>[]): ImportResult {
+  const result: ImportResult = { success: 0, failed: 0, duplicates: 0, errors: [] };
+  
+  data.forEach((row, index) => {
+    try {
+      if (!row.title && !row.contactName) {
+        result.failed++;
+        result.errors.push(`Row ${index + 1}: Lead title or contact name is required`);
+        return;
+      }
+      
+      saveLead({
+        ...row,
+        title: row.title || `${row.contactName}'s lead`,
+        contactName: row.contactName || '',
+        email: row.email || '',
+      });
+      result.success++;
+    } catch (e) {
+      result.failed++;
+      result.errors.push(`Row ${index + 1}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+  });
+  
+  return result;
+}
+
 export function exportContacts(): Contact[] {
   return getContacts();
 }
