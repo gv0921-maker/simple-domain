@@ -501,33 +501,6 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             )}
           </div>
 
-          {/* Right: View toggle icons */}
-          <div className="flex items-center gap-1">
-            {[
-              { icon: LayoutGrid, id: 'kanban' as const, title: 'Kanban' },
-              { icon: List, id: 'list' as const, title: 'List' },
-              { icon: CalendarDays, id: null, title: 'Calendar' },
-              { icon: BarChart3, id: null, title: 'Pivot' },
-              { icon: Activity, id: null, title: 'Graph' },
-              { icon: Map, id: null, title: 'Map' },
-              { icon: Clock, id: null, title: 'Activity' },
-            ].map(({ icon: Icon, id, title }) => (
-              <Tooltip key={title}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => id && onViewChange?.(id)}
-                    className={cn(
-                      'h-8 w-8 flex items-center justify-center rounded transition-colors',
-                      id && view === id ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">{title}</TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
         </div>
       </div>
 
