@@ -276,7 +276,7 @@ export function CRMDashboard() {
                   <span className="text-muted-foreground capitalize">{source.source.replace('_', ' ')}</span>
                   <div className="flex items-center gap-4">
                     <span>{source.count} leads</span>
-                    <span className="font-medium">${source.value.toLocaleString()}</span>
+                    <span className="font-medium">₹{source.value.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               ))}
