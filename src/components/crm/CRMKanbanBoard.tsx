@@ -233,7 +233,7 @@ function KanbanColumn({
           <div className="flex items-center gap-1">
             {totalValue > 0 && (
               <span className="text-xs text-muted-foreground font-medium">
-                ${(totalValue / 1000).toFixed(0)}k
+                ₹{(totalValue / 1000).toFixed(0)}k
               </span>
             )}
             <button
