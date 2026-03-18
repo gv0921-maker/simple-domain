@@ -614,8 +614,8 @@ export default function SalesOrderForm() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">${line.taxAmount.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">${line.total.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">₹{line.taxAmount.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-medium">₹{line.total.toFixed(2)}</TableCell>
                           {isEditable && (
                             <TableCell>
                               <Button
