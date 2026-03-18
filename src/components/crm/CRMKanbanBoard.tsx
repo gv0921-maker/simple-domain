@@ -506,10 +506,6 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             {[
               { icon: LayoutGrid, id: 'kanban' as const, title: 'Kanban' },
               { icon: List, id: 'list' as const, title: 'List' },
-              { icon: CalendarDays, id: null, title: 'Calendar' },
-              { icon: BarChart3, id: null, title: 'Pivot' },
-              { icon: Activity, id: null, title: 'Graph' },
-              { icon: Map, id: null, title: 'Map' },
               { icon: Clock, id: null, title: 'Activity' },
             ].map(({ icon: Icon, id, title }) => (
               <Tooltip key={title}>
