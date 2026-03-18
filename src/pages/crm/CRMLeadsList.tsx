@@ -328,8 +328,8 @@ export default function CRMLeadsList() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 font-medium">
-                          <DollarSign className="h-3 w-3" />
-                          {lead.expectedRevenue.toLocaleString()}
+                          <IndianRupee className="h-3 w-3" />
+                          {lead.expectedRevenue.toLocaleString('en-IN')}
                         </div>
                       </TableCell>
                       <TableCell>
