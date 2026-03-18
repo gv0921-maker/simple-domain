@@ -10,7 +10,7 @@ import {
   Building,
   Target,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
   CheckCircle2,
   Clock,
   Calendar,
@@ -157,7 +157,7 @@ export function CRMDashboard() {
           title="Pipeline Value"
           value={`₹${stats.pipelineValue.toLocaleString('en-IN')}`}
           subtitle={`${stats.activeOpportunities} active deals`}
-          icon={DollarSign}
+          icon={IndianRupee}
           color="success"
           delay={100}
         />
