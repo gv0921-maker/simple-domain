@@ -28,7 +28,7 @@ import {
   ChevronLeft,
   Trophy,
   XCircle,
-  CalendarClock,
+  
   MessageSquare,
   Clock,
   Send,
@@ -209,13 +209,6 @@ export default function OpportunityDetail() {
               <Settings className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-pointer" />
             </div>
 
-            {/* Center: No Meeting button */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-                <CalendarClock className="h-3.5 w-3.5" />
-                No Meeting
-              </Button>
-            </div>
 
             {/* Right: record pager */}
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
