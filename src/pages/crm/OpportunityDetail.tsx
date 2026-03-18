@@ -28,7 +28,7 @@ import {
   ChevronLeft,
   Trophy,
   XCircle,
-  CalendarClock,
+  
   MessageSquare,
   Clock,
   Send,
