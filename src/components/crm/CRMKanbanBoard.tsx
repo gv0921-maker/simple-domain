@@ -419,7 +419,6 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
               New
             </Button>
             <span className="text-sm font-semibold text-foreground">Pipeline</span>
-            <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer hover:text-foreground" />
           </div>
 
           {/* Center: Search bar with dropdown */}
