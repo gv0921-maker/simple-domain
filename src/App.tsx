@@ -407,7 +407,7 @@ const App = () => (
             <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
             {/* CRM module */}
-            <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
+            <Route path="/crm" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
             <Route path="/crm/pipeline" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
             <Route path="/crm/leads/:id" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
