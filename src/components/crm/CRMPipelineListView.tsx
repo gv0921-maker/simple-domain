@@ -224,7 +224,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                   <TableCell colSpan={4} className="pl-4 text-xs text-muted-foreground">
                     {filtered.length} record{filtered.length !== 1 ? 's' : ''}
                   </TableCell>
-                  <TableCell className="text-right text-xs">${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-right text-xs">₹{totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell colSpan={4} />
                 </TableRow>
               </>

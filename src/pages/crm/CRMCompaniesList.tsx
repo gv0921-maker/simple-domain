@@ -129,7 +129,7 @@ export default function CRMCompaniesList() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${(stats.totalRevenue / 1000000).toFixed(1)}M</div>
+              <div className="text-2xl font-bold">₹{(stats.totalRevenue / 1000000).toFixed(1)}M</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>

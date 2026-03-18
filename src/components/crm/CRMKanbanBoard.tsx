@@ -307,7 +307,7 @@ function KanbanColumn({
               />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground font-medium w-3.5 text-center shrink-0">$</span>
+              <span className="text-xs text-muted-foreground font-medium w-3.5 text-center shrink-0">₹</span>
               <Input
                 placeholder="0.00"
                 type="number"

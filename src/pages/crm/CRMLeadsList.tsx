@@ -528,7 +528,7 @@ export default function CRMLeadsList() {
                 <div className="grid gap-2">
                   <Label>Expected Revenue</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                     <Input
                       type="number"
                       value={formData.expectedRevenue || ''}

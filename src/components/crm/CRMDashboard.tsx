@@ -348,7 +348,7 @@ export function CRMDashboard() {
                       <Badge variant="outline" className="text-xs capitalize">
                         {lead.source.replace('_', ' ')}
                       </Badge>
-                      <span className="text-xs font-medium">${lead.expectedRevenue.toLocaleString()}</span>
+                      <span className="text-xs font-medium">₹{lead.expectedRevenue.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 ))

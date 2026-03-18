@@ -334,7 +334,7 @@ export default function OpportunityDetail() {
                     {isEditing ? (
                       <Input type="number" defaultValue={opportunity.expectedRevenue} className="h-8 text-sm w-32" onChange={e => setEditData({ ...editData, expectedRevenue: parseFloat(e.target.value) || 0 })} />
                     ) : (
-                      `$ ${currentData.expectedRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                      `₹ ${currentData.expectedRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
                     )}
                   </div>
                 </div>

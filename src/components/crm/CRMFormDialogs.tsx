@@ -451,7 +451,7 @@ export function CompanyFormDialog({ open, onOpenChange, company, onSave }: Compa
             <div className="grid gap-2">
               <Label>Annual Revenue</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                 <Input
                   type="number"
                   value={formData.annualRevenue || ''}
