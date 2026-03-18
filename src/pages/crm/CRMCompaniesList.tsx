@@ -221,7 +221,7 @@ export default function CRMCompaniesList() {
                     <TableCell>
                       {company.annualRevenue ? (
                         <div className="flex items-center gap-1 text-sm font-medium">
-                          <DollarSign className="h-3 w-3 text-muted-foreground" />
+                          <IndianRupee className="h-3 w-3 text-muted-foreground" />
                           {company.annualRevenue >= 1000000
                             ? `${(company.annualRevenue / 1000000).toFixed(1)}M`
                             : `${(company.annualRevenue / 1000).toFixed(0)}K`}
