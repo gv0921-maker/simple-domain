@@ -713,7 +713,7 @@ export default function QuotationForm() {
                 {totals.discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-success">
                     <span>Discount</span>
-                    <span>-${totals.discountAmount.toLocaleString()}</span>
+                    <span>-₹{totals.discountAmount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
