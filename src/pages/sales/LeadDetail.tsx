@@ -299,7 +299,7 @@ export default function LeadDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${lead.expectedRevenue.toLocaleString()}</div>
+                <div className="text-2xl font-bold">₹{lead.expectedRevenue.toLocaleString('en-IN')}</div>
               </CardContent>
             </Card>
             <Card className="animate-slide-up" style={{ animationDelay: '50ms' }}>
