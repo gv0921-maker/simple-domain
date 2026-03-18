@@ -44,7 +44,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  DollarSign,
+  IndianRupee,
   Target,
   Filter,
   LayoutGrid,
