@@ -29,7 +29,7 @@ import {
   Building,
   Globe,
   Users,
-  DollarSign,
+  IndianRupee,
   Filter,
 } from 'lucide-react';
 import { getCompanies, deleteCompany, getContacts, type Company } from '@/lib/data/crm';
