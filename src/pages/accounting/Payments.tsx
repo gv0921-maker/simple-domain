@@ -57,7 +57,7 @@ export default function Payments() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
   };
 
   const inboundTotal = payments.filter(p => p.type === 'inbound').reduce((sum, p) => sum + p.amount, 0);
