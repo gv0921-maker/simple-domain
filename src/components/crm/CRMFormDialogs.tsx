@@ -41,7 +41,7 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
   const { toast } = useToast();
   const isEdit = !!contact;
   
-  const [companies] = useState(() => getCompanies());
+  
   const [formData, setFormData] = useState({
     type: 'individual' as ContactType,
     firstName: '',
