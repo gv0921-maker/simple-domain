@@ -15,6 +15,9 @@ export interface Permission {
   module: string;
   level: PermissionLevel;
   scope: RecordScope;
+  canImport?: boolean;
+  canExport?: boolean;
+  canPrint?: boolean;
 }
 
 export interface Role {
