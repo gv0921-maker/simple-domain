@@ -1,13 +1,12 @@
-import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModuleCustomization } from '@/components/customization/ModuleCustomization';
 import { ThemeCustomization } from '@/components/customization/ThemeCustomization';
-import { FormCustomizationDialog } from '@/components/customization/FormCustomizationDialog';
 import { Button } from '@/components/ui/button';
 import { useCustomization } from '@/contexts/CustomizationContext';
 import { RotateCcw, Palette, Layout, FileEdit, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
@@ -63,7 +62,7 @@ const FORM_REGISTRY = [
 
 export default function CustomizationSettings() {
   const { resetAll } = useCustomization();
-  const [selectedForm, setSelectedForm] = useState<{ moduleId: string; formName: string } | null>(null);
+  const navigate = useNavigate();
 
   const handleResetAll = () => {
     resetAll();
@@ -121,7 +120,7 @@ export default function CustomizationSettings() {
                     {group.forms.map((form) => (
                       <button
                         key={form.name}
-                        onClick={() => setSelectedForm({ moduleId: group.moduleId, formName: form.name })}
+                        onClick={() => navigate(`/settings/studio?module=${group.moduleId}&form=${encodeURIComponent(form.name)}`)}
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors text-left"
                       >
                         <div className="flex items-center gap-3">
@@ -141,15 +140,6 @@ export default function CustomizationSettings() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {selectedForm && (
-        <FormCustomizationDialog
-          open={!!selectedForm}
-          onOpenChange={(open) => !open && setSelectedForm(null)}
-          moduleId={selectedForm.moduleId}
-          formName={selectedForm.formName}
-        />
-      )}
     </AppLayout>
   );
 }
