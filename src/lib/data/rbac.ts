@@ -297,10 +297,11 @@ export function hasModulePermission(userId: string, module: string, permission: 
   const permissions = getUserPermissions(userId);
   const modulePermission = permissions.find((p) => p.module === module);
   if (!modulePermission) return false;
+  const isAdmin = modulePermission.level === 'admin';
   switch (permission) {
-    case 'import': return !!modulePermission.canImport;
-    case 'export': return !!modulePermission.canExport;
-    case 'print': return !!modulePermission.canPrint;
+    case 'import': return modulePermission.canImport ?? isAdmin;
+    case 'export': return modulePermission.canExport ?? isAdmin;
+    case 'print': return modulePermission.canPrint ?? isAdmin;
     default: return false;
   }
 }
