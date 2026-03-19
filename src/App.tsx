@@ -54,6 +54,7 @@ import ShopFloor from "@/pages/manufacturing/ShopFloor";
 import CRMOverview from "@/pages/crm/CRMOverview";
 import CRMPipeline from "@/pages/crm/CRMPipeline";
 import CRMContactsList from "@/pages/crm/CRMContactsList";
+import CRMContactDetail from "@/pages/crm/CRMContactDetail";
 import CRMCompaniesList from "@/pages/crm/CRMCompaniesList";
 import CRMLeadsList from "@/pages/crm/CRMLeadsList";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
@@ -422,7 +423,7 @@ const App = () => (
             <Route path="/crm/leads/:id" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
-            <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
+            <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactDetail /></ProtectedRoute>} />
             <Route path="/crm/companies" element={<ProtectedRoute><CRMCompaniesList /></ProtectedRoute>} />
             <Route path="/crm/companies/:id" element={<ProtectedRoute><CRMCompaniesList /></ProtectedRoute>} />
 

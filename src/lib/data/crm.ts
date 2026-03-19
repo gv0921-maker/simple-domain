@@ -799,6 +799,34 @@ export function saveLead(lead: Partial<Lead> & { id?: string }): Lead {
   };
   leads.push(newLead);
   setItem('crm_leads', leads);
+
+  // Auto-create a contact from the lead's details
+  if (newLead.contactName && newLead.email) {
+    const duplicates = findDuplicateContacts(newLead.email, newLead.phone);
+    if (duplicates.length === 0) {
+      const nameParts = newLead.contactName.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const newContact = saveContact({
+        firstName,
+        lastName,
+        email: newLead.email,
+        phone: newLead.phone,
+        companyName: newLead.companyName,
+        companyId: newLead.companyId,
+        tags: [],
+        score: 0,
+      });
+      // Link the contact back to the lead
+      newLead.contactId = newContact.id;
+      const idx = leads.findIndex(l => l.id === newLead.id);
+      if (idx >= 0) {
+        leads[idx] = newLead;
+        setItem('crm_leads', leads);
+      }
+    }
+  }
+
   return newLead;
 }
 
