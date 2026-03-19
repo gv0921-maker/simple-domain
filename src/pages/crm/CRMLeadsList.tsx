@@ -156,7 +156,7 @@ export default function CRMLeadsList() {
       return;
     }
 
-    saveLead(formData);
+    saveLead({ ...formData, createdBy: user?.name || 'Unknown' });
     setLeads(getLeads());
     setIsNewDialogOpen(false);
     setFormData({
