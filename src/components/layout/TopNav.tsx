@@ -10,11 +10,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  MessageSquare,
-  Clock,
   Settings,
   LogOut,
-  Sparkles,
   Menu,
   Home,
 } from 'lucide-react';
