@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getContacts, getCompanies, saveOpportunity, getOpportunities } from '@/lib/data/crm';
+import { getContacts, saveOpportunity, getOpportunities } from '@/lib/data/crm';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CRMPipeline() {
@@ -32,11 +32,9 @@ export default function CRMPipeline() {
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [contacts] = useState(() => getContacts());
-  const [companies] = useState(() => getCompanies());
   const [formData, setFormData] = useState({
     name: '',
     contactId: '',
-    companyId: '',
     expectedRevenue: 0,
     expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
@@ -48,14 +46,12 @@ export default function CRMPipeline() {
     }
 
     const contact = contacts.find((c) => c.id === formData.contactId);
-    const company = companies.find((c) => c.id === formData.companyId);
 
     saveOpportunity({
       name: formData.name,
       contactId: formData.contactId,
       contactName: contact ? `${contact.firstName} ${contact.lastName}` : '',
-      companyId: formData.companyId,
-      companyName: company?.name,
+      companyName: contact?.companyName,
       expectedRevenue: formData.expectedRevenue,
       expectedCloseDate: formData.expectedCloseDate,
     });
@@ -65,7 +61,6 @@ export default function CRMPipeline() {
     setFormData({
       name: '',
       contactId: '',
-      companyId: '',
       expectedRevenue: 0,
       expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
@@ -115,19 +110,6 @@ export default function CRMPipeline() {
                   <SelectContent>
                     {contacts.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.firstName} {c.lastName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label className="text-xs font-semibold">Company</Label>
-                <Select value={formData.companyId} onValueChange={(v) => setFormData({ ...formData, companyId: v })}>
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue placeholder="Select company" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {companies.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

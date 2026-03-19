@@ -94,7 +94,6 @@ export const MODULE_REGISTRY = [
     { path: '/crm/pipeline', label: 'Pipeline' },
     { path: '/crm/leads', label: 'Leads' },
     { path: '/crm/contacts', label: 'Contacts' },
-    { path: '/crm/companies', label: 'Companies' },
   ]},
   { id: 'sales', name: 'Sales', routes: [
     { path: '/sales', label: 'Overview' },

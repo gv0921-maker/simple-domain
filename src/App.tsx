@@ -55,7 +55,7 @@ import CRMOverview from "@/pages/crm/CRMOverview";
 import CRMPipeline from "@/pages/crm/CRMPipeline";
 import CRMContactsList from "@/pages/crm/CRMContactsList";
 import CRMContactDetail from "@/pages/crm/CRMContactDetail";
-import CRMCompaniesList from "@/pages/crm/CRMCompaniesList";
+
 import CRMLeadsList from "@/pages/crm/CRMLeadsList";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Users,
-  Building,
+  
   Target,
   TrendingUp,
   IndianRupee,
@@ -194,12 +194,6 @@ export function CRMDashboard() {
           icon={Clock}
           color="warning"
           delay={300}
-        />
-        <StatCard
-          title="Companies"
-          value={stats.totalCompanies}
-          icon={Building}
-          delay={350}
         />
       </div>
 
@@ -402,11 +396,6 @@ export function CRMDashboard() {
             <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm/contacts')}>
               <Users className="h-4 w-4" />
               Manage Contacts
-              <ArrowRight className="h-4 w-4 ml-auto" />
-            </Button>
-            <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm/companies')}>
-              <Building className="h-4 w-4" />
-              Manage Companies
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
             <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm/leads')}>
