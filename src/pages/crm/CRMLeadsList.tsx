@@ -145,7 +145,7 @@ export default function CRMLeadsList() {
       total: activeLeads.length,
       new: activeLeads.filter((l) => l.status === 'new').length,
       completed: convertedToday,
-      pending: pendingToday,
+      pending: pendingCount,
     };
   }, [leads]);
 
