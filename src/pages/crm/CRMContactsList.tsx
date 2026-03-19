@@ -117,41 +117,6 @@ export default function CRMContactsList() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card className="animate-slide-up">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Contacts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-          <Card className="animate-slide-up" style={{ animationDelay: '50ms' }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">{stats.active}</div>
-            </CardContent>
-          </Card>
-          <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">With Company</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.withCompany}</div>
-            </CardContent>
-          </Card>
-          <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">High Score (70+)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-info">{stats.highScore}</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Search */}
         <div className="flex items-center gap-2">

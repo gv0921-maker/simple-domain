@@ -106,41 +106,6 @@ export default function CRMCompaniesList() {
           )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card className="animate-slide-up">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Companies</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-          <Card className="animate-slide-up" style={{ animationDelay: '50ms' }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">{stats.active}</div>
-            </CardContent>
-          </Card>
-          <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{(stats.totalRevenue / 1000000).toFixed(1)}M</div>
-            </CardContent>
-          </Card>
-          <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Industries</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.industries}</div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Search */}
         <div className="flex items-center gap-2">
