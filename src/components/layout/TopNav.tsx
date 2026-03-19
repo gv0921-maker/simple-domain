@@ -133,22 +133,6 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-1 md:gap-2 shrink-0">
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden sm:inline-flex">
-          <Sparkles className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden sm:inline-flex">
-          <MessageSquare className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden md:inline-flex">
-          <Clock className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden md:inline-flex">
-          <Settings className="h-4 w-4" />
-        </Button>
-
-        <span className="text-sm text-foreground font-medium ml-1 hidden lg:inline">
-          GLF
-        </span>
 
         {/* User menu */}
         <DropdownMenu>
