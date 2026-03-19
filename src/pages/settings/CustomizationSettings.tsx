@@ -120,7 +120,7 @@ export default function CustomizationSettings() {
                     {group.forms.map((form) => (
                       <button
                         key={form.name}
-                        onClick={() => setSelectedForm({ moduleId: group.moduleId, formName: form.name })}
+                        onClick={() => navigate(`/settings/studio?module=${group.moduleId}&form=${encodeURIComponent(form.name)}`)}
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors text-left"
                       >
                         <div className="flex items-center gap-3">
