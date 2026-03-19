@@ -75,7 +75,7 @@ const DEFAULT_ROLES: Role[] = [
     name: 'Super Admin',
     description: 'Full system access with all permissions',
     isSystem: true,
-    permissions: MODULES.map((m) => ({ module: m, level: 'admin' as PermissionLevel, scope: 'all' as RecordScope })),
+    permissions: MODULES.map((m) => ({ module: m, level: 'admin' as PermissionLevel, scope: 'all' as RecordScope, canImport: true, canExport: true, canPrint: true })),
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-01T00:00:00Z',
   },
