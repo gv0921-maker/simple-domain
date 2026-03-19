@@ -363,47 +363,6 @@ export default function CRMLeadsList() {
           </Card>
         )}
 
-        {/* Kanban View */}
-        {view === 'kanban' && (
-          <div className="overflow-x-auto">
-            <div className="flex gap-4 min-w-max pb-4">
-              {LEAD_STATUSES.filter((s) => !['converted', 'lost'].includes(s.id)).map((status) => (
-                <div key={status.id} className="w-72 flex flex-col bg-muted/30 rounded-lg">
-                  <div className="p-3 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <div className={cn('w-2 h-2 rounded-full', status.color)} />
-                      <h3 className="font-medium text-sm">{status.label}</h3>
-                      <Badge variant="secondary" className="ml-auto text-xs">
-                        {leadsByStatus[status.id].length}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex-1 p-2 space-y-2 min-h-[200px]">
-                    {leadsByStatus[status.id].map((lead) => (
-                      <Card
-                        key={lead.id}
-                        className="p-3 cursor-pointer card-hover"
-                        onClick={() => navigate(`/crm/leads/${lead.id}`)}
-                      >
-                        <p className="font-medium text-sm line-clamp-2">{lead.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{lead.contactName}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge className={cn('text-xs capitalize', PRIORITY_COLORS[lead.priority])}>
-                            {lead.priority}
-                          </Badge>
-                          <span className="text-sm font-medium">₹{lead.expectedRevenue.toLocaleString('en-IN')}</span>
-                        </div>
-                      </Card>
-                    ))}
-                    {leadsByStatus[status.id].length === 0 && (
-                      <p className="text-center text-sm text-muted-foreground py-8">No leads</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* New Lead Dialog */}
         <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
