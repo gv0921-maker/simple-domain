@@ -112,12 +112,9 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
       return;
     }
 
-    const company = companies.find((c) => c.id === formData.companyId);
-
     const savedContact = saveContact({
       ...(contact || {}),
       ...formData,
-      companyName: company?.name,
     });
 
     toast({
