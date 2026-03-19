@@ -228,18 +228,18 @@ export default function CRMLeadsList() {
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Qualified</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">{stats.qualified}</div>
+              <div className="text-2xl font-bold text-success">{stats.completed}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Value</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{stats.totalValue.toLocaleString('en-IN')}</div>
+              <div className="text-2xl font-bold text-warning">{stats.pending}</div>
             </CardContent>
           </Card>
         </div>
