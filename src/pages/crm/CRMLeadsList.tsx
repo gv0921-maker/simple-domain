@@ -259,7 +259,7 @@ export default function CRMLeadsList() {
         </div>
 
         {/* List View */}
-        {view === 'list' && (
+        <Card className="animate-fade-in">
           <Card className="animate-fade-in">
             <Table>
               <TableHeader>
