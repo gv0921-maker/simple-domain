@@ -293,6 +293,18 @@ export function hasPermission(userId: string, module: string, requiredLevel: Per
   return getPermissionWeight(modulePermission.level) >= getPermissionWeight(requiredLevel);
 }
 
+export function hasModulePermission(userId: string, module: string, permission: 'import' | 'export' | 'print'): boolean {
+  const permissions = getUserPermissions(userId);
+  const modulePermission = permissions.find((p) => p.module === module);
+  if (!modulePermission) return false;
+  switch (permission) {
+    case 'import': return !!modulePermission.canImport;
+    case 'export': return !!modulePermission.canExport;
+    case 'print': return !!modulePermission.canPrint;
+    default: return false;
+  }
+}
+
 // Tab permission checking
 export function getUserTabPermissions(userId: string): TabPermission[] {
   const userRole = getUserRole(userId);
