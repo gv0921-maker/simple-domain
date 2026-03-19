@@ -505,21 +505,21 @@ export default function RolesManagement() {
                                   </TableCell>
                                 ))}
                                 <TableCell className="text-center border-l border-border">
-                                  {perm?.canImport ? (
+                                  {hasImport ? (
                                     <Check className="h-4 w-4 text-success mx-auto" />
                                   ) : (
                                     <X className="h-4 w-4 text-muted-foreground/30 mx-auto" />
                                   )}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  {perm?.canExport ? (
+                                  {hasExport ? (
                                     <Check className="h-4 w-4 text-success mx-auto" />
                                   ) : (
                                     <X className="h-4 w-4 text-muted-foreground/30 mx-auto" />
                                   )}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  {perm?.canPrint ? (
+                                  {hasPrint ? (
                                     <Check className="h-4 w-4 text-success mx-auto" />
                                   ) : (
                                     <X className="h-4 w-4 text-muted-foreground/30 mx-auto" />
