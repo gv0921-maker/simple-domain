@@ -337,7 +337,7 @@ export default function CRMLeadsList() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {canConvertLeads && lead.status === 'qualified' && (
+                            {canConvertLeads && (
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleConvert(lead.id); }}>
                                 <Sparkles className="h-4 w-4 mr-2" />
                                 Convert to Opportunity
@@ -345,7 +345,7 @@ export default function CRMLeadsList() {
                             )}
                             {canDeleteLeads && (
                               <>
-                                {canConvertLeads && lead.status === 'qualified' && <DropdownMenuSeparator />}
+                                {canConvertLeads && <DropdownMenuSeparator />}
                                 <DropdownMenuItem
                                   onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}
                                   className="text-destructive"
