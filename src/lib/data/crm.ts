@@ -795,6 +795,25 @@ const DEFAULT_TAGS: CRMTag[] = [
   { id: 't8', name: 'Interior Designer', color: 'hsl(var(--chart-blue))' },
 ];
 
+// Force reset CRM data on version change
+const CRM_VERSION_KEY = 'crm_data_version';
+const CRM_CURRENT_VERSION = 3;
+
+function ensureCRMVersion() {
+  const stored = getItem<number>(CRM_VERSION_KEY, 0);
+  if (stored < CRM_CURRENT_VERSION) {
+    setItem('crm_opportunities', DEFAULT_OPPORTUNITIES);
+    setItem('crm_pipelines', DEFAULT_PIPELINES);
+    setItem('crm_companies', DEFAULT_COMPANIES);
+    setItem('crm_contacts', DEFAULT_CONTACTS);
+    setItem('crm_leads', DEFAULT_LEADS);
+    setItem('crm_activities', DEFAULT_ACTIVITIES);
+    setItem('crm_notes', DEFAULT_NOTES);
+    setItem('crm_tags', DEFAULT_TAGS);
+    setItem(CRM_VERSION_KEY, CRM_CURRENT_VERSION);
+  }
+}
+
 // ================== CRUD Operations ==================
 
 // Companies
