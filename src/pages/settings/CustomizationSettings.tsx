@@ -1,13 +1,12 @@
-import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModuleCustomization } from '@/components/customization/ModuleCustomization';
 import { ThemeCustomization } from '@/components/customization/ThemeCustomization';
-import { FormCustomizationDialog } from '@/components/customization/FormCustomizationDialog';
 import { Button } from '@/components/ui/button';
 import { useCustomization } from '@/contexts/CustomizationContext';
 import { RotateCcw, Palette, Layout, FileEdit, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
