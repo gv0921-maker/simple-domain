@@ -53,11 +53,9 @@ import {
 import {
   getLeads,
   deleteLead,
-  updateLeadStatus,
   convertLeadToOpportunity,
   saveLead,
   type Lead,
-  type LeadStatus,
   type LeadSource,
   type LeadPriority,
 } from '@/lib/data/crm';
