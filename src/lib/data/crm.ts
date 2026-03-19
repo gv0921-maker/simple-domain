@@ -842,6 +842,7 @@ export function deleteCompany(id: string): void {
 
 // Contacts
 export function getContacts(): Contact[] {
+  ensureCRMVersion();
   return getItem<Contact[]>('crm_contacts', DEFAULT_CONTACTS);
 }
 
