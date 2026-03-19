@@ -62,7 +62,7 @@ const FORM_REGISTRY = [
 
 export default function CustomizationSettings() {
   const { resetAll } = useCustomization();
-  const [selectedForm, setSelectedForm] = useState<{ moduleId: string; formName: string } | null>(null);
+  const navigate = useNavigate();
 
   const handleResetAll = () => {
     resetAll();
