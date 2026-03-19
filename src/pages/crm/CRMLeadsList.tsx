@@ -63,6 +63,7 @@ import { CRM_NAV } from '@/lib/navigation/crm';
 import { CRMExportButton } from '@/components/crm/CRMImportExport';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 
