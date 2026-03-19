@@ -281,11 +281,13 @@ export default function RolesManagement() {
     setEditFormData((prev) => ({
       ...prev,
       permissions: prev.permissions.map((p) =>
-        p.module === module ? { ...p, level } : p
+        p.module === module
+          ? { ...p, level, ...(level === 'admin' ? { canImport: true, canExport: true, canPrint: true } : {}) }
+          : p
       ).concat(
         prev.permissions.find((p) => p.module === module)
           ? []
-          : [{ module, level, scope: 'own' as const }]
+          : [{ module, level, scope: 'own' as const, ...(level === 'admin' ? { canImport: true, canExport: true, canPrint: true } : {}) }]
       ),
     }));
   };
