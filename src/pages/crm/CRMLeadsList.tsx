@@ -336,27 +336,15 @@ export default function CRMLeadsList() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {canEditLeads && LEAD_STATUSES.filter((s) => s.id !== lead.status && !['converted', 'lost'].includes(s.id)).map((status) => (
-                              <DropdownMenuItem
-                                key={status.id}
-                                onClick={(e) => { e.stopPropagation(); handleMoveLead(lead.id, status.id); }}
-                              >
-                                <ArrowRight className="h-4 w-4 mr-2" />
-                                Move to {status.label}
-                              </DropdownMenuItem>
-                            ))}
                             {canConvertLeads && lead.status === 'qualified' && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleConvert(lead.id); }}>
-                                  <Sparkles className="h-4 w-4 mr-2" />
-                                  Convert to Opportunity
-                                </DropdownMenuItem>
-                              </>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleConvert(lead.id); }}>
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                Convert to Opportunity
+                              </DropdownMenuItem>
                             )}
                             {canDeleteLeads && (
                               <>
-                                <DropdownMenuSeparator />
+                                {canConvertLeads && lead.status === 'qualified' && <DropdownMenuSeparator />}
                                 <DropdownMenuItem
                                   onClick={(e) => { e.stopPropagation(); handleDelete(lead.id); }}
                                   className="text-destructive"

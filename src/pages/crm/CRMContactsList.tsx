@@ -258,12 +258,6 @@ export default function CRMContactsList() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {canEditContacts && (
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(contact); }}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
                           {canDeleteContacts && (
                             <DropdownMenuItem
                               onClick={(e) => { e.stopPropagation(); handleDelete(contact.id); }}
