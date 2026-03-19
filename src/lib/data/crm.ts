@@ -800,6 +800,7 @@ const DEFAULT_TAGS: CRMTag[] = [
 
 // Companies
 export function getCompanies(): Company[] {
+  ensureCRMVersion();
   return getItem<Company[]>('crm_companies', DEFAULT_COMPANIES);
 }
 
