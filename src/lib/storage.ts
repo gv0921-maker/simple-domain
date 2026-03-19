@@ -59,19 +59,19 @@ export const DEMO_USERS: User[] = [
   {
     id: '1',
     name: 'Management',
-    email: 'admin@erp.local',
+    email: 'vigu092@gmail.com',
     role: 'admin',
   },
   {
     id: '2',
-    name: 'Sales Manager',
-    email: 'sales@erp.local',
+    name: 'Mohan Raj',
+    email: 'goodlifefurnituremanager@gmail.com',
     role: 'manager',
   },
   {
     id: '3',
-    name: 'Warehouse Operator',
-    email: 'warehouse@erp.local',
+    name: 'Vikesh',
+    email: 'glfslteam1@gmail.com',
     role: 'user',
   },
 ];
