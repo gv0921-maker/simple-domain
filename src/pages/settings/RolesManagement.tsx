@@ -290,6 +290,25 @@ export default function RolesManagement() {
     }));
   };
 
+  // Update additional permissions (import/export/print)
+  const handleAdditionalPermChange = (module: string, field: 'canImport' | 'canExport' | 'canPrint', value: boolean) => {
+    setEditFormData((prev) => {
+      const existing = prev.permissions.find((p) => p.module === module);
+      if (existing) {
+        return {
+          ...prev,
+          permissions: prev.permissions.map((p) =>
+            p.module === module ? { ...p, [field]: value } : p
+          ),
+        };
+      }
+      return {
+        ...prev,
+        permissions: [...prev.permissions, { module, level: 'none' as PermissionLevel, scope: 'own' as const, [field]: value }],
+      };
+    });
+  };
+
   // Delete role
   const handleDeleteRole = (role: Role) => {
     if (role.isSystem) {
