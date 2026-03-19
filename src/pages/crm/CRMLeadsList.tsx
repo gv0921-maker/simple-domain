@@ -136,11 +136,18 @@ export default function CRMLeadsList() {
 
   const stats = useMemo(() => {
     const activeLeads = leads.filter((l) => l.status !== 'converted');
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const convertedToday = leads.filter(
+      (l) => l.status === 'converted' && l.convertedAt && format(parseISO(l.convertedAt), 'yyyy-MM-dd') === todayStr
+    ).length;
+    const pendingToday = leads.filter(
+      (l) => l.status !== 'converted' && format(parseISO(l.createdAt), 'yyyy-MM-dd') === todayStr
+    ).length;
     return {
       total: activeLeads.length,
       new: activeLeads.filter((l) => l.status === 'new').length,
-      qualified: activeLeads.filter((l) => l.status === 'qualified').length,
-      totalValue: activeLeads.reduce((sum, l) => sum + l.expectedRevenue, 0),
+      completed: convertedToday,
+      pending: pendingToday,
     };
   }, [leads]);
 
@@ -221,18 +228,18 @@ export default function CRMLeadsList() {
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Qualified</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">{stats.qualified}</div>
+              <div className="text-2xl font-bold text-success">{stats.completed}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Value</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{stats.totalValue.toLocaleString('en-IN')}</div>
+              <div className="text-2xl font-bold text-warning">{stats.pending}</div>
             </CardContent>
           </Card>
         </div>
