@@ -323,15 +323,10 @@ export default function CRMLeadsList() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          className={cn(
-                            'text-xs',
-                            LEAD_STATUSES.find((s) => s.id === lead.status)?.color,
-                            'text-foreground'
-                          )}
-                        >
-                          {LEAD_STATUSES.find((s) => s.id === lead.status)?.label}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <User className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm">{lead.createdBy || 'Unknown'}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
