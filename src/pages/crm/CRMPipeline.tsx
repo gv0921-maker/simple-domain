@@ -32,11 +32,9 @@ export default function CRMPipeline() {
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [contacts] = useState(() => getContacts());
-  const [companies] = useState(() => getCompanies());
   const [formData, setFormData] = useState({
     name: '',
     contactId: '',
-    companyId: '',
     expectedRevenue: 0,
     expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
