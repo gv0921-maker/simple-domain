@@ -99,7 +99,8 @@ export function CustomizationProvider({ children }: { children: ReactNode }) {
         newForms[existingIndex] = { ...newForms[existingIndex], ...updates };
         return { ...prev, forms: newForms };
       }
-      return prev;
+      // Create new form config if it doesn't exist
+      return { ...prev, forms: [...prev.forms, updates as FormConfig] };
     });
   }, []);
 

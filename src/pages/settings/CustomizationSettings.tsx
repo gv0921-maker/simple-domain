@@ -1,63 +1,69 @@
+import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModuleCustomization } from '@/components/customization/ModuleCustomization';
 import { ThemeCustomization } from '@/components/customization/ThemeCustomization';
+import { FormCustomizationDialog } from '@/components/customization/FormCustomizationDialog';
 import { Button } from '@/components/ui/button';
 import { useCustomization } from '@/contexts/CustomizationContext';
 import { RotateCcw, Palette, Layout, FileEdit, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 const FORM_REGISTRY = [
   {
     module: 'CRM',
+    moduleId: 'crm',
     forms: [
-      { name: 'New Opportunity', href: '/crm/pipeline', description: 'Opportunity creation form' },
-      { name: 'New Lead', href: '/crm/leads', description: 'Lead capture form' },
-      { name: 'New Contact', href: '/crm/contacts', description: 'Contact details form' },
-      { name: 'New Company', href: '/crm/companies', description: 'Company details form' },
+      { name: 'New Opportunity', description: 'Opportunity creation form' },
+      { name: 'New Lead', description: 'Lead capture form' },
+      { name: 'New Contact', description: 'Contact details form' },
+      { name: 'New Company', description: 'Company details form' },
     ],
   },
   {
     module: 'Sales',
+    moduleId: 'sales',
     forms: [
-      { name: 'Quotation', href: '/sales/quotations', description: 'Sales quotation form' },
-      { name: 'Sales Order', href: '/sales/orders', description: 'Sales order form' },
-      { name: 'Customer', href: '/sales/customers', description: 'Customer details form' },
+      { name: 'Quotation', description: 'Sales quotation form' },
+      { name: 'Sales Order', description: 'Sales order form' },
+      { name: 'Customer', description: 'Customer details form' },
     ],
   },
   {
     module: 'Inventory',
+    moduleId: 'inventory',
     forms: [
-      { name: 'Product', href: '/inventory/products', description: 'Product details form' },
-      { name: 'Transfer', href: '/inventory/transfers/new', description: 'Stock transfer form' },
-      { name: 'Inventory Adjustment', href: '/inventory/adjustments', description: 'Stock adjustment form' },
-      { name: 'Warehouse', href: '/inventory/warehouses', description: 'Warehouse configuration form' },
+      { name: 'Product', description: 'Product details form' },
+      { name: 'Transfer', description: 'Stock transfer form' },
+      { name: 'Inventory Adjustment', description: 'Stock adjustment form' },
+      { name: 'Warehouse', description: 'Warehouse configuration form' },
     ],
   },
   {
     module: 'Manufacturing',
+    moduleId: 'manufacturing',
     forms: [
-      { name: 'Work Order', href: '/manufacturing/work-orders', description: 'Work order form' },
-      { name: 'Bill of Materials', href: '/manufacturing/bom', description: 'BOM form' },
-      { name: 'Work Center', href: '/manufacturing/work-centers', description: 'Work center form' },
+      { name: 'Work Order', description: 'Work order form' },
+      { name: 'Bill of Materials', description: 'BOM form' },
+      { name: 'Work Center', description: 'Work center form' },
     ],
   },
   {
     module: 'Accounting',
+    moduleId: 'accounting',
     forms: [
-      { name: 'Invoice', href: '/accounting/invoices', description: 'Invoice form' },
-      { name: 'Payment', href: '/accounting/payments', description: 'Payment form' },
-      { name: 'Journal Entry', href: '/accounting/journal-entries', description: 'Journal entry form' },
+      { name: 'Invoice', description: 'Invoice form' },
+      { name: 'Payment', description: 'Payment form' },
+      { name: 'Journal Entry', description: 'Journal entry form' },
     ],
   },
 ];
 
 export default function CustomizationSettings() {
   const { resetAll } = useCustomization();
-  const navigate = useNavigate();
+  const [selectedForm, setSelectedForm] = useState<{ moduleId: string; formName: string } | null>(null);
 
   const handleResetAll = () => {
     resetAll();
@@ -115,7 +121,7 @@ export default function CustomizationSettings() {
                     {group.forms.map((form) => (
                       <button
                         key={form.name}
-                        onClick={() => navigate(form.href)}
+                        onClick={() => setSelectedForm({ moduleId: group.moduleId, formName: form.name })}
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors text-left"
                       >
                         <div className="flex items-center gap-3">
@@ -135,6 +141,15 @@ export default function CustomizationSettings() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedForm && (
+        <FormCustomizationDialog
+          open={!!selectedForm}
+          onOpenChange={(open) => !open && setSelectedForm(null)}
+          moduleId={selectedForm.moduleId}
+          formName={selectedForm.formName}
+        />
+      )}
     </AppLayout>
   );
 }
