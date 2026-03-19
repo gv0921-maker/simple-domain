@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getContacts, getCompanies, saveOpportunity, getOpportunities } from '@/lib/data/crm';
+import { getContacts, saveOpportunity, getOpportunities } from '@/lib/data/crm';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CRMPipeline() {
