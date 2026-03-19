@@ -140,9 +140,7 @@ export default function CRMLeadsList() {
     const convertedToday = leads.filter(
       (l) => l.status === 'converted' && l.convertedAt && format(parseISO(l.convertedAt), 'yyyy-MM-dd') === todayStr
     ).length;
-    const pendingToday = leads.filter(
-      (l) => l.status !== 'converted' && format(parseISO(l.createdAt), 'yyyy-MM-dd') === todayStr
-    ).length;
+    const pendingCount = activeLeads.length;
     return {
       total: activeLeads.length,
       new: activeLeads.filter((l) => l.status === 'new').length,
