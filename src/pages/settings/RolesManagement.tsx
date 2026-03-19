@@ -486,6 +486,11 @@ export default function RolesManagement() {
                             const level = getPermissionLevel(selectedRole, module);
                             const levelWeight = PERMISSION_LEVELS.findIndex((p) => p.id === level);
                             const perm = selectedRole.permissions.find((p) => p.module === module);
+                            const isAdmin = level === 'admin';
+                            // Admin level defaults to all additional permissions granted
+                            const hasImport = perm?.canImport ?? isAdmin;
+                            const hasExport = perm?.canExport ?? isAdmin;
+                            const hasPrint = perm?.canPrint ?? isAdmin;
 
                             return (
                               <TableRow key={module}>
