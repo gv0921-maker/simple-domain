@@ -134,12 +134,15 @@ export default function CRMLeadsList() {
     return grouped;
   }, [filteredLeads]);
 
-  const stats = useMemo(() => ({
-    total: leads.length,
-    new: leads.filter((l) => l.status === 'new').length,
-    qualified: leads.filter((l) => l.status === 'qualified').length,
-    totalValue: leads.reduce((sum, l) => sum + l.expectedRevenue, 0),
-  }), [leads]);
+  const stats = useMemo(() => {
+    const activeLeads = leads.filter((l) => l.status !== 'converted');
+    return {
+      total: activeLeads.length,
+      new: activeLeads.filter((l) => l.status === 'new').length,
+      qualified: activeLeads.filter((l) => l.status === 'qualified').length,
+      totalValue: activeLeads.reduce((sum, l) => sum + l.expectedRevenue, 0),
+    };
+  }, [leads]);
 
   const handleConvert = (id: string) => {
     const opportunity = convertLeadToOpportunity(id);
