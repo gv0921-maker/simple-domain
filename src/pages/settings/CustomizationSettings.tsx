@@ -140,15 +140,6 @@ export default function CustomizationSettings() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {selectedForm && (
-        <FormCustomizationDialog
-          open={!!selectedForm}
-          onOpenChange={(open) => !open && setSelectedForm(null)}
-          moduleId={selectedForm.moduleId}
-          formName={selectedForm.formName}
-        />
-      )}
     </AppLayout>
   );
 }
