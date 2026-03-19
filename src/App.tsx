@@ -424,8 +424,6 @@ const App = () => (
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactDetail /></ProtectedRoute>} />
-            <Route path="/crm/companies" element={<ProtectedRoute><CRMCompaniesList /></ProtectedRoute>} />
-            <Route path="/crm/companies/:id" element={<ProtectedRoute><CRMCompaniesList /></ProtectedRoute>} />
 
             {/* Manufacturing module */}
             <Route path="/manufacturing" element={<ProtectedRoute><ManufacturingOverview /></ProtectedRoute>} />
