@@ -88,6 +88,7 @@ export interface Lead {
   convertedAt?: string;
   convertedToOpportunityId?: string;
   lostReason?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
