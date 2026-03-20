@@ -468,6 +468,7 @@ export default function RolesManagement() {
                             <TableHead className="text-center">Edit</TableHead>
                             <TableHead className="text-center">Delete</TableHead>
                             <TableHead className="text-center">Admin</TableHead>
+                            <TableHead className="text-center border-l border-border">Record Access</TableHead>
                             <TableHead className="text-center border-l border-border">
                               <div className="flex flex-col items-center gap-0.5">
                                 <Import className="h-3.5 w-3.5" />
