@@ -312,7 +312,7 @@ export default function InventoryConfiguration() {
                       <Input
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="e.g., Office Supplies"
+                        placeholder=""
                       />
                     </div>
                   </div>
@@ -373,7 +373,7 @@ export default function InventoryConfiguration() {
                       <Input
                         value={operationForm.name}
                         onChange={(e) => setOperationForm({ ...operationForm, name: e.target.value })}
-                        placeholder="e.g., Manufacturing Orders"
+                        placeholder=""
                       />
                     </div>
                     <div className="grid gap-2">
@@ -381,7 +381,7 @@ export default function InventoryConfiguration() {
                       <Input
                         value={operationForm.code}
                         onChange={(e) => setOperationForm({ ...operationForm, code: e.target.value.toUpperCase() })}
-                        placeholder="e.g., MFG"
+                        placeholder=""
                       />
                     </div>
                     <div className="grid gap-2">

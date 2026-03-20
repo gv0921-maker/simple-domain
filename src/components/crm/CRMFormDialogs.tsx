@@ -240,7 +240,7 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
                 <Input
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="e.g., Sales"
+                  placeholder=""
                 />
               </div>
             </div>

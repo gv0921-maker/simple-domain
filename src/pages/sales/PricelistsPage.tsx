@@ -208,7 +208,7 @@ export default function PricelistsPage() {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search pricelists..."
+            placeholder=""
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -331,7 +331,7 @@ export default function PricelistsPage() {
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Wholesale Pricing"
+                  placeholder=""
                 />
               </div>
               <div className="grid gap-2">
@@ -339,7 +339,7 @@ export default function PricelistsPage() {
                 <Input
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="e.g., WHL"
+                  placeholder=""
                 />
               </div>
             </div>

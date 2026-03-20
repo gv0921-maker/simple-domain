@@ -98,7 +98,7 @@ export default function WorkCenters() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search work centers..."
+            placeholder=""
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -183,7 +183,7 @@ export default function WorkCenters() {
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Assembly Line 1"
+                placeholder=""
               />
             </div>
             <div>
@@ -191,7 +191,7 @@ export default function WorkCenters() {
               <Input
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                placeholder="e.g., ASM-01"
+                placeholder=""
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

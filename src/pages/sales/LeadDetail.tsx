@@ -359,7 +359,7 @@ export default function LeadDetail() {
                         <Input
                           value={lead.name}
                           onChange={(e) => handleChange('name', e.target.value)}
-                          placeholder="e.g., Office Furniture Quote"
+                          placeholder=""
                         />
                       </div>
                       <div className="grid gap-2">

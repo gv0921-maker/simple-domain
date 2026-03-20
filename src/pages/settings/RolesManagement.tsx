@@ -378,7 +378,7 @@ export default function RolesManagement() {
             <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search roles..."
+                placeholder=""
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -732,7 +732,7 @@ export default function RolesManagement() {
                   <Input
                     value={editFormData.name}
                     onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                    placeholder="e.g., Sales Manager"
+                    placeholder=""
                     disabled={selectedRole?.isSystem && !isNewRole}
                   />
                 </div>

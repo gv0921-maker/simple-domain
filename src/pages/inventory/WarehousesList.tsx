@@ -191,7 +191,7 @@ export default function WarehousesList() {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search warehouses..."
+            placeholder=""
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"

@@ -82,7 +82,7 @@ export default function UsersManagement() {
             <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search users..."
+                placeholder=""
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -105,11 +105,11 @@ export default function UsersManagement() {
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" placeholder="John Doe" />
+                    <Input id="name" placeholder="" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" />
+                    <Input id="email" type="email" placeholder="" />
                   </div>
                   <div className="space-y-2">
                     <Label>Roles</Label>

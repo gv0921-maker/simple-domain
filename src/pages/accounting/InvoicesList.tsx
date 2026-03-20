@@ -146,7 +146,7 @@ export default function InvoicesList() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search invoices..."
+            placeholder=""
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -272,7 +272,7 @@ export default function InvoicesList() {
                 />
                 <Input
                   type="number"
-                  placeholder="Qty"
+                  placeholder=""
                   value={newLine.quantity}
                   onChange={(e) => setNewLine({ ...newLine, quantity: parseInt(e.target.value) || 1 })}
                   className="w-20"

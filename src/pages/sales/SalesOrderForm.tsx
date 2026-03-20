@@ -538,7 +538,7 @@ export default function SalesOrderForm() {
                         min={1}
                         value={newLine.quantity}
                         onChange={(e) => setNewLine({ ...newLine, quantity: Number(e.target.value) })}
-                        placeholder="Qty"
+                        placeholder=""
                       />
                     </div>
                     <div className="col-span-2">

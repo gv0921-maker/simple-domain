@@ -132,7 +132,7 @@ export default function BOMList() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search BOMs..."
+            placeholder=""
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -221,7 +221,7 @@ export default function BOMList() {
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Widget A Assembly"
+                  placeholder=""
                 />
               </div>
               <div>
@@ -275,7 +275,7 @@ export default function BOMList() {
                 />
                 <Input
                   type="number"
-                  placeholder="Qty"
+                  placeholder=""
                   value={newLine.quantity}
                   onChange={(e) => setNewLine({ ...newLine, quantity: parseFloat(e.target.value) || 1 })}
                   className="w-20"

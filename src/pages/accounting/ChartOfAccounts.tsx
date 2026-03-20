@@ -127,7 +127,7 @@ export default function ChartOfAccounts() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search accounts..."
+              placeholder=""
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -216,7 +216,7 @@ export default function ChartOfAccounts() {
                 <Input
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="e.g., 1000"
+                  placeholder=""
                 />
               </div>
               <div>
@@ -240,7 +240,7 @@ export default function ChartOfAccounts() {
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Cash"
+                placeholder=""
               />
             </div>
             <div className="flex items-center justify-between">

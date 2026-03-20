@@ -297,7 +297,7 @@ export default function WarehouseLocations() {
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search locations..."
+                    placeholder=""
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-9"
@@ -480,7 +480,7 @@ export default function WarehouseLocations() {
                 <Input
                   value={locationForm.name}
                   onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
-                  placeholder="e.g., Zone A"
+                  placeholder=""
                 />
               </div>
               <div className="grid gap-2">
@@ -488,7 +488,7 @@ export default function WarehouseLocations() {
                 <Input
                   value={locationForm.code}
                   onChange={(e) => setLocationForm({ ...locationForm, code: e.target.value })}
-                  placeholder="e.g., GLF/Stock/Zone-A"
+                  placeholder=""
                 />
               </div>
               <div className="grid gap-2">
@@ -586,7 +586,7 @@ export default function WarehouseLocations() {
                 <Input
                   value={routeForm.name}
                   onChange={(e) => setRouteForm({ ...routeForm, name: e.target.value })}
-                  placeholder="e.g., Supplier to Main"
+                  placeholder=""
                 />
               </div>
               <div className="grid gap-2">

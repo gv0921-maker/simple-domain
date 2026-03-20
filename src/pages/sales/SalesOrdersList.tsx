@@ -275,7 +275,7 @@ export default function SalesOrdersList() {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search orders..."
+            placeholder=""
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -446,7 +446,7 @@ export default function SalesOrdersList() {
                     value={newLine.quantity}
                     onChange={(e) => setNewLine({ ...newLine, quantity: parseInt(e.target.value) || 1 })}
                     className="w-20"
-                    placeholder="Qty"
+                    placeholder=""
                   />
                   <Input
                     type="number"
@@ -455,7 +455,7 @@ export default function SalesOrdersList() {
                     value={newLine.discount}
                     onChange={(e) => setNewLine({ ...newLine, discount: parseInt(e.target.value) || 0 })}
                     className="w-20"
-                    placeholder="%"
+                    placeholder=""
                   />
                   <Button onClick={handleAddLine}>
                     <Plus className="h-4 w-4" />

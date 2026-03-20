@@ -478,7 +478,7 @@ export default function ProductDetail() {
                     <Input
                       value={newVariant.name}
                       onChange={(e) => setNewVariant({ ...newVariant, name: e.target.value })}
-                      placeholder="e.g., Large"
+                      placeholder=""
                     />
                   </div>
                   <div className="grid gap-2">
@@ -486,7 +486,7 @@ export default function ProductDetail() {
                     <Input
                       value={newVariant.sku}
                       onChange={(e) => setNewVariant({ ...newVariant, sku: e.target.value })}
-                      placeholder="e.g., PROD-001-L"
+                      placeholder=""
                     />
                   </div>
                   <div className="grid gap-2">

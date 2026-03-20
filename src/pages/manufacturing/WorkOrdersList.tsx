@@ -144,7 +144,7 @@ export default function WorkOrdersList() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search work orders..."
+              placeholder=""
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -263,7 +263,7 @@ export default function WorkOrdersList() {
               <Label>Work Center</Label>
               <Select value={formData.workCenterId} onValueChange={(v) => setFormData({ ...formData, workCenterId: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Work Center" />
+                  <SelectValue placeholder="" />
                 </SelectTrigger>
                 <SelectContent>
                   {workCenters.filter(wc => wc.isActive).map((wc) => (

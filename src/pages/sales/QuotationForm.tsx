@@ -533,7 +533,7 @@ export default function QuotationForm() {
                       value={newLine.quantity}
                       onChange={(e) => setNewLine({ ...newLine, quantity: parseInt(e.target.value) || 1 })}
                       className="w-20"
-                      placeholder="Qty"
+                      placeholder=""
                     />
                     <Input
                       type="number"
