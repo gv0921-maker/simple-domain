@@ -59,8 +59,15 @@ import {
   type PermissionLevel, 
   type Permission,
   type TabPermission,
+  type RecordScope,
 } from '@/lib/data/rbac';
 import { MODULE_TABS, getModuleTabIds } from '@/lib/data/moduleTabs';
+
+const RECORD_SCOPE_OPTIONS: { id: RecordScope | 'none'; label: string; description: string }[] = [
+  { id: 'none', label: 'None', description: 'No access to records' },
+  { id: 'own', label: 'Own', description: 'Only own records' },
+  { id: 'all', label: 'All', description: 'All user records' },
+];
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
