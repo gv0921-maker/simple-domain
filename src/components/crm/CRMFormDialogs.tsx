@@ -224,14 +224,17 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
 
           <TabsContent value="details" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Job Title</Label>
-                <Input
-                  value={formData.jobTitle}
-                  onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
-                  placeholder="e.g., Sales Manager"
-                />
-              </div>
+              {studio.isFieldVisible('jobTitle') && (
+                <div className="grid gap-2">
+                  <Label>{studio.getFieldLabel('jobTitle', 'Job Title')}</Label>
+                  <Input
+                    value={formData.jobTitle}
+                    onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                    placeholder={studio.getFieldPlaceholder('jobTitle', 'e.g., Sales Manager')}
+                    readOnly={studio.isFieldReadOnly('jobTitle')}
+                  />
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label>Department</Label>
                 <Input
@@ -242,40 +245,45 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label>Tags</Label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {formData.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="gap-1">
-                    {tag}
-                    <button onClick={() => handleRemoveTag(tag)} className="ml-1">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+            {studio.isFieldVisible('tags') && (
+              <div className="grid gap-2">
+                <Label>{studio.getFieldLabel('tags', 'Tags')}</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1">
+                      {tag}
+                      <button onClick={() => handleRemoveTag(tag)} className="ml-1">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="Add tag"
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                  />
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddTag}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Add tag"
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                />
-                <Button type="button" variant="outline" size="icon" onClick={handleAddTag}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            )}
 
-            <div className="grid gap-2">
-              <Label>Notes</Label>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Additional notes..."
-                rows={3}
-              />
-            </div>
+            {studio.isFieldVisible('notes') && (
+              <div className="grid gap-2">
+                <Label>{studio.getFieldLabel('notes', 'Notes')}</Label>
+                <Textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder={studio.getFieldPlaceholder('notes', 'Additional notes...')}
+                  rows={3}
+                  readOnly={studio.isFieldReadOnly('notes')}
+                />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
