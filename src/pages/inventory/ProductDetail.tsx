@@ -36,6 +36,7 @@ import {
 import { getProduct, saveProduct, deleteProduct, type Product, type ProductVariant } from '@/lib/data/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useStudioConfig } from '@/hooks/useStudioConfig';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
