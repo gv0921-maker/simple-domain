@@ -63,6 +63,7 @@ export default function TransferForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isNew = id === 'new';
+  const studio = useStudioConfig('inventory', 'Transfer');
 
   const [products] = useState(getProducts());
   const [warehouses] = useState(getWarehouses());
