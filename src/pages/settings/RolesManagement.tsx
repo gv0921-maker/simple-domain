@@ -798,6 +798,33 @@ export default function RolesManagement() {
                               </Select>
                             </TableCell>
                             <TableCell className="text-center border-l border-border">
+                              <Select
+                                value={getEditPermissionLevel(module) === 'none' ? 'none' : (perm?.scope || 'own')}
+                                onValueChange={(v) => {
+                                  if (v === 'none') {
+                                    handlePermissionChange(module, 'none');
+                                  } else {
+                                    handleScopeChange(module, v as RecordScope);
+                                    // If permission is none, auto-set to view
+                                    if (getEditPermissionLevel(module) === 'none') {
+                                      handlePermissionChange(module, 'view');
+                                    }
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-[90px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {RECORD_SCOPE_OPTIONS.map((opt) => (
+                                    <SelectItem key={opt.id} value={opt.id}>
+                                      {opt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-center border-l border-border">
                               <Checkbox
                                 checked={!!perm?.canImport}
                                 onCheckedChange={(checked) => handleAdditionalPermChange(module, 'canImport', !!checked)}
