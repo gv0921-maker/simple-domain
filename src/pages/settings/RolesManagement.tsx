@@ -593,9 +593,9 @@ export default function RolesManagement() {
                           const moduleLevel = getPermissionLevel(selectedRole, moduleConfig.moduleId);
                           const isAdmin = moduleLevel === 'admin';
                           const tabPerm = getTabPermission(moduleConfig.moduleId);
-                          const allowedCount = tabPerm?.allowedTabs.length || 0;
                           const totalTabs = moduleConfig.tabs.length;
-                          const allAllowed = !tabPerm || tabPerm.allowedTabs.length === 0;
+                          const allowedCount = !tabPerm ? totalTabs : tabPerm.allowedTabs.length;
+                          const allAllowed = !tabPerm;
 
                           return (
                             <Collapsible
@@ -680,6 +680,7 @@ export default function RolesManagement() {
                                               >
                                                 <Checkbox
                                                   checked={allowed}
+                                                   onClick={(e) => e.stopPropagation()}
                                                   onCheckedChange={() => toggleTabPermission(moduleConfig.moduleId, tab.id)}
                                                 />
                                                 <span className="text-sm">{tab.label}</span>

@@ -130,7 +130,7 @@ function getTabFromPath(moduleId: string, pathname: string): string | null {
   }
 
   if (moduleId === 'crm' && normalized.startsWith('/crm/opportunities')) {
-    return 'pipeline';
+    return 'opportunities';
   }
 
   const tabs = getModuleTabs(moduleId);
@@ -146,6 +146,10 @@ function getTabFromPath(moduleId: string, pathname: string): string | null {
   return matchedTab?.id ?? null;
 }
 
+function hasExplicitTabRestriction(userId: string, moduleId: string): boolean {
+  return getUserTabPermissions(userId).some((tp) => tp.moduleId === moduleId);
+}
+
 export function canAccessRoute(userId: string, pathname: string): boolean {
   const normalized = normalizePathname(pathname);
 
@@ -158,7 +162,16 @@ export function canAccessRoute(userId: string, pathname: string): boolean {
   if (!hasPermission(userId, moduleId, requiredLevel)) return false;
 
   const tabId = getTabFromPath(moduleId, normalized);
-  if (!tabId) return true;
+  if (!tabId) {
+    const moduleTabIds = getModuleTabIds(moduleId);
+    if (moduleTabIds.length === 0) return true;
+
+    // If a role explicitly restricts tabs for this module, unmapped routes are denied
+    // to prevent bypassing tab restrictions via alternate URLs.
+    if (hasExplicitTabRestriction(userId, moduleId)) return false;
+
+    return true;
+  }
 
   return hasTabAccess(userId, moduleId, tabId);
 }
@@ -478,8 +491,10 @@ export function hasTabAccess(userId: string, moduleId: string, tabId: string): b
 }
 
 export function getAccessibleTabs(userId: string, moduleId: string): string[] {
+  const allTabIds = getModuleTabIds(moduleId);
+
   if (isSuperAdminUser(userId)) {
-    return getModuleTabIds(moduleId);
+    return allTabIds;
   }
 
   if (!hasPermission(userId, moduleId, 'view')) return [];
@@ -489,7 +504,7 @@ export function getAccessibleTabs(userId: string, moduleId: string): string[] {
   
   // Admins get all tabs
   if (modulePerm?.level === 'admin') {
-    return getModuleTabIds(moduleId);
+    return allTabIds;
   }
 
   const tabPermissions = getUserTabPermissions(userId);
@@ -497,7 +512,7 @@ export function getAccessibleTabs(userId: string, moduleId: string): string[] {
 
   // If no restrictions, return all tabs
   if (!moduleTabPerm) {
-    return getModuleTabIds(moduleId);
+    return allTabIds;
   }
 
   // Explicit empty allowedTabs means deny all tabs for non-admin users
@@ -505,7 +520,7 @@ export function getAccessibleTabs(userId: string, moduleId: string): string[] {
     return [];
   }
 
-  return moduleTabPerm.allowedTabs;
+  return moduleTabPerm.allowedTabs.filter((tabId) => allTabIds.includes(tabId));
 }
 
 // Audit logging

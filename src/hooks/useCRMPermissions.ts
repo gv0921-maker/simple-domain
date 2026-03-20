@@ -1,7 +1,12 @@
 // CRM Permission Hook - Demo RBAC for CRM module
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserPermissions, hasPermission, getModuleRecordScope, type PermissionLevel, type RecordScope } from '@/lib/data/rbac';
+import {
+  hasPermission,
+  hasModulePermission,
+  getModuleRecordScope,
+  type RecordScope,
+} from '@/lib/data/rbac';
 
 export type CRMAction = 
   | 'view_crm'
@@ -68,21 +73,13 @@ export function useCRMPermissions(): CRMPermissions {
       };
     }
     
-    const userPerms = getUserPermissions(user.id);
-    const crmPerm = userPerms.find(p => p.module === 'crm');
-    const salesPerm = userPerms.find(p => p.module === 'sales');
-    
-    // Combine CRM and Sales permissions (they often overlap)
-    const effectiveLevel = Math.max(
-      getPermissionWeight(crmPerm?.level || 'none'),
-      getPermissionWeight(salesPerm?.level || 'none')
-    );
-    
-    const canView = effectiveLevel >= 1;
-    const canCreate = effectiveLevel >= 2;
-    const canEdit = effectiveLevel >= 3;
-    const canDelete = effectiveLevel >= 4;
-    const isAdmin = effectiveLevel >= 5;
+    const canView = hasPermission(user.id, 'crm', 'view');
+    const canCreate = hasPermission(user.id, 'crm', 'create');
+    const canEdit = hasPermission(user.id, 'crm', 'edit');
+    const canDelete = hasPermission(user.id, 'crm', 'delete');
+    const isAdmin = hasPermission(user.id, 'crm', 'admin');
+    const canExport = hasModulePermission(user.id, 'crm', 'export');
+    const canImport = hasModulePermission(user.id, 'crm', 'import');
     
     const recordScope = getModuleRecordScope(user.id, 'crm');
     
@@ -109,9 +106,9 @@ export function useCRMPermissions(): CRMPermissions {
         case 'view_analytics':
           return canView;
         case 'export_data':
-          return canView;
+          return canExport;
         case 'import_data':
-          return canCreate;
+          return canImport;
         default:
           return false;
       }
@@ -125,8 +122,7 @@ export function useCRMPermissions(): CRMPermissions {
         r.assignedTo === user.name || 
         r.createdBy === user.name || 
         r.assignedTo === user.id ||
-        r.createdBy === user.id ||
-        (!r.assignedTo && !r.createdBy) // Unassigned records visible to all
+        r.createdBy === user.id
       );
     };
     
@@ -144,8 +140,8 @@ export function useCRMPermissions(): CRMPermissions {
       canDeleteOpportunities: canDelete,
       canModifyPipeline: isAdmin,
       canViewAnalytics: canView,
-      canExportData: canView,
-      canImportData: canCreate,
+      canExportData: canExport,
+      canImportData: canImport,
       recordScope,
       can,
       filterByScope,
@@ -153,18 +149,6 @@ export function useCRMPermissions(): CRMPermissions {
   }, [user]);
   
   return permissions;
-}
-
-function getPermissionWeight(level: PermissionLevel): number {
-  const weights: Record<PermissionLevel, number> = {
-    none: 0,
-    view: 1,
-    create: 2,
-    edit: 3,
-    delete: 4,
-    admin: 5,
-  };
-  return weights[level];
 }
 
 // Helper to check if user can access a specific record
