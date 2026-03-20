@@ -103,11 +103,11 @@ let leaveRequests: LeaveRequest[] = [
 ];
 
 let contracts: Contract[] = [
-  { id: 'CON-001', employeeId: 'EMP-001', employeeName: 'John Smith', type: 'permanent', startDate: '2021-03-15', salary: 85000, currency: 'USD', status: 'active' },
-  { id: 'CON-002', employeeId: 'EMP-002', employeeName: 'Sarah Johnson', type: 'permanent', startDate: '2020-06-01', salary: 95000, currency: 'USD', status: 'active' },
-  { id: 'CON-003', employeeId: 'EMP-003', employeeName: 'Mike Williams', type: 'permanent', startDate: '2019-11-20', salary: 78000, currency: 'USD', status: 'active' },
-  { id: 'CON-004', employeeId: 'EMP-005', employeeName: 'Michael Chen', type: 'permanent', startDate: '2018-05-01', salary: 120000, currency: 'USD', status: 'active' },
-  { id: 'CON-005', employeeId: 'EMP-007', employeeName: 'David Lee', type: 'temporary', startDate: '2023-02-01', endDate: '2024-02-01', salary: 55000, currency: 'USD', status: 'active' },
+  { id: 'CON-001', employeeId: 'EMP-001', employeeName: 'John Smith', type: 'permanent', startDate: '2021-03-15', salary: 85000, currency: 'INR', status: 'active' },
+  { id: 'CON-002', employeeId: 'EMP-002', employeeName: 'Sarah Johnson', type: 'permanent', startDate: '2020-06-01', salary: 95000, currency: 'INR', status: 'active' },
+  { id: 'CON-003', employeeId: 'EMP-003', employeeName: 'Mike Williams', type: 'permanent', startDate: '2019-11-20', salary: 78000, currency: 'INR', status: 'active' },
+  { id: 'CON-004', employeeId: 'EMP-005', employeeName: 'Michael Chen', type: 'permanent', startDate: '2018-05-01', salary: 120000, currency: 'INR', status: 'active' },
+  { id: 'CON-005', employeeId: 'EMP-007', employeeName: 'David Lee', type: 'temporary', startDate: '2023-02-01', endDate: '2024-02-01', salary: 55000, currency: 'INR', status: 'active' },
 ];
 
 // CRUD operations

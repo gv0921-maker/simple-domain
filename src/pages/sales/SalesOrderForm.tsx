@@ -104,7 +104,7 @@ export default function SalesOrderForm() {
     customerName: '',
     orderDate: new Date().toISOString().split('T')[0],
     deliveryDate: addDays(new Date(), 7).toISOString().split('T')[0],
-    currency: 'USD',
+    currency: 'INR',
     pricelistId: 'pl_standard',
     paymentTerms: 'net30',
     deliveryAddress: '',
@@ -646,17 +646,17 @@ export default function SalesOrderForm() {
                     <TableFooter>
                       <TableRow>
                         <TableCell colSpan={5} className="text-right font-medium">Subtotal</TableCell>
-                        <TableCell className="text-right font-medium">${totals.subtotal.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">{`₹${totals.subtotal.toFixed(2)}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                       <TableRow>
                         <TableCell colSpan={5} className="text-right font-medium">Tax</TableCell>
-                        <TableCell className="text-right font-medium">${totals.taxAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">{`₹${totals.taxAmount.toFixed(2)}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                       <TableRow className="bg-muted/50">
                         <TableCell colSpan={5} className="text-right font-bold text-lg">Total</TableCell>
-                        <TableCell className="text-right font-bold text-lg">${totals.total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold text-lg">{`₹${totals.total.toFixed(2)}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                     </TableFooter>
@@ -706,7 +706,7 @@ export default function SalesOrderForm() {
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">${totals.total.toLocaleString()}</span>
+                    <span className="text-primary">{`₹${totals.total.toLocaleString('en-IN')}`}</span>
                   </div>
                 </div>
               </CardContent>

@@ -30,7 +30,7 @@ const DEFAULT_PRICELISTS: Pricelist[] = [
     id: 'pl_standard',
     name: 'Standard Pricelist',
     code: 'STD',
-    currency: 'USD',
+    currency: 'INR',
     isActive: true,
     isDefault: true,
     rules: [],
@@ -41,7 +41,7 @@ const DEFAULT_PRICELISTS: Pricelist[] = [
     id: 'pl_wholesale',
     name: 'Wholesale Pricelist',
     code: 'WHL',
-    currency: 'USD',
+    currency: 'INR',
     isActive: true,
     isDefault: false,
     rules: [
@@ -56,7 +56,7 @@ const DEFAULT_PRICELISTS: Pricelist[] = [
     id: 'pl_vip',
     name: 'VIP Customer Pricelist',
     code: 'VIP',
-    currency: 'USD',
+    currency: 'INR',
     isActive: true,
     isDefault: false,
     rules: [
@@ -100,7 +100,7 @@ const DEFAULT_QUOTATIONS: Quotation[] = [
     quotationDate: '2025-01-20',
     validUntil: '2025-02-20',
     salespersonName: 'Sales Manager',
-    currency: 'USD',
+    currency: 'INR',
     pricelistId: 'pl_standard',
     paymentTerms: 'Net 30',
     lines: [
@@ -143,7 +143,7 @@ const DEFAULT_QUOTATIONS: Quotation[] = [
     quotationDate: '2025-01-22',
     validUntil: '2025-02-22',
     salespersonName: 'Sales Rep',
-    currency: 'USD',
+    currency: 'INR',
     pricelistId: 'pl_vip',
     paymentTerms: 'Net 15',
     lines: [
@@ -190,7 +190,7 @@ const DEFAULT_SALES_ORDERS: SalesOrder[] = [
     commitmentDate: '2025-02-05',
     deliveryDate: '2025-02-05',
     salespersonName: 'Sales Manager',
-    currency: 'USD',
+    currency: 'INR',
     paymentTerms: 'Net 30',
     lines: [
       {
@@ -265,7 +265,7 @@ const DEFAULT_SUBSCRIPTIONS: Subscription[] = [
     subtotal: 500,
     taxAmount: 90,
     total: 590,
-    currency: 'USD',
+    currency: 'INR',
     orderHistory: [],
     createdBy: 'Sales Manager',
     createdAt: '2025-01-01T00:00:00Z',

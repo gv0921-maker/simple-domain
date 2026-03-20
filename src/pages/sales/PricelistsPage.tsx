@@ -83,7 +83,7 @@ export default function PricelistsPage() {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    currency: 'USD',
+    currency: 'INR',
     isActive: true,
     isDefault: false,
   });
@@ -121,7 +121,7 @@ export default function PricelistsPage() {
       setFormData({
         name: '',
         code: '',
-        currency: 'USD',
+        currency: 'INR',
         isActive: true,
         isDefault: false,
       });

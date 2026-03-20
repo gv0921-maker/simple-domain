@@ -212,7 +212,7 @@ export default function SalesOrdersListNew() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${stats.totalRevenue.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '250ms' }}>
@@ -220,7 +220,7 @@ export default function SalesOrdersListNew() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Pending Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-info">${stats.pendingRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-info">{`₹${stats.pendingRevenue.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
         </div>
@@ -324,7 +324,7 @@ export default function SalesOrdersListNew() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div>
-                          <p className="font-semibold">${order.total.toLocaleString()}</p>
+                          <p className="font-semibold">{`₹${order.total.toLocaleString('en-IN')}`}</p>
                           <p className="text-xs text-muted-foreground">{order.lines.length} items</p>
                         </div>
                       </TableCell>

@@ -322,7 +322,7 @@ export default function QuotationsList() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.value.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${stats.value.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
         </div>
@@ -482,7 +482,7 @@ export default function QuotationsList() {
                     <SelectContent>
                       {products.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
-                          {p.name} - ${p.salePrice}
+                          {p.name} - ₹{p.salePrice}
                         </SelectItem>
                       ))}
                     </SelectContent>
