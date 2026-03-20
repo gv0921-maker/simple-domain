@@ -347,102 +347,125 @@ export default function CRMLeadsList() {
               <DialogDescription>Create a new sales lead</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="grid gap-2">
-                <Label>Lead Title *</Label>
-                <Input
-                  value={formData.title || ''}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Office Furniture Quote"
-                />
-              </div>
+              {studio.isFieldVisible('name') && (
+                <div className="grid gap-2">
+                  <Label>{studio.getFieldLabel('name', 'Lead Title')} {studio.isFieldRequired('name', true) && '*'}</Label>
+                  <Input
+                    value={formData.title || ''}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder={studio.getFieldPlaceholder('name', 'e.g., Office Furniture Quote')}
+                    readOnly={studio.isFieldReadOnly('name')}
+                  />
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Contact Name *</Label>
-                  <Input
-                    value={formData.contactName || ''}
-                    onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Email *</Label>
-                  <Input
-                    type="email"
-                    value={formData.email || ''}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="john@example.com"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Phone</Label>
-                  <Input
-                    value={formData.phone || ''}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+1 555-0123"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Company</Label>
-                  <Input
-                    value={formData.companyName || ''}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    placeholder="Company name"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="grid gap-2">
-                  <Label>Source</Label>
-                  <Select
-                    value={formData.source}
-                    onValueChange={(v) => setFormData({ ...formData, source: v as LeadSource })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="website">Website</SelectItem>
-                      <SelectItem value="referral">Referral</SelectItem>
-                      <SelectItem value="social_media">Social Media</SelectItem>
-                      <SelectItem value="trade_show">Trade Show</SelectItem>
-                      <SelectItem value="cold_call">Cold Call</SelectItem>
-                      <SelectItem value="email_campaign">Email Campaign</SelectItem>
-                      <SelectItem value="manual">Manual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Priority</Label>
-                  <Select
-                    value={formData.priority}
-                    onValueChange={(v) => setFormData({ ...formData, priority: v as LeadPriority })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Expected Revenue</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                {studio.isFieldVisible('contactName') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('contactName', 'Contact Name')} {studio.isFieldRequired('contactName') && '*'}</Label>
                     <Input
-                      type="number"
-                      value={formData.expectedRevenue || ''}
-                      onChange={(e) => setFormData({ ...formData, expectedRevenue: parseFloat(e.target.value) || 0 })}
-                      className="pl-8"
+                      value={formData.contactName || ''}
+                      onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                      placeholder={studio.getFieldPlaceholder('contactName', 'John Doe')}
+                      readOnly={studio.isFieldReadOnly('contactName')}
                     />
                   </div>
-                </div>
+                )}
+                {studio.isFieldVisible('email') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('email', 'Email')} {studio.isFieldRequired('email') && '*'}</Label>
+                    <Input
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder={studio.getFieldPlaceholder('email', 'john@example.com')}
+                      readOnly={studio.isFieldReadOnly('email')}
+                    />
+                  </div>
+                )}
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                {studio.isFieldVisible('phone') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('phone', 'Phone')}</Label>
+                    <Input
+                      value={formData.phone || ''}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder={studio.getFieldPlaceholder('phone', '+1 555-0123')}
+                      readOnly={studio.isFieldReadOnly('phone')}
+                    />
+                  </div>
+                )}
+                {studio.isFieldVisible('company') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('company', 'Company')}</Label>
+                    <Input
+                      value={formData.companyName || ''}
+                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                      placeholder={studio.getFieldPlaceholder('company', 'Company name')}
+                      readOnly={studio.isFieldReadOnly('company')}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {studio.isFieldVisible('source') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('source', 'Source')}</Label>
+                    <Select
+                      value={formData.source}
+                      onValueChange={(v) => setFormData({ ...formData, source: v as LeadSource })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="website">Website</SelectItem>
+                        <SelectItem value="referral">Referral</SelectItem>
+                        <SelectItem value="social_media">Social Media</SelectItem>
+                        <SelectItem value="trade_show">Trade Show</SelectItem>
+                        <SelectItem value="cold_call">Cold Call</SelectItem>
+                        <SelectItem value="email_campaign">Email Campaign</SelectItem>
+                        <SelectItem value="manual">Manual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {studio.isFieldVisible('priority') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('priority', 'Priority')}</Label>
+                    <Select
+                      value={formData.priority}
+                      onValueChange={(v) => setFormData({ ...formData, priority: v as LeadPriority })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {studio.isFieldVisible('expectedRevenue') && (
+                  <div className="grid gap-2">
+                    <Label>{studio.getFieldLabel('expectedRevenue', 'Expected Revenue')}</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                      <Input
+                        type="number"
+                        value={formData.expectedRevenue || ''}
+                        onChange={(e) => setFormData({ ...formData, expectedRevenue: parseFloat(e.target.value) || 0 })}
+                        className="pl-8"
+                        readOnly={studio.isFieldReadOnly('expectedRevenue')}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsNewDialogOpen(false)}>Cancel</Button>
