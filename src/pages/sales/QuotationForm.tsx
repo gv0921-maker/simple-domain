@@ -108,7 +108,7 @@ export default function QuotationForm() {
     customerName: '',
     quotationDate: new Date().toISOString().split('T')[0],
     validUntil: addDays(new Date(), 30).toISOString().split('T')[0],
-    currency: 'USD',
+    currency: 'INR',
     pricelistId: 'pl_standard',
     paymentTerms: 'net30',
     globalDiscount: 0,

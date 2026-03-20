@@ -191,7 +191,7 @@ export default function SubscriptionsList() {
       subtotal,
       taxAmount,
       total: subtotal + taxAmount,
-      currency: 'USD',
+      currency: 'INR',
       orderHistory: editingSub?.orderHistory || [],
       createdBy: editingSub?.createdBy || user?.name || 'System',
       createdAt: editingSub?.createdAt || now.toISOString(),
