@@ -92,8 +92,6 @@ const DEFAULT_OPERATION_TYPES: OperationType[] = [
 ];
 
 const DEFAULT_REORDER_RULES: ReorderRule[] = [
-  { id: '1', productId: '1', productName: 'Cushion Cover (Punch)', warehouseId: '1', warehouseName: 'Main Warehouse', minQty: 20, maxQty: 100, triggerQty: 25, isActive: true },
-  { id: '2', productId: '4', productName: 'LED Table Lamp', warehouseId: '1', warehouseName: 'Main Warehouse', minQty: 10, maxQty: 50, triggerQty: 15, isActive: true },
 ];
 
 export default function InventoryConfiguration() {

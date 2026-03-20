@@ -86,25 +86,7 @@ interface Quotation {
   updatedAt: string;
 }
 
-const DEFAULT_QUOTATIONS: Quotation[] = [
-  {
-    id: '1',
-    reference: 'QT-2025-001',
-    customerId: '1',
-    customerName: 'John Smith - Acme Corp',
-    status: 'sent',
-    validUntil: '2025-02-28',
-    lines: [
-      { id: 'l1', productId: '2', productName: 'Wooden Chair - Oak', quantity: 20, unitPrice: 4999, discount: 10, total: 89982 },
-    ],
-    subtotal: 89982,
-    tax: 16196.76,
-    total: 106178.76,
-    createdBy: 'Sales Manager',
-    createdAt: '2025-01-20T10:00:00Z',
-    updatedAt: '2025-01-22T14:00:00Z',
-  },
-];
+const DEFAULT_QUOTATIONS: Quotation[] = [];
 
 const STATUS_CONFIG: Record<QuotationStatus, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },

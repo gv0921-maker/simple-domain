@@ -43,59 +43,8 @@ const ACTION_ICONS: Record<string, React.ReactNode> = {
   permission_change: <Shield className="h-4 w-4 text-primary" />,
 };
 
-// Demo audit logs
-const DEMO_LOGS: AuditLog[] = [
-  {
-    id: '1',
-    userId: '1',
-    userName: 'Management',
-    action: 'login',
-    resource: 'session',
-    details: 'User logged in successfully',
-    ipAddress: '192.168.1.100',
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    userId: '1',
-    userName: 'Management',
-    action: 'create',
-    resource: 'product',
-    resourceId: '102884',
-    details: 'Created new product: Leather Sofa',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: '3',
-    userId: '2',
-    userName: 'Sales Manager',
-    action: 'update',
-    resource: 'lead',
-    resourceId: '1',
-    details: 'Updated lead status: New → Qualified',
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: '4',
-    userId: '1',
-    userName: 'Management',
-    action: 'permission_change',
-    resource: 'role',
-    resourceId: 'sales_rep',
-    details: 'Modified permissions for Sales Representative role',
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: '5',
-    userId: '3',
-    userName: 'Warehouse Operator',
-    action: 'update',
-    resource: 'inventory',
-    resourceId: 'GLF/EST/25-26/00670',
-    details: 'Updated transfer status: Draft → Waiting',
-    timestamp: new Date(Date.now() - 172800000).toISOString(),
-  },
-];
+// Audit logs loaded from storage
+const DEMO_LOGS: AuditLog[] = [];
 
 export default function AuditLogs() {
   const [search, setSearch] = useState('');

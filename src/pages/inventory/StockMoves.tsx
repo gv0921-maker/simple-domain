@@ -63,68 +63,7 @@ export interface StockMoveRecord {
   createdAt: string;
 }
 
-const DEFAULT_STOCK_MOVES: StockMoveRecord[] = [
-  {
-    id: '1',
-    productId: '1',
-    productName: 'Cushion Cover (Punch)',
-    productSku: '102880',
-    moveType: 'in',
-    quantity: 20,
-    previousQty: 25,
-    newQty: 45,
-    sourceLocation: 'Vendor',
-    destinationLocation: 'GLF/Stock',
-    reference: 'PO-2025-001',
-    createdBy: 'Vikesh',
-    createdAt: '2025-01-20T10:30:00Z',
-  },
-  {
-    id: '2',
-    productId: '2',
-    productName: 'Wooden Chair - Oak',
-    productSku: '102881',
-    moveType: 'out',
-    quantity: 5,
-    previousQty: 17,
-    newQty: 12,
-    sourceLocation: 'GLF/Stock',
-    destinationLocation: 'Customer',
-    reference: 'SO-2025-042',
-    createdBy: 'Management',
-    createdAt: '2025-01-18T14:15:00Z',
-  },
-  {
-    id: '3',
-    productId: '3',
-    productName: 'Office Desk - Modern',
-    productSku: '102882',
-    moveType: 'adjustment',
-    quantity: -2,
-    previousQty: 10,
-    newQty: 8,
-    sourceLocation: 'GLF/Stock',
-    destinationLocation: 'GLF/Stock',
-    notes: 'Inventory count adjustment',
-    createdBy: 'Admin',
-    createdAt: '2025-01-22T09:00:00Z',
-  },
-  {
-    id: '4',
-    productId: '1',
-    productName: 'Cushion Cover (Punch)',
-    productSku: '102880',
-    moveType: 'transfer',
-    quantity: 10,
-    previousQty: 45,
-    newQty: 35,
-    sourceLocation: 'GLF/Stock',
-    destinationLocation: 'GLF-RET/Stock',
-    lotNumber: 'LOT-2025-001',
-    createdBy: 'Vikesh',
-    createdAt: '2025-01-25T11:00:00Z',
-  },
-];
+const DEFAULT_STOCK_MOVES: StockMoveRecord[] = [];
 
 function getStockMoves(): StockMoveRecord[] {
   return getItem<StockMoveRecord[]>('stock_moves', DEFAULT_STOCK_MOVES);
