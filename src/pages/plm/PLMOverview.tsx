@@ -232,7 +232,7 @@ export default function PLMOverview() {
               <Input
                 value={formData.productName}
                 onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                placeholder="Affected product"
+                placeholder=""
               />
             </div>
             <div>
@@ -253,7 +253,7 @@ export default function PLMOverview() {
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe the change..."
+                placeholder=""
                 rows={3}
               />
             </div>
@@ -262,7 +262,7 @@ export default function PLMOverview() {
               <Input
                 value={formData.requestedBy}
                 onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
-                placeholder="Team or person requesting"
+                placeholder=""
               />
             </div>
           </div>

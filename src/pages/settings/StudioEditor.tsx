@@ -801,7 +801,7 @@ function ActionButtonProperties({ button, onUpdate, onDelete }: { button: Studio
         {button.action === 'navigate' && (
           <div>
             <Label className="text-xs">Target Route</Label>
-            <Input value={button.targetRoute || ''} onChange={e => onUpdate({ targetRoute: e.target.value })} className="h-7 text-xs mt-1" placeholder="/module/page" />
+            <Input value={button.targetRoute || ''} onChange={e => onUpdate({ targetRoute: e.target.value })} className="h-7 text-xs mt-1" placeholder="" />
           </div>
         )}
         {button.action === 'status_change' && (
@@ -909,7 +909,7 @@ function AddFieldDialog({ open, onOpenChange, onAdd, sections }: {
         <div className="space-y-3 py-2">
           <div>
             <Label className="text-xs">Label</Label>
-            <Input value={label} onChange={e => setLabel(e.target.value)} className="h-8 text-sm mt-1" placeholder="Field label" />
+            <Input value={label} onChange={e => setLabel(e.target.value)} className="h-8 text-sm mt-1" placeholder="" />
           </div>
           <div>
             <Label className="text-xs">Widget Type</Label>
@@ -1094,7 +1094,7 @@ function AddSectionDialog({ open, onOpenChange, onAdd, nextOrder }: {
         <div className="space-y-3 py-2">
           <div>
             <Label className="text-xs">Label (optional)</Label>
-            <Input value={label} onChange={e => setLabel(e.target.value)} className="h-8 text-sm mt-1" placeholder="Section title" />
+            <Input value={label} onChange={e => setLabel(e.target.value)} className="h-8 text-sm mt-1" placeholder="" />
           </div>
           <div>
             <Label className="text-xs">Columns</Label>
@@ -1139,7 +1139,7 @@ function AddTabDialog({ open, onOpenChange, onAdd, nextOrder }: {
         </DialogHeader>
         <div className="py-2">
           <Label className="text-xs">Label</Label>
-          <Input value={label} onChange={e => setLabel(e.target.value)} className="h-8 text-sm mt-1" placeholder="Tab name" />
+          <Input value={label} onChange={e => setLabel(e.target.value)} className="h-8 text-sm mt-1" placeholder="" />
         </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>

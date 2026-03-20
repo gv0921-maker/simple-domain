@@ -235,7 +235,7 @@ export default function StockMoves() {
                     type="number"
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    placeholder="Enter quantity"
+                    placeholder=""
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -284,7 +284,7 @@ export default function StockMoves() {
                     <Input
                       value={formData.lotNumber}
                       onChange={(e) => setFormData({ ...formData, lotNumber: e.target.value })}
-                      placeholder="LOT-XXXX"
+                      placeholder=""
                     />
                   </div>
                   <div className="grid gap-2">
@@ -292,7 +292,7 @@ export default function StockMoves() {
                     <Input
                       value={formData.serialNumber}
                       onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                      placeholder="SN-XXXX"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export default function StockMoves() {
                   <Input
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Optional notes"
+                    placeholder=""
                   />
                 </div>
               </div>

@@ -382,7 +382,7 @@ export default function ProductDetail() {
                       id="barcode"
                       value={product.barcode || ''}
                       onChange={(e) => handleChange('barcode', e.target.value)}
-                      placeholder="Enter barcode or scan"
+                      placeholder=""
                     />
                   </div>
                 </div>

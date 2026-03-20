@@ -145,7 +145,7 @@ export default function WarehousesList() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Main Warehouse"
+                    placeholder=""
                   />
                 </div>
                 <div className="grid gap-2">
@@ -154,7 +154,7 @@ export default function WarehousesList() {
                     id="code"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="WH-001"
+                    placeholder=""
                   />
                 </div>
                 <div className="grid gap-2">
@@ -163,7 +163,7 @@ export default function WarehousesList() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="Industrial Area, Block A"
+                    placeholder=""
                   />
                 </div>
                 <div className="flex items-center justify-between">

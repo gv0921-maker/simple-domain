@@ -419,7 +419,7 @@ export default function LeadDetail() {
                         <Input
                           value={lead.contactName}
                           onChange={(e) => handleChange('contactName', e.target.value)}
-                          placeholder="Full name"
+                          placeholder=""
                         />
                       </div>
                       <div className="grid gap-2">
@@ -427,7 +427,7 @@ export default function LeadDetail() {
                         <Input
                           value={lead.company || ''}
                           onChange={(e) => handleChange('company', e.target.value)}
-                          placeholder="Company name"
+                          placeholder=""
                         />
                       </div>
                       <div className="grid gap-2">
@@ -436,7 +436,7 @@ export default function LeadDetail() {
                           type="email"
                           value={lead.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          placeholder="email@example.com"
+                          placeholder=""
                         />
                       </div>
                       <div className="grid gap-2">
@@ -444,7 +444,7 @@ export default function LeadDetail() {
                         <Input
                           value={lead.phone || ''}
                           onChange={(e) => handleChange('phone', e.target.value)}
-                          placeholder="+1 555-0123"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -459,7 +459,7 @@ export default function LeadDetail() {
                     <Textarea
                       value={lead.notes || ''}
                       onChange={(e) => handleChange('notes', e.target.value)}
-                      placeholder="Add notes about this lead..."
+                      placeholder=""
                       rows={4}
                     />
                   </CardContent>
@@ -496,7 +496,7 @@ export default function LeadDetail() {
                         <Input
                           value={newActivity.subject}
                           onChange={(e) => setNewActivity({ ...newActivity, subject: e.target.value })}
-                          placeholder="Activity subject"
+                          placeholder=""
                         />
                       </div>
                       <div className="flex items-end">
@@ -548,7 +548,7 @@ export default function LeadDetail() {
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Add tag..."
+                    placeholder=""
                     onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                   />
                   <Button onClick={handleAddTag} size="icon">

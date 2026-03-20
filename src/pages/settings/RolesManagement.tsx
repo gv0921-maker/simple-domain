@@ -741,7 +741,7 @@ export default function RolesManagement() {
                   <Input
                     value={editFormData.description}
                     onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                    placeholder="Brief description of this role"
+                    placeholder=""
                   />
                 </div>
               </div>

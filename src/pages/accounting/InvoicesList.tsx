@@ -240,7 +240,7 @@ export default function InvoicesList() {
                 <Input
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  placeholder="Customer name"
+                  placeholder=""
                 />
               </div>
               <div>
@@ -265,7 +265,7 @@ export default function InvoicesList() {
               <Label className="mb-2 block">Invoice Lines</Label>
               <div className="flex gap-2 mb-4">
                 <Input
-                  placeholder="Product/Service"
+                  placeholder=""
                   value={newLine.productName}
                   onChange={(e) => setNewLine({ ...newLine, productName: e.target.value })}
                   className="flex-1"
@@ -279,7 +279,7 @@ export default function InvoicesList() {
                 />
                 <Input
                   type="number"
-                  placeholder="Price"
+                  placeholder=""
                   value={newLine.unitPrice || ''}
                   onChange={(e) => setNewLine({ ...newLine, unitPrice: parseFloat(e.target.value) || 0 })}
                   className="w-28"

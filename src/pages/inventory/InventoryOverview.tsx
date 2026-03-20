@@ -113,7 +113,7 @@ export default function InventoryOverview() {
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-9" />
+              <Input placeholder="" className="pl-9" />
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
               <span className="hidden sm:inline">1-7 / 7</span>

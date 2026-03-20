@@ -315,7 +315,7 @@ export default function CustomersList() {
                   <Input
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Full name"
+                    placeholder=""
                   />
                 </div>
                 <div className="grid gap-2">
@@ -324,7 +324,7 @@ export default function CustomersList() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@example.com"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -334,7 +334,7 @@ export default function CustomersList() {
                   <Input
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+1 555-0123"
+                    placeholder=""
                   />
                 </div>
                 <div className="grid gap-2">
@@ -342,7 +342,7 @@ export default function CustomersList() {
                   <Input
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    placeholder="Company name"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -359,7 +359,7 @@ export default function CustomersList() {
                 <Input
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Full address"
+                  placeholder=""
                 />
               </div>
             </div>

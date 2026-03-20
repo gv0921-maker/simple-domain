@@ -406,7 +406,7 @@ export default function PricelistsPage() {
                   value={newRule.minQuantity}
                   onChange={(e) => setNewRule({ ...newRule, minQuantity: parseInt(e.target.value) || 1 })}
                   className="w-24"
-                  placeholder="Min qty"
+                  placeholder=""
                 />
                 <div className="flex items-center gap-1">
                   <Input
@@ -416,7 +416,7 @@ export default function PricelistsPage() {
                     value={newRule.discountPercentage}
                     onChange={(e) => setNewRule({ ...newRule, discountPercentage: parseFloat(e.target.value) || 0 })}
                     className="w-20"
-                    placeholder="Disc"
+                    placeholder=""
                   />
                   <Percent className="h-4 w-4 text-muted-foreground" />
                 </div>

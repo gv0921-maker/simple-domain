@@ -277,7 +277,7 @@ export default function TransferForm() {
                     <Input
                       value={transfer.contact}
                       onChange={(e) => handleChange('contact', e.target.value)}
-                      placeholder="Enter contact name"
+                      placeholder=""
                     />
                   </div>
                   <div className="grid gap-2">
@@ -285,7 +285,7 @@ export default function TransferForm() {
                     <Input
                       value={transfer.contactPhone || ''}
                       onChange={(e) => handleChange('contactPhone', e.target.value)}
-                      placeholder="Phone number"
+                      placeholder=""
                     />
                   </div>
                   {studio.isFieldVisible('sourceWarehouse') && (
@@ -452,7 +452,7 @@ export default function TransferForm() {
                   <Textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Add a note..."
+                    placeholder=""
                     className="min-h-[80px]"
                   />
                 </div>

@@ -542,7 +542,7 @@ export default function QuotationForm() {
                       value={newLine.discount}
                       onChange={(e) => setNewLine({ ...newLine, discount: parseFloat(e.target.value) || 0 })}
                       className="w-20"
-                      placeholder="Disc %"
+                      placeholder=""
                     />
                     <Select
                       value={newLine.taxId}
@@ -683,7 +683,7 @@ export default function QuotationForm() {
                 <div className="space-y-2">
                   <Label>Notes</Label>
                   <Textarea
-                    placeholder="Add any notes for the customer..."
+                    placeholder=""
                     value={formData.notes || ''}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     disabled={!isEditable}
@@ -693,7 +693,7 @@ export default function QuotationForm() {
                 <div className="space-y-2">
                   <Label>Terms & Conditions</Label>
                   <Textarea
-                    placeholder="Terms and conditions..."
+                    placeholder=""
                     value={formData.termsAndConditions || ''}
                     onChange={(e) => setFormData({ ...formData, termsAndConditions: e.target.value })}
                     disabled={!isEditable}

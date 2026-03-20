@@ -187,7 +187,7 @@ export default function Payments() {
               <Input
                 value={formData.partnerName}
                 onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
-                placeholder="Partner name"
+                placeholder=""
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

@@ -435,7 +435,7 @@ export default function OpportunityDetail() {
                 <TabsContent value="notes" className="mt-4">
                   {isEditing ? (
                     <Textarea
-                      placeholder="Type '/' for commands"
+                      placeholder=""
                       defaultValue={opportunity.internalNotes}
                       className="min-h-[120px] text-sm"
                       onChange={e => setEditData({ ...editData, internalNotes: e.target.value })}

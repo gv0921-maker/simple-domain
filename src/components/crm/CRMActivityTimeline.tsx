@@ -272,18 +272,18 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
                 type="datetime-local"
                 value={newActivity.dueDate?.split('.')[0] || ''}
                 onChange={(e) => setNewActivity({ ...newActivity, dueDate: e.target.value })}
-                placeholder="Due date (optional)"
+                placeholder=""
               />
             </div>
             <Input
               value={newActivity.subject || ''}
               onChange={(e) => setNewActivity({ ...newActivity, subject: e.target.value })}
-              placeholder="Activity subject"
+              placeholder=""
             />
             <Textarea
               value={newActivity.description || ''}
               onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-              placeholder="Description (optional)"
+              placeholder=""
               rows={2}
             />
             <div className="flex justify-end gap-2">
@@ -303,7 +303,7 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
             <Textarea
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Write a note..."
+              placeholder=""
               rows={3}
             />
             <div className="flex justify-end gap-2">

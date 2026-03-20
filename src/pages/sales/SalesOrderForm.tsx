@@ -547,7 +547,7 @@ export default function SalesOrderForm() {
                         min={0}
                         value={newLine.discount}
                         onChange={(e) => setNewLine({ ...newLine, discount: Number(e.target.value) })}
-                        placeholder="Disc%"
+                        placeholder=""
                       />
                     </div>
                     <div className="col-span-2">
@@ -675,7 +675,7 @@ export default function SalesOrderForm() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   disabled={!isEditable}
-                  placeholder="Internal notes about this order..."
+                  placeholder=""
                   rows={4}
                 />
               </CardContent>

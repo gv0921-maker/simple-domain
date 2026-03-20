@@ -119,7 +119,7 @@ export default function ProductScanLookup() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Scan barcode, enter SKU, or search by name..."
+                  placeholder=""
                   className="pl-11 h-14 text-lg font-mono"
                   autoFocus
                 />

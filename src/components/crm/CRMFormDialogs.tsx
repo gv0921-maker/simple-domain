@@ -262,7 +262,7 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Add tag"
+                    placeholder=""
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                   />
                   <Button type="button" variant="outline" size="icon" onClick={handleAddTag}>

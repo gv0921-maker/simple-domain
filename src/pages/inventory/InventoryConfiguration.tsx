@@ -498,7 +498,7 @@ export default function InventoryConfiguration() {
                       <Input
                         value={newRule.productName}
                         onChange={(e) => setNewRule({ ...newRule, productName: e.target.value })}
-                        placeholder="Product name"
+                        placeholder=""
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-4">
