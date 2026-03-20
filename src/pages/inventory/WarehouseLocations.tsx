@@ -72,21 +72,9 @@ interface WarehouseRoute {
   isActive: boolean;
 }
 
-const DEFAULT_LOCATIONS: Location[] = [
-  { id: '1', name: 'Stock', code: 'GLF/Stock', warehouseId: '1', type: 'internal', isActive: true },
-  { id: '2', name: 'Delivery Orders', code: 'GLF/Stock/Delivery', warehouseId: '1', parentId: '1', type: 'internal', isActive: true },
-  { id: '3', name: 'Receipts', code: 'GLF/Stock/Receipts', warehouseId: '1', parentId: '1', type: 'internal', isActive: true },
-  { id: '4', name: 'Quality Control', code: 'GLF/Stock/QC', warehouseId: '1', parentId: '1', type: 'internal', isActive: true },
-  { id: '5', name: 'Scrap', code: 'GLF/Scrap', warehouseId: '1', type: 'inventory', isActive: true },
-  { id: '6', name: 'Production Floor', code: 'GLF-FAC/Production', warehouseId: '2', type: 'production', isActive: true },
-  { id: '7', name: 'Raw Materials', code: 'GLF-FAC/Raw', warehouseId: '2', type: 'internal', isActive: true },
-];
+const DEFAULT_LOCATIONS: Location[] = [];
 
-const DEFAULT_ROUTES: WarehouseRoute[] = [
-  { id: '1', name: 'Main to Factory', sourceWarehouseId: '1', destinationWarehouseId: '2', operationType: 'Internal Transfer', isActive: true },
-  { id: '2', name: 'Factory to Retail', sourceWarehouseId: '2', destinationWarehouseId: '3', operationType: 'Internal Transfer', isActive: true },
-  { id: '3', name: 'Supplier to Main', sourceWarehouseId: '', destinationWarehouseId: '1', operationType: 'Receipt', isActive: true },
-];
+const DEFAULT_ROUTES: WarehouseRoute[] = [];
 
 const LOCATION_TYPES = [
   { value: 'internal', label: 'Internal Location' },
