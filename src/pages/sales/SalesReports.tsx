@@ -350,7 +350,7 @@ export default function SalesReports() {
                   <div className="flex items-end gap-2 mb-4">
                     {monthlyData.map((m, i) => (
                       <div key={i} className="flex-1 text-center">
-                        <div className="text-xs text-muted-foreground mb-1">{`₹${Math.round(m.revenue / 1000)}k</div>
+                        <div className="text-xs text-muted-foreground mb-1">{`₹${Math.round(m.revenue / 1000)}k`}</div>
                       </div>
                     ))}
                   </div>
