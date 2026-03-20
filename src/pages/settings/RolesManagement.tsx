@@ -513,6 +513,11 @@ export default function RolesManagement() {
                                   </TableCell>
                                 ))}
                                 <TableCell className="text-center border-l border-border">
+                                  <Badge variant={level === 'none' ? 'secondary' : perm?.scope === 'all' ? 'default' : 'outline'} className="text-xs">
+                                    {level === 'none' ? 'None' : (perm?.scope === 'all' ? 'All' : 'Own')}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-center border-l border-border">
                                   {hasImport ? (
                                     <Check className="h-4 w-4 text-success mx-auto" />
                                   ) : (
