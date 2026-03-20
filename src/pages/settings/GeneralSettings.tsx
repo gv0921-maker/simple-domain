@@ -72,45 +72,15 @@ export default function GeneralSettings() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Language</Label>
-                <Select defaultValue="en">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input defaultValue="English" readOnly className="bg-muted" />
               </div>
               <div className="space-y-2">
                 <Label>Timezone</Label>
-                <Select defaultValue="utc">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="utc">UTC</SelectItem>
-                    <SelectItem value="est">Eastern Time</SelectItem>
-                    <SelectItem value="pst">Pacific Time</SelectItem>
-                    <SelectItem value="ist">India Standard Time</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input defaultValue="India Standard Time (IST)" readOnly className="bg-muted" />
               </div>
               <div className="space-y-2">
                 <Label>Currency</Label>
-                <Select defaultValue="usd">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="usd">USD ($)</SelectItem>
-                    <SelectItem value="eur">EUR (€)</SelectItem>
-                    <SelectItem value="gbp">GBP (£)</SelectItem>
-                    <SelectItem value="inr">INR (₹)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input defaultValue="INR (₹)" readOnly className="bg-muted" />
               </div>
             </div>
           </Card>
