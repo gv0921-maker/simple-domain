@@ -1,10 +1,15 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ModuleCard } from '@/components/modules/ModuleCard';
 import { useCustomization } from '@/contexts/CustomizationContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { canAccessRoute } from '@/lib/data/rbac';
 
 export default function HomePage() {
   const { getVisibleModules } = useCustomization();
-  const visibleModules = getVisibleModules();
+  const { user } = useAuth();
+  const visibleModules = getVisibleModules().filter((module) =>
+    user ? canAccessRoute(user.id, module.href) : false
+  );
 
   return (
     <AppLayout>

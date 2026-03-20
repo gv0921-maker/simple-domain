@@ -24,6 +24,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { canAccessRoute } from '@/lib/data/rbac';
 
 interface TopNavProps {
   title?: string;
@@ -35,6 +36,20 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const mobileNavItems = [
+    { label: 'Home', href: '/', icon: Home },
+    { label: 'Inventory', href: '/inventory' },
+    { label: 'Sales', href: '/sales' },
+    { label: 'Barcode', href: '/barcode' },
+    { label: 'Manufacturing', href: '/manufacturing' },
+    { label: 'Accounting', href: '/accounting' },
+    { label: 'CRM', href: '/crm' },
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ].filter((item) => (user ? canAccessRoute(user.id, item.href) : false));
+
+  const filteredModuleNav =
+    moduleNav?.filter((item) => (user ? canAccessRoute(user.id, item.href) : false)) || [];
 
   const handleLogout = () => {
     logout();
@@ -60,30 +75,20 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
               </SheetTitle>
             </SheetHeader>
             <nav className="p-2 space-y-1">
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/')}>
-                <Home className="h-4 w-4" /> Home
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/inventory')}>
-                Inventory
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/sales')}>
-                Sales
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/barcode')}>
-                Barcode
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/manufacturing')}>
-                Manufacturing
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/accounting')}>
-                Accounting
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/crm')}>
-                CRM
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => navigate('/settings')}>
-                <Settings className="h-4 w-4" /> Settings
-              </Button>
+              {mobileNavItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.href}
+                    variant="ghost"
+                    className="w-full justify-start gap-2"
+                    onClick={() => navigate(item.href)}
+                  >
+                    {Icon ? <Icon className="h-4 w-4" /> : null}
+                    {item.label}
+                  </Button>
+                );
+              })}
             </nav>
           </SheetContent>
         </Sheet>
@@ -105,9 +110,9 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
         )}
 
         {/* Module sub-navigation inline */}
-        {moduleNav && moduleNav.length > 0 && (
+        {filteredModuleNav.length > 0 && (
           <nav className="hidden md:flex items-center gap-1 ml-2">
-            {moduleNav.map((item) => {
+            {filteredModuleNav.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
@@ -148,11 +153,15 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/settings')}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {user && canAccessRoute(user.id, '/settings') && (
+              <>
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
               Log out
