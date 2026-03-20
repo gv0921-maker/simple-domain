@@ -87,6 +87,7 @@ export default function SalesOrderForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isNew = id === 'new' || !id;
+  const studio = useStudioConfig('sales', 'Sales Order');
   
   const [contacts] = useState(() => getContacts());
   const [products] = useState(() => getProducts());
