@@ -1,12 +1,27 @@
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ModuleCard } from '@/components/modules/ModuleCard';
 import { useCustomization } from '@/contexts/CustomizationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { canAccessRoute } from '@/lib/data/rbac';
+import { useToast } from '@/hooks/use-toast';
 
 export default function HomePage() {
   const { getVisibleModules } = useCustomization();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const state = location.state as { accessDenied?: boolean } | null;
+    if (!state?.accessDenied) return;
+
+    toast({ title: 'Access Denied' });
+    navigate('/', { replace: true, state: null });
+  }, [location.state, navigate, toast]);
+
   const visibleModules = getVisibleModules().filter((module) =>
     user ? canAccessRoute(user.id, module.href) : false
   );

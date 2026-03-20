@@ -15,7 +15,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user || !canAccessRoute(user.id, location.pathname)) {
-    return <Navigate to="/" replace />;
+    return (
+      <Navigate
+        to="/"
+        replace
+        state={{ accessDenied: true, deniedPath: location.pathname }}
+      />
+    );
   }
 
   return <>{children}</>;
