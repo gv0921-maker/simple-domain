@@ -483,14 +483,20 @@ export function savePipeline(pipeline: Partial<Pipeline> & { id?: string }): Pip
 
 // Force reset CRM data to new Odoo-style pipeline on version change
 const CRM_VERSION_KEY = 'crm_data_version';
-const CRM_CURRENT_VERSION = 2;
+const CRM_CURRENT_VERSION = 3;
 
 function ensureCRMVersion() {
   const stored = getItem<number>(CRM_VERSION_KEY, 0);
   if (stored < CRM_CURRENT_VERSION) {
-    // Clear old CRM data to use new defaults
+    // Clear all CRM data to use new empty defaults
     setItem('crm_opportunities', DEFAULT_OPPORTUNITIES);
     setItem('crm_pipelines', DEFAULT_PIPELINES);
+    setItem('crm_leads', DEFAULT_LEADS);
+    setItem('crm_contacts', DEFAULT_CONTACTS);
+    setItem('crm_companies', DEFAULT_COMPANIES);
+    setItem('crm_activities', DEFAULT_ACTIVITIES);
+    setItem('crm_notes', DEFAULT_NOTES);
+    setItem('crm_tags', DEFAULT_TAGS);
     setItem(CRM_VERSION_KEY, CRM_CURRENT_VERSION);
   }
 }
