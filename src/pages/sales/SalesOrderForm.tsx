@@ -646,7 +646,7 @@ export default function SalesOrderForm() {
                     <TableFooter>
                       <TableRow>
                         <TableCell colSpan={5} className="text-right font-medium">Subtotal</TableCell>
-                        <TableCell className="text-right font-medium">{`₹${totals.subtotal.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">{`₹${totals.subtotal.toFixed(2)}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                       <TableRow>
