@@ -753,6 +753,7 @@ export default function RolesManagement() {
                       <TableRow>
                         <TableHead className="w-[130px]">Module</TableHead>
                         <TableHead>Permission Level</TableHead>
+                        <TableHead className="text-center border-l border-border">Record Access</TableHead>
                         <TableHead className="text-center border-l border-border">
                           <div className="flex flex-col items-center gap-0.5">
                             <Import className="h-3.5 w-3.5" />
