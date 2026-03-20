@@ -493,6 +493,7 @@ export default function QuotationForm() {
                     </div>
                   )}
                 </div>
+              </CardContent>
             </Card>
             
             {/* Line Items */}
