@@ -80,7 +80,7 @@ export default function CRMLeadsList() {
   const { toast } = useToast();
   const { canCreateLeads, canDeleteLeads, canConvertLeads } = useCRMPermissions();
   const { user } = useAuth();
-  
+  const studio = useStudioConfig('crm', 'New Lead');
   const [leads, setLeads] = useState<Lead[]>(() => getLeads());
   const [search, setSearch] = useState('');
   
