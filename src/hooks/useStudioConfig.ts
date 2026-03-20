@@ -79,9 +79,9 @@ export function useStudioConfig(moduleId: string, formName: string) {
   };
 
   // Get field placeholder
-  const getFieldPlaceholder = (fieldIdOrTechnicalName: string, fallback?: string): string | undefined => {
+  const getFieldPlaceholder = (fieldIdOrTechnicalName: string, _fallback?: string): string => {
     const field = getField(fieldIdOrTechnicalName);
-    return field?.placeholder || fallback;
+    return field?.placeholder || '';
   };
 
   // Check if field is read-only
