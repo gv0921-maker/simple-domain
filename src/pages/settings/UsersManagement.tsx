@@ -41,13 +41,18 @@ import {
   UserCog,
 } from 'lucide-react';
 import { DEMO_USERS, type User } from '@/lib/storage';
-import { getRoles, getUserRole, type Role } from '@/lib/data/rbac';
+import { getRoles, getUserRole, setUserRoles, type Role } from '@/lib/data/rbac';
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UsersManagement() {
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const roles = getRoles();
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+  const [roles, setRoles] = useState<Role[]>(() => getRoles());
 
   const users = DEMO_USERS.filter(
     (u) =>
@@ -61,6 +66,27 @@ export default function UsersManagement() {
     return userRole.roleIds
       .map((id) => roles.find((r) => r.id === id)?.name)
       .filter(Boolean) as string[];
+  };
+
+  const handleManageRoles = (user: User) => {
+    setSelectedUser(user);
+    const existingRole = getUserRole(user.id);
+    setSelectedRoleIds(existingRole?.roleIds || []);
+    setIsRoleDialogOpen(true);
+  };
+
+  const handleSaveRoles = () => {
+    if (!selectedUser) return;
+    setUserRoles(selectedUser.id, selectedRoleIds);
+    setRoles(getRoles()); // refresh
+    setIsRoleDialogOpen(false);
+    toast({ title: `Roles updated for ${selectedUser.name}` });
+  };
+
+  const toggleRole = (roleId: string) => {
+    setSelectedRoleIds((prev) =>
+      prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId]
+    );
   };
 
   return (
@@ -169,7 +195,6 @@ export default function UsersManagement() {
                         </Avatar>
                         <div>
                           <p className="font-medium text-foreground">{user.name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -208,7 +233,7 @@ export default function UsersManagement() {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleManageRoles(user)}>
                             <Shield className="mr-2 h-4 w-4" />
                             Manage Roles
                           </DropdownMenuItem>
@@ -229,6 +254,49 @@ export default function UsersManagement() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Manage Roles Dialog */}
+        <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+          <DialogContent className="animate-scale-in">
+            <DialogHeader>
+              <DialogTitle>Manage Roles — {selectedUser?.name}</DialogTitle>
+              <DialogDescription>
+                Select the roles to assign to this user. Permissions are determined by the assigned roles.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-4 max-h-64 overflow-y-auto">
+              {roles.map((role) => (
+                <div
+                  key={role.id}
+                  className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <Checkbox
+                    id={`assign-role-${role.id}`}
+                    checked={selectedRoleIds.includes(role.id)}
+                    onCheckedChange={() => toggleRole(role.id)}
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor={`assign-role-${role.id}`} className="text-sm font-medium cursor-pointer">
+                      {role.name}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{role.description}</p>
+                  </div>
+                  {role.isSystem && (
+                    <Badge variant="secondary" className="text-xs shrink-0">System</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveRoles}>
+                Save Roles
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
