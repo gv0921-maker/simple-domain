@@ -593,8 +593,8 @@ export default function RolesManagement() {
                           const moduleLevel = getPermissionLevel(selectedRole, moduleConfig.moduleId);
                           const isAdmin = moduleLevel === 'admin';
                           const tabPerm = getTabPermission(moduleConfig.moduleId);
-                          const allowedCount = !tabPerm ? totalTabs : tabPerm.allowedTabs.length;
                           const totalTabs = moduleConfig.tabs.length;
+                          const allowedCount = !tabPerm ? totalTabs : tabPerm.allowedTabs.length;
                           const allAllowed = !tabPerm;
 
                           return (
