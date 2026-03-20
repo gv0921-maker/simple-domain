@@ -45,7 +45,7 @@ import { cn } from '@/lib/utils';
 export default function CRMContactsList() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canCreateContacts, canEditContacts, canDeleteContacts, canImportData } = useCRMPermissions();
+  const { canCreateContacts, canEditContacts, canDeleteContacts, canImportData, filterByScope } = useCRMPermissions();
   
   const [contacts, setContacts] = useState<Contact[]>(() => getContacts());
   const [search, setSearch] = useState('');
