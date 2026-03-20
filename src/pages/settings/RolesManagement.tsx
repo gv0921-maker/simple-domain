@@ -318,6 +318,25 @@ export default function RolesManagement() {
     });
   };
 
+  // Update record scope
+  const handleScopeChange = (module: string, scope: RecordScope) => {
+    setEditFormData((prev) => {
+      const existing = prev.permissions.find((p) => p.module === module);
+      if (existing) {
+        return {
+          ...prev,
+          permissions: prev.permissions.map((p) =>
+            p.module === module ? { ...p, scope } : p
+          ),
+        };
+      }
+      return {
+        ...prev,
+        permissions: [...prev.permissions, { module, level: 'view' as PermissionLevel, scope, canImport: false, canExport: false, canPrint: false }],
+      };
+    });
+  };
+
   // Delete role
   const handleDeleteRole = (role: Role) => {
     if (role.isSystem) {
