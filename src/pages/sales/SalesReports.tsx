@@ -242,7 +242,7 @@ export default function SalesReports() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${kpis.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${kpis.totalRevenue.toLocaleString('en-IN')}`}</div>
               <div className="flex items-center text-xs text-success mt-1">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +12% vs last period
@@ -294,7 +294,7 @@ export default function SalesReports() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${Math.round(kpis.avgDealSize).toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${Math.round(kpis.avgDealSize).toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
 
@@ -318,7 +318,7 @@ export default function SalesReports() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">${Math.round(kpis.mrr).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-primary">{`₹${Math.round(kpis.mrr).toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
         </div>
@@ -350,7 +350,7 @@ export default function SalesReports() {
                   <div className="flex items-end gap-2 mb-4">
                     {monthlyData.map((m, i) => (
                       <div key={i} className="flex-1 text-center">
-                        <div className="text-xs text-muted-foreground mb-1">${Math.round(m.revenue / 1000)}k</div>
+                        <div className="text-xs text-muted-foreground mb-1">{`₹${Math.round(m.revenue / 1000)}k</div>
                       </div>
                     ))}
                   </div>
@@ -428,7 +428,7 @@ export default function SalesReports() {
                         <TableCell>{q.customerName}</TableCell>
                         <TableCell>{format(parseISO(q.quotationDate), 'MMM d, yyyy')}</TableCell>
                         <TableCell>{format(parseISO(q.validUntil), 'MMM d, yyyy')}</TableCell>
-                        <TableCell className="text-right">${q.total.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{`₹${q.total.toLocaleString('en-IN')}`}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">{q.status}</Badge>
                         </TableCell>
@@ -470,8 +470,8 @@ export default function SalesReports() {
                         </TableCell>
                         <TableCell className="font-medium">{customer.name}</TableCell>
                         <TableCell className="text-right">{customer.orders}</TableCell>
-                        <TableCell className="text-right font-semibold">${customer.total.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">${Math.round(customer.total / customer.orders).toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-semibold">{`₹${customer.total.toLocaleString('en-IN')}`}</TableCell>
+                        <TableCell className="text-right">{`₹${Math.round(customer.total / customer.orders).toLocaleString('en-IN')}`}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -494,7 +494,7 @@ export default function SalesReports() {
                       ${quotations
                         .filter((q) => q.status === 'sent')
                         .reduce((sum, q) => sum + q.total, 0)
-                        .toLocaleString()}
+                        .toLocaleString('en-IN')}`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">Active quotations</p>
                   </div>
@@ -505,13 +505,13 @@ export default function SalesReports() {
                         quotations
                           .filter((q) => q.status === 'sent')
                           .reduce((sum, q) => sum + q.total * 0.6, 0)
-                      ).toLocaleString()}
+                      ).toLocaleString('en-IN')}`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">60% weighted probability</p>
                   </div>
                   <div className="p-6 bg-primary/10 rounded-lg text-center">
                     <p className="text-sm text-muted-foreground mb-2">Recurring Revenue</p>
-                    <p className="text-3xl font-bold text-primary">${Math.round(kpis.mrr * 12).toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-primary">{`₹${Math.round(kpis.mrr * 12).toLocaleString('en-IN')}`}</p>
                     <p className="text-xs text-muted-foreground mt-2">Annual (ARR)</p>
                   </div>
                 </div>

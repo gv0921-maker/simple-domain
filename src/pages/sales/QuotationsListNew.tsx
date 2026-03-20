@@ -172,9 +172,9 @@ Valid Until: ${quotation.validUntil}
 ITEMS:
 ${quotation.lines.map((line) => `- ${line.productName}: ${line.quantity} x ₹${line.unitPrice} = ₹${line.total}`).join('\n')}
 
-Subtotal: ₹${quotation.subtotal.toLocaleString()}
-Tax: ₹${quotation.taxAmount.toLocaleString()}
-Total: ₹${quotation.total.toLocaleString()}
+Subtotal: ₹${quotation.subtotal.toLocaleString('en-IN')}`}
+Tax: ₹${quotation.taxAmount.toLocaleString('en-IN')}`}
+Total: ₹${quotation.total.toLocaleString('en-IN')}`}
 
 ${quotation.termsAndConditions || ''}
     `.trim();
@@ -243,7 +243,7 @@ ${quotation.termsAndConditions || ''}
               <CardTitle className="text-sm font-medium text-muted-foreground">Pending Value</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.pendingValue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${stats.pendingValue.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '250ms' }}>
@@ -251,7 +251,7 @@ ${quotation.termsAndConditions || ''}
               <CardTitle className="text-sm font-medium text-muted-foreground">Won Value</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">${stats.acceptedValue.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-success">{`₹${stats.acceptedValue.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
         </div>
@@ -351,7 +351,7 @@ ${quotation.termsAndConditions || ''}
                       </TableCell>
                       <TableCell className="text-right">
                         <div>
-                          <p className="font-semibold">${quotation.total.toLocaleString()}</p>
+                          <p className="font-semibold">{`₹${quotation.total.toLocaleString('en-IN')}`}</p>
                           <p className="text-xs text-muted-foreground">{quotation.lines.length} items</p>
                         </div>
                       </TableCell>

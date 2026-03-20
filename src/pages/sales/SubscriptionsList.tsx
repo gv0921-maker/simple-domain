@@ -262,7 +262,7 @@ export default function SubscriptionsList() {
               <CardTitle className="text-sm font-medium text-muted-foreground">MRR</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${Math.round(stats.mrr).toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${Math.round(stats.mrr).toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>
@@ -270,7 +270,7 @@ export default function SubscriptionsList() {
               <CardTitle className="text-sm font-medium text-muted-foreground">ARR</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${Math.round(stats.arr).toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${Math.round(stats.arr).toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
         </div>
@@ -354,7 +354,7 @@ export default function SubscriptionsList() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div>
-                        <p className="font-semibold">${sub.total.toLocaleString()}</p>
+                        <p className="font-semibold">{`₹${sub.total.toLocaleString('en-IN')}`}</p>
                         <p className="text-xs text-muted-foreground">/{sub.billingCycle.replace('ly', '')}</p>
                       </div>
                     </TableCell>

@@ -256,7 +256,7 @@ export default function SalesOrdersList() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.pending.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{`₹${stats.pending.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '150ms' }}>
@@ -266,7 +266,7 @@ export default function SalesOrdersList() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">${stats.revenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-success">{`₹${stats.revenue.toLocaleString('en-IN')}`}</div>
             </CardContent>
           </Card>
         </div>

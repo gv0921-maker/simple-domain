@@ -617,7 +617,7 @@ export default function QuotationForm() {
                                 line.quantity
                               )}
                             </TableCell>
-                            <TableCell className="text-right">${line.unitPrice.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{`₹${line.unitPrice.toLocaleString('en-IN')}`}</TableCell>
                             <TableCell className="text-right">
                               {line.discount > 0 ? (
                                 <Badge variant="outline" className="text-success">
@@ -625,8 +625,8 @@ export default function QuotationForm() {
                                 </Badge>
                               ) : '-'}
                             </TableCell>
-                            <TableCell className="text-right">${line.taxAmount.toLocaleString()}</TableCell>
-                            <TableCell className="text-right font-semibold">${line.total.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{`₹${line.taxAmount.toLocaleString('en-IN')}`}</TableCell>
+                            <TableCell className="text-right font-semibold">{`₹${line.total.toLocaleString('en-IN')}`}</TableCell>
                             {isEditable && (
                               <TableCell>
                                 <Button
@@ -648,24 +648,24 @@ export default function QuotationForm() {
                     <TableFooter>
                       <TableRow>
                         <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-medium">Subtotal</TableCell>
-                        <TableCell className="text-right">${totals.subtotal.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{`₹${totals.subtotal.toLocaleString('en-IN')}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                       {totals.discountAmount > 0 && (
                         <TableRow>
                           <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-medium text-success">Discount</TableCell>
-                          <TableCell className="text-right text-success">-${totals.discountAmount.toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-success">-${totals.discountAmount.toLocaleString('en-IN')}`}</TableCell>
                           {isEditable && <TableCell />}
                         </TableRow>
                       )}
                       <TableRow>
                         <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-medium">Tax</TableCell>
-                        <TableCell className="text-right">${totals.taxAmount.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{`₹${totals.taxAmount.toLocaleString('en-IN')}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                       <TableRow>
                         <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-bold text-lg">Total</TableCell>
-                        <TableCell className="text-right font-bold text-lg">${totals.total.toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-bold text-lg">{`₹${totals.total.toLocaleString('en-IN')}`}</TableCell>
                         {isEditable && <TableCell />}
                       </TableRow>
                     </TableFooter>
