@@ -1,5 +1,5 @@
 // CRM Contacts List Page
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,6 @@ import {
   Mail,
   Building,
   User,
-  Filter,
   UserPlus,
   Upload,
 } from 'lucide-react';
@@ -38,9 +37,20 @@ import { getContacts, deleteContact, type Contact } from '@/lib/data/crm';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { ContactFormDialog } from '@/components/crm/CRMFormDialogs';
 import { CRMImportDialog, CRMExportButton } from '@/components/crm/CRMImportExport';
+import { CRMFilterPopover, type FilterOption, type ActiveFilter } from '@/components/crm/CRMFilterPopover';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { cn } from '@/lib/utils';
+
+const CONTACT_FILTER_OPTIONS: FilterOption[] = [
+  { id: 'status:active', label: 'Active', group: 'Status' },
+  { id: 'status:archived', label: 'Archived', group: 'Status' },
+  { id: 'score:high', label: 'High Score (70+)', group: 'Score' },
+  { id: 'score:medium', label: 'Medium Score (40-69)', group: 'Score' },
+  { id: 'score:low', label: 'Low Score (<40)', group: 'Score' },
+  { id: 'has:company', label: 'Has Company', group: 'Other' },
+  { id: 'has:phone', label: 'Has Phone', group: 'Other' },
+];
 
 export default function CRMContactsList() {
   const navigate = useNavigate();
@@ -52,18 +62,48 @@ export default function CRMContactsList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | undefined>();
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
 
   const scopedContacts = useMemo(() => filterByScope(contacts), [contacts, filterByScope]);
 
   const filteredContacts = useMemo(() => {
-    return scopedContacts.filter(
+    let filtered = scopedContacts.filter(
       (c) =>
         c.firstName.toLowerCase().includes(search.toLowerCase()) ||
         c.lastName.toLowerCase().includes(search.toLowerCase()) ||
         c.email.toLowerCase().includes(search.toLowerCase()) ||
         (c.companyName?.toLowerCase().includes(search.toLowerCase()) ?? false)
     );
-  }, [scopedContacts, search]);
+
+    if (activeFilters.length > 0) {
+      filtered = filtered.filter(c => {
+        return activeFilters.every(f => {
+          const [type, value] = f.id.split(':');
+          if (type === 'status') return c.status === value;
+          if (type === 'score') {
+            if (value === 'high') return c.score >= 70;
+            if (value === 'medium') return c.score >= 40 && c.score < 70;
+            if (value === 'low') return c.score < 40;
+          }
+          if (type === 'has') {
+            if (value === 'company') return !!c.companyName;
+            if (value === 'phone') return !!c.phone;
+          }
+          return true;
+        });
+      });
+    }
+
+    return filtered;
+  }, [scopedContacts, search, activeFilters]);
+
+  const handleToggleFilter = useCallback((filter: FilterOption) => {
+    setActiveFilters(prev => {
+      const exists = prev.some(f => f.id === filter.id);
+      if (exists) return prev.filter(f => f.id !== filter.id);
+      return [...prev, { id: filter.id, label: filter.label }];
+    });
+  }, []);
 
   const stats = useMemo(() => ({
     total: contacts.length,
@@ -124,16 +164,19 @@ export default function CRMContactsList() {
         <div className="flex items-center gap-2">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder=""
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              <Input
+                placeholder="Search contacts..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <CRMFilterPopover
+              options={CONTACT_FILTER_OPTIONS}
+              activeFilters={activeFilters}
+              onToggleFilter={handleToggleFilter}
+              onClearAll={() => setActiveFilters([])}
             />
-          </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Table */}

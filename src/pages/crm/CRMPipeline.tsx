@@ -59,15 +59,13 @@ export default function CRMPipeline() {
     });
 
     toast({ title: 'Opportunity created' });
-    setIsNewDialogOpen(false);
     setFormData({
       name: '',
       contactId: '',
       expectedRevenue: 0,
       expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
-    // Force page re-render
-    window.location.reload();
+    setIsNewDialogOpen(false);
   };
 
   return (

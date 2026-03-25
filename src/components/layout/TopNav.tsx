@@ -15,6 +15,7 @@ import {
   Menu,
   Home,
 } from 'lucide-react';
+import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Sheet,
@@ -134,7 +135,8 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-1 md:gap-2 shrink-0">
+      <div className="flex items-center gap-2 md:gap-3 shrink-0">
+        <GlobalSearch />
 
         {/* User menu */}
         <DropdownMenu>

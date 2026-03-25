@@ -131,7 +131,7 @@ export function CRMDashboard() {
           <p className="text-muted-foreground">Overview of your customer relationships and sales pipeline</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('/crm/leads/new')}>
+          <Button variant="outline" onClick={() => navigate('/crm')}>
             <UserPlus className="h-4 w-4 mr-2" />
             New Lead
           </Button>
@@ -290,7 +290,7 @@ export function CRMDashboard() {
         <Card className="animate-fade-in">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Upcoming Deals</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/crm/opportunities')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/crm/pipeline')}>
               View All
             </Button>
           </CardHeader>

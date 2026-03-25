@@ -191,6 +191,8 @@ function KanbanColumn({
   onPriorityChange: (oppId: string, priority: 0 | 1 | 2 | 3) => void;
   onQuickCreate: (stageId: string, stage: OpportunityStage) => void;
 }) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isDragOver, setIsDragOver] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickData, setQuickData] = useState({
@@ -204,11 +206,47 @@ function KanbanColumn({
 
   const handleQuickAdd = () => {
     if (quickData.name.trim() || quickData.company.trim()) {
-      onQuickCreate(stage.id, stageMap[stage.id] || 'new');
+      const oppStage = stageMap[stage.id] || 'new';
+      saveOpportunity({
+        name: quickData.name || quickData.company,
+        contactName: quickData.contact,
+        companyName: quickData.company,
+        email: quickData.email,
+        phone: quickData.phone,
+        expectedRevenue: parseFloat(quickData.revenue) || 0,
+        priority: quickPriority as 0 | 1 | 2 | 3,
+        stageId: stage.id,
+        stage: oppStage,
+      });
+      toast({ title: 'Opportunity created' });
+      // Trigger parent refresh
+      onQuickCreate(stage.id, oppStage);
       setShowQuickAdd(false);
       setQuickData({ company: '', contact: '', name: '', email: '', phone: '', revenue: '' });
       setQuickPriority(0);
     }
+  };
+
+  const handleEditClick = () => {
+    // Save as draft then navigate to detail
+    if (quickData.name.trim() || quickData.company.trim()) {
+      const oppStage = stageMap[stage.id] || 'new';
+      const opp = saveOpportunity({
+        name: quickData.name || quickData.company,
+        contactName: quickData.contact,
+        companyName: quickData.company,
+        email: quickData.email,
+        phone: quickData.phone,
+        expectedRevenue: parseFloat(quickData.revenue) || 0,
+        priority: quickPriority as 0 | 1 | 2 | 3,
+        stageId: stage.id,
+        stage: oppStage,
+      });
+      navigate(`/crm/opportunities/${opp.id}`);
+    }
+    setShowQuickAdd(false);
+    setQuickData({ company: '', contact: '', name: '', email: '', phone: '', revenue: '' });
+    setQuickPriority(0);
   };
 
   return (
@@ -263,7 +301,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Company"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.company}
                 onChange={(e) => setQuickData({ ...quickData, company: e.target.value })}
@@ -273,7 +311,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Contact name"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.contact}
                 onChange={(e) => setQuickData({ ...quickData, contact: e.target.value })}
@@ -282,7 +320,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Opportunity name"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.name}
                 onChange={(e) => setQuickData({ ...quickData, name: e.target.value })}
@@ -291,7 +329,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Email"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.email}
                 onChange={(e) => setQuickData({ ...quickData, email: e.target.value })}
@@ -300,7 +338,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Phone"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.phone}
                 onChange={(e) => setQuickData({ ...quickData, phone: e.target.value })}
@@ -309,7 +347,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground font-medium w-3.5 text-center shrink-0">₹</span>
               <Input
-                placeholder=""
+                placeholder="Revenue"
                 type="number"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary flex-1"
                 value={quickData.revenue}
@@ -320,7 +358,7 @@ function KanbanColumn({
             <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-1">
                 <Button size="sm" className="h-7 text-xs px-3 bg-[#875A7B] hover:bg-[#6e4a64] text-white" onClick={handleQuickAdd}>Add</Button>
-                <Button size="sm" variant="outline" className="h-7 text-xs px-3" onClick={() => { setShowQuickAdd(false); setQuickData({ company: '', contact: '', name: '', email: '', phone: '', revenue: '' }); setQuickPriority(0); }}>
+                <Button size="sm" variant="outline" className="h-7 text-xs px-3" onClick={handleEditClick}>
                   Edit
                 </Button>
               </div>
@@ -398,10 +436,11 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   );
 
   const handleQuickCreate = useCallback(
-    (stageId: string, stage: OpportunityStage) => {
-      onNewOpportunity?.();
+    (_stageId: string, _stage: OpportunityStage) => {
+      // Refresh opportunities after quick-create saved in KanbanColumn
+      setAllOpportunities(getOpportunities());
     },
-    [onNewOpportunity]
+    []
   );
 
   return (
@@ -428,7 +467,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             <div className="relative flex items-center border border-border rounded bg-card overflow-hidden">
               <Search className="h-4 w-4 text-muted-foreground ml-2.5" />
               <input
-                placeholder=""
+                placeholder="Search pipeline..."
                 className="h-8 w-full text-sm bg-transparent border-0 outline-none px-2 placeholder:text-muted-foreground"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

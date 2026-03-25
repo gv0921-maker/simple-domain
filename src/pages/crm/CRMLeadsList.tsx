@@ -1,5 +1,5 @@
 // CRM Leads List Page with Kanban view
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useStudioConfig } from '@/hooks/useStudioConfig';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -45,7 +45,6 @@ import {
   MoreHorizontal,
   Trash2,
   IndianRupee,
-  Filter,
   Sparkles,
   User,
 } from 'lucide-react';
@@ -60,11 +59,23 @@ import {
 } from '@/lib/data/crm';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { CRMExportButton } from '@/components/crm/CRMImportExport';
+import { CRMFilterPopover, type FilterOption, type ActiveFilter } from '@/components/crm/CRMFilterPopover';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+
+const LEAD_FILTER_OPTIONS: FilterOption[] = [
+  { id: 'status:new', label: 'New', group: 'Status' },
+  { id: 'status:contacted', label: 'Contacted', group: 'Status' },
+  { id: 'status:qualified', label: 'Qualified', group: 'Status' },
+  { id: 'priority:high', label: 'High Priority', group: 'Priority' },
+  { id: 'priority:urgent', label: 'Urgent', group: 'Priority' },
+  { id: 'source:website', label: 'Website', group: 'Source' },
+  { id: 'source:referral', label: 'Referral', group: 'Source' },
+  { id: 'source:social_media', label: 'Social Media', group: 'Source' },
+];
 
 
 
@@ -85,6 +96,7 @@ export default function CRMLeadsList() {
   const [search, setSearch] = useState('');
   
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [formData, setFormData] = useState<Partial<Lead>>({
     title: '',
     contactName: '',
@@ -104,13 +116,37 @@ export default function CRMLeadsList() {
     const base = isSearching
       ? scopedLeads
       : scopedLeads.filter((l) => l.status !== 'converted');
-    return base.filter(
+    
+    let filtered = base.filter(
       (l) =>
         l.title.toLowerCase().includes(search.toLowerCase()) ||
         l.contactName.toLowerCase().includes(search.toLowerCase()) ||
         (l.companyName?.toLowerCase().includes(search.toLowerCase()) ?? false)
     );
-  }, [scopedLeads, search, isSearching]);
+
+    // Apply active filters
+    if (activeFilters.length > 0) {
+      filtered = filtered.filter(l => {
+        return activeFilters.every(f => {
+          const [type, value] = f.id.split(':');
+          if (type === 'status') return l.status === value;
+          if (type === 'priority') return l.priority === value;
+          if (type === 'source') return l.source === value;
+          return true;
+        });
+      });
+    }
+
+    return filtered;
+  }, [scopedLeads, search, isSearching, activeFilters]);
+
+  const handleToggleFilter = useCallback((filter: FilterOption) => {
+    setActiveFilters(prev => {
+      const exists = prev.some(f => f.id === filter.id);
+      if (exists) return prev.filter(f => f.id !== filter.id);
+      return [...prev, { id: filter.id, label: filter.label }];
+    });
+  }, []);
 
 
   const stats = useMemo(() => {
@@ -227,15 +263,18 @@ export default function CRMLeadsList() {
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder=""
+                placeholder="Search leads..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
               />
             </div>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
+            <CRMFilterPopover
+              options={LEAD_FILTER_OPTIONS}
+              activeFilters={activeFilters}
+              onToggleFilter={handleToggleFilter}
+              onClearAll={() => setActiveFilters([])}
+            />
           </div>
         </div>
 

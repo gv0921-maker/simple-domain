@@ -37,6 +37,10 @@ import {
   Maximize2,
   Smile,
   Settings,
+  ShoppingCart,
+  FileText,
+  Package,
+  User,
 } from 'lucide-react';
 import {
   getOpportunity,
@@ -517,6 +521,51 @@ export default function OpportunityDetail() {
                   </div>
                 </TabsContent>
               </Tabs>
+
+              {/* Cross-module Links */}
+              <div className="mt-4 pt-3 border-t border-border">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">Linked Actions</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => navigate(`/sales/quotations/new?contact=${encodeURIComponent(currentData.contactName)}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    Create Quotation
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => navigate(`/sales/orders/new?contact=${encodeURIComponent(currentData.contactName)}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    Create Sales Order
+                  </Button>
+                  {currentData.contactId && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1.5"
+                      onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
+                    >
+                      <User className="h-3.5 w-3.5" />
+                      View Contact
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => navigate('/inventory/products')}
+                  >
+                    <Package className="h-3.5 w-3.5" />
+                    Browse Products
+                  </Button>
+                </div>
+              </div>
 
               {/* Edit/Save bar */}
               {!isWon && !isLost && (
