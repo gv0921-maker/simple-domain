@@ -175,13 +175,13 @@ export default function CRMLeadsList() {
             <p className="text-muted-foreground">Track and qualify your sales leads</p>
           </div>
           <div className="flex gap-2">
-            <CRMExportButton type="leads" />
             {canCreateLeads && (
               <Button onClick={() => setIsNewDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                New Lead
+                New
               </Button>
             )}
+            <CRMExportButton type="leads" />
           </div>
         </div>
 
