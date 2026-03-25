@@ -13,8 +13,12 @@ import {
   Calendar,
   Tag,
   Briefcase,
+  Target,
+  TrendingUp,
+  ShoppingCart,
+  FileText,
 } from 'lucide-react';
-import { getContact, getLeads, type Contact } from '@/lib/data/crm';
+import { getContact, getLeads, getOpportunities, type Contact } from '@/lib/data/crm';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { format, parseISO } from 'date-fns';
 
@@ -26,6 +30,11 @@ export default function CRMContactDetail() {
   // Find linked leads for this contact
   const linkedLeads = getLeads().filter(
     (l) => l.contactId === id || l.email === contact?.email
+  );
+
+  // Find linked opportunities
+  const linkedOpportunities = getOpportunities().filter(
+    (o) => o.contactId === id || o.contactName === `${contact?.firstName} ${contact?.lastName}`
   );
 
   if (!contact) {
@@ -153,6 +162,97 @@ export default function CRMContactDetail() {
           </div>
 
           {/* Sidebar */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Score</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl font-bold">{contact.score}</div>
+                  <Badge
+                    variant={contact.score >= 70 ? 'default' : contact.score >= 40 ? 'secondary' : 'outline'}
+                  >
+                    {contact.score >= 70 ? 'High' : contact.score >= 40 ? 'Medium' : 'Low'}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {contact.email && (
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href={`mailto:${contact.email}`}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Email
+                    </a>
+                  </Button>
+                )}
+                {contact.phone && (
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href={`tel:${contact.phone}`}>
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call
+                    </a>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Cross-module Links */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Module Links</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate(`/sales/quotations/new?contact=${encodeURIComponent(`${contact.firstName} ${contact.lastName}`)}`)}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Create Quotation
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate(`/sales/orders/new?contact=${encodeURIComponent(`${contact.firstName} ${contact.lastName}`)}`)}>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Create Sales Order
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate('/invoicing')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Invoices
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Linked Opportunities */}
+            {linkedOpportunities.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Opportunities
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {linkedOpportunities.map(opp => (
+                      <div
+                        key={opp.id}
+                        className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate(`/crm/opportunities/${opp.id}`)}
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{opp.name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{opp.stage}</p>
+                        </div>
+                        <span className="text-xs font-medium">₹{opp.expectedRevenue.toLocaleString('en-IN')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
           <div className="space-y-6">
             <Card>
               <CardHeader>
