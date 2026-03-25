@@ -57,6 +57,7 @@ import CRMContactsList from "@/pages/crm/CRMContactsList";
 import CRMContactDetail from "@/pages/crm/CRMContactDetail";
 
 import CRMLeadsList from "@/pages/crm/CRMLeadsList";
+import LeadDetail from "@/pages/crm/LeadDetail";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 
 // Accounting pages
@@ -420,7 +421,7 @@ const App = () => (
             <Route path="/crm" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
             <Route path="/crm/pipeline" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
-            <Route path="/crm/leads/:id" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
+            <Route path="/crm/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactDetail /></ProtectedRoute>} />
