@@ -253,47 +253,6 @@ export default function CRMContactDetail() {
               </Card>
             )}
           </div>
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Score</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl font-bold">{contact.score}</div>
-                  <Badge
-                    variant={contact.score >= 70 ? 'default' : contact.score >= 40 ? 'secondary' : 'outline'}
-                  >
-                    {contact.score >= 70 ? 'High' : contact.score >= 40 ? 'Medium' : 'Low'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {contact.email && (
-                  <Button variant="outline" className="w-full justify-start" asChild>
-                    <a href={`mailto:${contact.email}`}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Email
-                    </a>
-                  </Button>
-                )}
-                {contact.phone && (
-                  <Button variant="outline" className="w-full justify-start" asChild>
-                    <a href={`tel:${contact.phone}`}>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call
-                    </a>
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </AppLayout>
