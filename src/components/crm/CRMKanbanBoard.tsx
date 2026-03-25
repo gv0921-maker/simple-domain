@@ -301,7 +301,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Company"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.company}
                 onChange={(e) => setQuickData({ ...quickData, company: e.target.value })}
@@ -311,7 +311,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Contact name"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.contact}
                 onChange={(e) => setQuickData({ ...quickData, contact: e.target.value })}
@@ -320,7 +320,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Opportunity name"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.name}
                 onChange={(e) => setQuickData({ ...quickData, name: e.target.value })}
@@ -329,7 +329,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Email"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.email}
                 onChange={(e) => setQuickData({ ...quickData, email: e.target.value })}
@@ -338,7 +338,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Input
-                placeholder=""
+                placeholder="Phone"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary"
                 value={quickData.phone}
                 onChange={(e) => setQuickData({ ...quickData, phone: e.target.value })}
@@ -347,7 +347,7 @@ function KanbanColumn({
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground font-medium w-3.5 text-center shrink-0">₹</span>
               <Input
-                placeholder=""
+                placeholder="Revenue"
                 type="number"
                 className="h-7 text-xs border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary flex-1"
                 value={quickData.revenue}
