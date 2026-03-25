@@ -180,8 +180,8 @@ export default function CRMLeadsList() {
   };
 
   const handleCreate = () => {
-    if (!formData.title || !formData.contactName || !formData.email) {
-      toast({ title: 'Title, contact name, and email are required', variant: 'destructive' });
+    if (!formData.title) {
+      toast({ title: 'Lead name is required', variant: 'destructive' });
       return;
     }
 
