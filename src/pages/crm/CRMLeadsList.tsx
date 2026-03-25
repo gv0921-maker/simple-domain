@@ -345,13 +345,13 @@ export default function CRMLeadsList() {
         <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>New Lead</DialogTitle>
+              <DialogTitle>New Customer</DialogTitle>
               <DialogDescription>Create a new sales lead</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {studio.isFieldVisible('name') && (
                 <div className="grid gap-2">
-                  <Label>{studio.getFieldLabel('name', 'Lead Title')} {studio.isFieldRequired('name', true) && '*'}</Label>
+                  <Label>{studio.getFieldLabel('name', 'Title')} {studio.isFieldRequired('name', true) && '*'}</Label>
                   <Input
                     value={formData.title || ''}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -363,7 +363,7 @@ export default function CRMLeadsList() {
               <div className="grid grid-cols-2 gap-4">
                 {studio.isFieldVisible('contactName') && (
                   <div className="grid gap-2">
-                    <Label>{studio.getFieldLabel('contactName', 'Contact Name')} {studio.isFieldRequired('contactName') && '*'}</Label>
+                    <Label>{studio.getFieldLabel('contactName', 'Name')} {studio.isFieldRequired('contactName') && '*'}</Label>
                     <Input
                       value={formData.contactName || ''}
                       onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
