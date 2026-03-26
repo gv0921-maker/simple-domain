@@ -840,10 +840,29 @@ export function importContacts(data: Partial<Contact>[]): ImportResult {
         return;
       }
       
+      const address: Address | undefined = (row as any).street || (row as any).city || (row as any).state || (row as any).postalCode || (row as any).country || (row as any).street2
+        ? {
+            street: (row as any).street,
+            street2: (row as any).street2,
+            city: (row as any).city,
+            state: (row as any).state,
+            postalCode: (row as any).postalCode,
+            country: (row as any).country,
+            type: 'both' as const,
+          }
+        : undefined;
+
       saveContact({
         ...row,
         firstName: row.firstName || '',
         lastName: row.lastName || '',
+        website: (row as any).website,
+        gstin: (row as any).gstin,
+        type: ((row as any).type === 'company' ? 'company' : 'individual') as ContactType,
+        addresses: address ? [address] : row.addresses || [],
+        score: typeof (row as any).score === 'number' ? (row as any).score : row.score,
+        assignedTo: (row as any).assignedTo || row.assignedTo,
+        status: ((row as any).status === 'archived' ? 'archived' : 'active') as ContactStatus,
       });
       result.success++;
     } catch (e) {
