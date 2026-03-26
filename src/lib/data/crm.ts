@@ -15,6 +15,7 @@ export type NoteVisibility = 'private' | 'team' | 'public';
 
 export interface Address {
   street?: string;
+  street2?: string;
   city?: string;
   state?: string;
   postalCode?: string;
@@ -54,6 +55,8 @@ export interface Contact {
   companyName?: string;
   jobTitle?: string;
   department?: string;
+  website?: string;
+  gstin?: string;
   addresses: Address[];
   tags: string[];
   notes?: string;
