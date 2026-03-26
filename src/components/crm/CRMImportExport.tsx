@@ -328,7 +328,7 @@ export function CRMImportDialog({ open, onOpenChange, onImportComplete, defaultR
       fieldMappings.forEach((mapping, index) => {
         if (mapping.crmField !== 'skip' && row[index] != null && row[index] !== '') {
           const val = row[index];
-          if (mapping.crmField === 'expectedRevenue' || mapping.crmField === 'probability') {
+          if (mapping.crmField === 'expectedRevenue' || mapping.crmField === 'probability' || mapping.crmField === 'score') {
             record[mapping.crmField] = parseNumber(val);
           } else if (mapping.crmField === 'priority' && recordType === 'opportunities') {
             record[mapping.crmField] = parsePriority(String(val));
