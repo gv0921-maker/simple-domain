@@ -826,20 +826,24 @@ export interface ImportResult {
 export function importContacts(data: Partial<Contact>[]): ImportResult {
   const result: ImportResult = { success: 0, failed: 0, duplicates: 0, errors: [] };
   
+  // Reload contacts once for matching
+  let contacts = getContacts();
+
   data.forEach((row, index) => {
     try {
-      if (!row.email) {
+      // No required fields — accept any row with at least a name or email
+      const firstName = row.firstName || '';
+      const lastName = row.lastName || '';
+      const email = row.email || '';
+      const phone = row.phone || '';
+
+      if (!firstName && !lastName && !email) {
         result.failed++;
-        result.errors.push(`Row ${index + 1}: Email is required`);
+        result.errors.push(`Row ${index + 2}: At least a name or email is needed`);
         return;
       }
-      
-      const duplicates = findDuplicateContacts(row.email, row.phone);
-      if (duplicates.length > 0) {
-        result.duplicates++;
-        return;
-      }
-      
+
+      // Build address if any address field is present
       const address: Address | undefined = (row as any).street || (row as any).city || (row as any).state || (row as any).postalCode || (row as any).country || (row as any).street2
         ? {
             street: (row as any).street,
@@ -852,22 +856,65 @@ export function importContacts(data: Partial<Contact>[]): ImportResult {
           }
         : undefined;
 
-      saveContact({
+      const contactData: Partial<Contact> = {
         ...row,
-        firstName: row.firstName || '',
-        lastName: row.lastName || '',
+        firstName,
+        lastName,
+        email,
+        phone,
         website: (row as any).website,
         gstin: (row as any).gstin,
         type: ((row as any).type === 'company' ? 'company' : 'individual') as ContactType,
         addresses: address ? [address] : row.addresses || [],
-        score: typeof (row as any).score === 'number' ? (row as any).score : row.score,
+        score: typeof (row as any).score === 'number' ? (row as any).score : (row.score ?? 0),
         assignedTo: (row as any).assignedTo || row.assignedTo,
         status: ((row as any).status === 'archived' ? 'archived' : 'active') as ContactStatus,
-      });
-      result.success++;
+      };
+
+      // Try to find existing contact by email (primary) or by exact name match
+      let existingContact: Contact | undefined;
+      if (email) {
+        existingContact = contacts.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
+      }
+      if (!existingContact && firstName) {
+        existingContact = contacts.find(c =>
+          c.firstName.toLowerCase() === firstName.toLowerCase() &&
+          c.lastName.toLowerCase() === (lastName || '').toLowerCase()
+        );
+      }
+
+      if (existingContact) {
+        // Update existing contact — merge non-empty imported fields
+        const merged: Partial<Contact> = { id: existingContact.id };
+        for (const [key, value] of Object.entries(contactData)) {
+          if (key === 'id') continue;
+          if (value !== undefined && value !== '' && value !== null) {
+            (merged as any)[key] = value;
+          }
+        }
+        // Merge tags
+        if (contactData.tags && contactData.tags.length > 0) {
+          const existingTags = existingContact.tags || [];
+          merged.tags = [...new Set([...existingTags, ...contactData.tags])];
+        }
+        // Merge addresses
+        if (address) {
+          merged.addresses = existingContact.addresses?.length
+            ? [...existingContact.addresses.filter(a => a.street !== address.street || a.city !== address.city), address]
+            : [address];
+        }
+        saveContact(merged);
+        result.duplicates++;
+        result.success++;
+      } else {
+        // Create new contact
+        const saved = saveContact(contactData);
+        contacts.push(saved); // keep in-memory list updated for subsequent duplicate checks
+        result.success++;
+      }
     } catch (e) {
       result.failed++;
-      result.errors.push(`Row ${index + 1}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      result.errors.push(`Row ${index + 2}: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   });
   
