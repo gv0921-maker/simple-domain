@@ -122,6 +122,8 @@ const App = () => (
             <Route path="/inventory/configuration" element={<ProtectedRoute><InventoryConfiguration /></ProtectedRoute>} />
             <Route path="/inventory/adjustments" element={<ProtectedRoute><InventoryAdjustments /></ProtectedRoute>} />
             <Route path="/inventory/reorder-rules" element={<ProtectedRoute><ReorderRules /></ProtectedRoute>} />
+            <Route path="/inventory/reorder-rules/new" element={<ProtectedRoute><ReorderRuleForm /></ProtectedRoute>} />
+            <Route path="/inventory/reorder-rules/:id/edit" element={<ProtectedRoute><ReorderRuleForm /></ProtectedRoute>} />
             <Route path="/inventory/stock-dashboard" element={<ProtectedRoute><StockDashboard /></ProtectedRoute>} />
 
             {/* Barcode module */}
@@ -139,6 +141,8 @@ const App = () => (
             <Route path="/sales/orders/:id" element={<ProtectedRoute><SalesOrderForm /></ProtectedRoute>} />
             <Route path="/sales/orders/:id/edit" element={<ProtectedRoute><SalesOrderForm /></ProtectedRoute>} />
             <Route path="/sales/subscriptions" element={<ProtectedRoute><SubscriptionsList /></ProtectedRoute>} />
+            <Route path="/sales/subscriptions/new" element={<ProtectedRoute><SubscriptionForm /></ProtectedRoute>} />
+            <Route path="/sales/subscriptions/:id/edit" element={<ProtectedRoute><SubscriptionForm /></ProtectedRoute>} />
             <Route path="/sales/pricelists" element={<ProtectedRoute><PricelistsPage /></ProtectedRoute>} />
             <Route path="/sales/pricelists/new" element={<ProtectedRoute><PricelistForm /></ProtectedRoute>} />
             <Route path="/sales/pricelists/:id/edit" element={<ProtectedRoute><PricelistForm /></ProtectedRoute>} />
@@ -172,6 +176,7 @@ const App = () => (
             <Route path="/crm/leads/new" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
             <Route path="/crm/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
             <Route path="/crm/leads/:id/edit" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
+            <Route path="/crm/opportunities/new" element={<ProtectedRoute><OpportunityForm /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />
             <Route path="/crm/contacts/new" element={<ProtectedRoute><ContactForm /></ProtectedRoute>} />
