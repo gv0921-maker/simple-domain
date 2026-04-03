@@ -14,7 +14,7 @@ export function ModuleCard({ id, name, description, href }: ModuleCardProps) {
 
   return (
     <Link to={href}>
-      <Card className="p-5 flex flex-col items-center justify-center gap-3 card-hover hover:shadow-lg cursor-pointer group bg-card border-border/40 aspect-square">
+      <Card className="p-3 flex flex-col items-center justify-center gap-2 card-hover hover:shadow-lg cursor-pointer group bg-card border-border/40 aspect-square">
         <div className="w-14 h-14 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-105 shrink-0 overflow-hidden">
           {CustomIcon ? (
             <CustomIcon />
