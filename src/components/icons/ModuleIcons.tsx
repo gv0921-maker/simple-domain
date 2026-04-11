@@ -148,31 +148,6 @@ export const CalendarIcon = () => (
   </svg>
 );
 
-export const HelpdeskIcon = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full">
-    <rect x="8" y="12" width="32" height="24" rx="3" fill="#0891b2" />
-    <path d="M8 18L24 28L40 18" stroke="#cffafe" strokeWidth="2" />
-    <circle cx="36" cy="12" r="6" fill="#22d3ee" />
-    <path d="M36 10V12L38 14" stroke="#ecfeff" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
-export const EmailMarketingIcon = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full">
-    <path d="M8 16L24 8L40 16V32L24 40L8 32V16Z" fill="#db2777" />
-    <path d="M24 8L40 16V32L24 24V8Z" fill="#ec4899" />
-    <path d="M14 20L24 26L34 20" stroke="#fce7f3" strokeWidth="2" />
-  </svg>
-);
-
-export const WebsiteIcon = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full">
-    <circle cx="24" cy="24" r="16" fill="#2563eb" />
-    <ellipse cx="24" cy="24" rx="8" ry="16" fill="#3b82f6" />
-    <path d="M8 24H40" stroke="#93c5fd" strokeWidth="2" />
-    <path d="M12 16H36M12 32H36" stroke="#bfdbfe" strokeWidth="2" />
-  </svg>
-);
 
 // Icon map for easy lookup
 export const MODULE_ICONS: Record<string, React.FC> = {
