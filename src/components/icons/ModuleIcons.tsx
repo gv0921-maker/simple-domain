@@ -192,7 +192,4 @@ export const MODULE_ICONS: Record<string, React.FC> = {
   invoicing: InvoicingIcon,
   maintenance: MaintenanceIcon,
   calendar: CalendarIcon,
-  helpdesk: HelpdeskIcon,
-  'email-marketing': EmailMarketingIcon,
-  website: WebsiteIcon,
 };

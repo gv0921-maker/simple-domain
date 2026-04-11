@@ -96,9 +96,6 @@ export const DEFAULT_MODULES: ModuleConfig[] = [
   { id: 'shop-floor', name: 'Shop Floor', description: 'Track shop floor operations', icon: 'Smartphone', iconBg: '#e0f2fe', iconColor: '#0ea5e9', href: '/shop-floor', visible: true, order: 9 },
   { id: 'barcode', name: 'Barcode', description: 'Scan and manage products', icon: 'Barcode', iconBg: '#fce7f3', iconColor: '#ec4899', href: '/barcode', visible: true, order: 10 },
   { id: 'invoicing', name: 'Invoicing', description: 'Invoices & Payments', icon: 'FileText', iconBg: '#e0e7ff', iconColor: '#6366f1', href: '/invoicing', visible: true, order: 11 },
-  { id: 'helpdesk', name: 'Helpdesk', description: 'Track and solve customer tickets', icon: 'HelpCircle', iconBg: '#cffafe', iconColor: '#0891b2', href: '/helpdesk', visible: true, order: 12 },
-  { id: 'email-marketing', name: 'Email Marketing', description: 'Design, send and track emails', icon: 'Mail', iconBg: '#fce7f3', iconColor: '#db2777', href: '/email-marketing', visible: true, order: 13 },
-  { id: 'website', name: 'Website', description: 'Enterprise website builder', icon: 'Globe', iconBg: '#dbeafe', iconColor: '#2563eb', href: '/website', visible: true, order: 14 },
 ];
 
 // Default theme configuration

@@ -103,16 +103,6 @@ export const MODULE_TABS: ModuleTabsConfig[] = [
     ],
   },
   {
-    moduleId: 'helpdesk',
-    moduleName: 'Helpdesk',
-    tabs: [
-      { id: 'overview', label: 'Overview', href: '/helpdesk' },
-      { id: 'tickets', label: 'Tickets', href: '/helpdesk/tickets' },
-      { id: 'knowledge', label: 'Knowledge Base', href: '/helpdesk/knowledge' },
-      { id: 'sla', label: 'SLA', href: '/helpdesk/sla' },
-    ],
-  },
-  {
     moduleId: 'pos',
     moduleName: 'POS',
     tabs: [
@@ -120,16 +110,6 @@ export const MODULE_TABS: ModuleTabsConfig[] = [
       { id: 'session', label: 'Session', href: '/pos/session' },
       { id: 'orders', label: 'Orders', href: '/pos/orders' },
       { id: 'configuration', label: 'Configuration', href: '/pos/configuration' },
-    ],
-  },
-  {
-    moduleId: 'website',
-    moduleName: 'Website',
-    tabs: [
-      { id: 'overview', label: 'Overview', href: '/website' },
-      { id: 'pages', label: 'Pages', href: '/website/pages' },
-      { id: 'blog', label: 'Blog', href: '/website/blog' },
-      { id: 'analytics', label: 'Analytics', href: '/website/analytics' },
     ],
   },
   {
