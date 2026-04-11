@@ -13,7 +13,7 @@ export function ModuleCard({ id, name, href }: ModuleCardProps) {
 
   return (
     <Link to={href}>
-      <Card className="p-2 flex flex-col items-center justify-center gap-1.5 card-hover hover:shadow-lg cursor-pointer group bg-card border-border/40 aspect-square">
+      <Card className="p-4 flex flex-col items-center justify-center gap-3 card-hover hover:shadow-lg cursor-pointer group bg-card border-border/40">
         <div className="w-16 h-16 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110 shrink-0 overflow-hidden">
           {CustomIcon ? (
             <CustomIcon />
@@ -21,7 +21,7 @@ export function ModuleCard({ id, name, href }: ModuleCardProps) {
             <div className="w-full h-full bg-muted rounded-lg" />
           )}
         </div>
-        <span className="text-[11px] font-semibold text-foreground text-center truncate w-full">{name}</span>
+        <span className="text-sm font-semibold text-foreground text-center truncate w-full">{name}</span>
       </Card>
     </Link>
   );

@@ -28,9 +28,9 @@ export default function HomePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-gradient-lavender p-4 md:p-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+      <div className="min-h-full bg-gradient-lavender flex items-center justify-center p-6 md:p-10">
+        <div className="max-w-6xl w-full mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {visibleModules.map((module, index) => (
               <div
                 key={module.id}
