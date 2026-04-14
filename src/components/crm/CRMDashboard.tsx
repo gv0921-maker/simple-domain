@@ -251,7 +251,7 @@ export function CRMDashboard() {
               <PieChart className="h-5 w-5" />
               Leads by Source
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/crm/leads')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/crm')}>
               View All
             </Button>
           </CardHeader>
@@ -326,7 +326,7 @@ export function CRMDashboard() {
         <Card className="animate-fade-in">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">New Leads</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/crm/leads')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/crm')}>
               View All
             </Button>
           </CardHeader>
@@ -339,7 +339,7 @@ export function CRMDashboard() {
                   <div
                     key={lead.id}
                     className="p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
-                    onClick={() => navigate(`/crm/leads/${lead.id}`)}
+                    onClick={() => navigate(`/crm`)}
                   >
                     <p className="font-medium text-sm truncate">{lead.title}</p>
                     <p className="text-xs text-muted-foreground">{lead.contactName}</p>
@@ -403,14 +403,14 @@ export function CRMDashboard() {
               Manage Contacts
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
-            <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm/leads')}>
-              <Target className="h-4 w-4" />
-              View Leads
-              <ArrowRight className="h-4 w-4 ml-auto" />
-            </Button>
-            <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm/pipeline')}>
+            <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm')}>
               <TrendingUp className="h-4 w-4" />
               Sales Pipeline
+              <ArrowRight className="h-4 w-4 ml-auto" />
+            </Button>
+            <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/crm')}>
+              <TrendingUp className="h-4 w-4" />
+              View Pipeline
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
           </div>

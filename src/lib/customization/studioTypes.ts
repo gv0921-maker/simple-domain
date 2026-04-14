@@ -90,9 +90,7 @@ export interface StudioFormConfig {
 // Module and route registry for linking
 export const MODULE_REGISTRY = [
   { id: 'crm', name: 'CRM', routes: [
-    { path: '/crm', label: 'Overview' },
-    { path: '/crm/pipeline', label: 'Pipeline' },
-    { path: '/crm/leads', label: 'Leads' },
+    { path: '/crm', label: 'Pipeline' },
     { path: '/crm/contacts', label: 'Contacts' },
   ]},
   { id: 'sales', name: 'Sales', routes: [

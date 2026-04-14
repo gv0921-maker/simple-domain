@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Search,
   User,
-  Target,
+  
   TrendingUp,
   Package,
   ShoppingCart,
@@ -15,7 +15,7 @@ import {
   Settings,
   X,
 } from 'lucide-react';
-import { getLeads, getContacts, getOpportunities } from '@/lib/data/crm';
+import { getContacts, getOpportunities } from '@/lib/data/crm';
 import { cn } from '@/lib/utils';
 
 interface SearchResult {
@@ -39,16 +39,6 @@ export function GlobalSearch() {
     const q = query.toLowerCase();
     const items: SearchResult[] = [];
 
-    // CRM Leads
-    try {
-      getLeads().filter(l =>
-        l.title.toLowerCase().includes(q) ||
-        l.contactName.toLowerCase().includes(q) ||
-        l.email.toLowerCase().includes(q)
-      ).slice(0, 3).forEach(l => {
-        items.push({ id: l.id, title: l.title, subtitle: l.contactName, module: 'CRM Lead', icon: Target, href: `/crm/leads/${l.id}` });
-      });
-    } catch {}
 
     // CRM Contacts
     try {
@@ -73,8 +63,7 @@ export function GlobalSearch() {
 
     // Module navigation shortcuts
     const modules = [
-      { name: 'CRM', href: '/crm', icon: Target },
-      { name: 'CRM Pipeline', href: '/crm/pipeline', icon: TrendingUp },
+      { name: 'CRM', href: '/crm', icon: TrendingUp },
       { name: 'CRM Contacts', href: '/crm/contacts', icon: User },
       { name: 'Inventory', href: '/inventory', icon: Package },
       { name: 'Inventory Products', href: '/inventory/products', icon: Package },

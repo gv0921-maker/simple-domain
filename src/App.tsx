@@ -61,9 +61,6 @@ import CRMOverview from "@/pages/crm/CRMOverview";
 import CRMPipeline from "@/pages/crm/CRMPipeline";
 import CRMContactsList from "@/pages/crm/CRMContactsList";
 import CRMContactDetail from "@/pages/crm/CRMContactDetail";
-import CRMLeadsList from "@/pages/crm/CRMLeadsList";
-import LeadDetail from "@/pages/crm/LeadDetail";
-import LeadForm from "@/pages/crm/LeadForm";
 import ContactForm from "@/pages/crm/ContactForm";
 import OpportunityForm from "@/pages/crm/OpportunityForm";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
@@ -167,12 +164,7 @@ const App = () => (
             <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
             {/* CRM module */}
-            <Route path="/crm" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
-            <Route path="/crm/pipeline" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
-            <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
-            <Route path="/crm/leads/new" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
-            <Route path="/crm/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
-            <Route path="/crm/leads/:id/edit" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
+            <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/opportunities/new" element={<ProtectedRoute><OpportunityForm /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts" element={<ProtectedRoute><CRMContactsList /></ProtectedRoute>} />

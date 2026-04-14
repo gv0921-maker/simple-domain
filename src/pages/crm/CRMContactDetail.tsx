@@ -146,7 +146,7 @@ export default function CRMContactDetail() {
                       <div
                         key={lead.id}
                         className="flex items-center justify-between p-3 rounded-md border cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate(`/crm/leads/${lead.id}`)}
+                        onClick={() => navigate('/crm')}
                       >
                         <div>
                           <p className="font-medium text-sm">{lead.title}</p>
