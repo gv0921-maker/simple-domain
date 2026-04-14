@@ -78,10 +78,10 @@ const DEFAULT_STUDIO_FORMS: Record<string, Omit<StudioFormConfig, 'id' | 'module
       { id: 'notes', label: 'Notes', technicalName: 'notes', widget: 'textarea', required: false, visible: true, readOnly: false, colSpan: 2 },
     ],
     smartButtons: [
-      { id: 'sb_opportunity', label: 'Convert to Opportunity', icon: 'Target', targetModule: 'crm', targetRoute: '/crm/pipeline', visible: true },
+      { id: 'sb_opportunity', label: 'Convert to Opportunity', icon: 'Target', targetModule: 'crm', targetRoute: '/crm', visible: true },
     ],
     actionButtons: [
-      { id: 'ab_convert', label: 'Convert to Opportunity', type: 'primary', action: 'navigate', targetRoute: '/crm/pipeline', visible: true, position: 'header', order: 0 },
+      { id: 'ab_convert', label: 'Convert to Opportunity', type: 'primary', action: 'navigate', targetRoute: '/crm', visible: true, position: 'header', order: 0 },
     ],
   },
   'crm:New Contact': {
@@ -112,7 +112,7 @@ const DEFAULT_STUDIO_FORMS: Record<string, Omit<StudioFormConfig, 'id' | 'module
       { id: 'notes', label: 'Notes', technicalName: 'notes', widget: 'textarea', required: false, visible: true, readOnly: false, colSpan: 2 },
     ],
     smartButtons: [
-      { id: 'sb_opportunities', label: 'Opportunities', icon: 'Target', targetModule: 'crm', targetRoute: '/crm/pipeline', visible: true },
+      { id: 'sb_opportunities', label: 'Opportunities', icon: 'Target', targetModule: 'crm', targetRoute: '/crm', visible: true },
       { id: 'sb_quotations', label: 'Quotations', icon: 'FileText', targetModule: 'sales', targetRoute: '/sales/quotations', visible: true },
     ],
     actionButtons: [],
@@ -143,7 +143,7 @@ const DEFAULT_STUDIO_FORMS: Record<string, Omit<StudioFormConfig, 'id' | 'module
     ],
     smartButtons: [
       { id: 'sb_contacts', label: 'Contacts', icon: 'Users', targetModule: 'crm', targetRoute: '/crm/contacts', visible: true },
-      { id: 'sb_opportunities', label: 'Opportunities', icon: 'Target', targetModule: 'crm', targetRoute: '/crm/pipeline', visible: true },
+      { id: 'sb_opportunities', label: 'Opportunities', icon: 'Target', targetModule: 'crm', targetRoute: '/crm', visible: true },
     ],
     actionButtons: [],
   },

@@ -105,7 +105,7 @@ export default function OpportunityDetail() {
       <AppLayout title="CRM" moduleNav={CRM_NAV}>
         <div className="p-6 text-center">
           <p className="text-muted-foreground">Opportunity not found</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate('/crm/pipeline')}>
+          <Button variant="outline" className="mt-4" onClick={() => navigate('/crm')}>
             Back to Pipeline
           </Button>
         </div>
@@ -198,12 +198,12 @@ export default function OpportunityDetail() {
               <Button
                 size="sm"
                 className="h-8 text-xs font-semibold bg-[#875A7B] hover:bg-[#6e4a64] text-white"
-                onClick={() => navigate('/crm/pipeline')}
+                onClick={() => navigate('/crm')}
               >
                 New
               </Button>
               <button
-                onClick={() => navigate('/crm/pipeline')}
+                onClick={() => navigate('/crm')}
                 className="text-primary hover:underline font-medium text-sm"
               >
                 Pipeline
