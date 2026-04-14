@@ -11,17 +11,18 @@ import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  Search, List, LayoutGrid, ChevronDown, ChevronUp, Star,
-  SlidersHorizontal, Users, BarChart3, Activity, Clock, Settings,
-  CalendarDays, Map,
+  List, LayoutGrid, ChevronDown, ChevronUp,
+  Clock, Settings,
 } from 'lucide-react';
 import {
   getOpportunities, getDefaultPipeline, type Opportunity,
 } from '@/lib/data/crm';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import { CRMSearchDropdown, useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
 
 interface CRMPipelineListViewProps {
   onNewOpportunity?: () => void;
