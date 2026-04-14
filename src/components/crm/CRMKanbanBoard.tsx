@@ -1,5 +1,5 @@
 // Odoo-style CRM Kanban Board — pixel-perfect replica from reference screenshots
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -392,6 +392,15 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
 
   const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
+
+  // Refresh data when component mounts or window regains focus (e.g., after navigating back from detail page)
+  useEffect(() => {
+    const refresh = () => setAllOpportunities(getOpportunities());
+    window.addEventListener('focus', refresh);
+    // Also refresh on mount in case data changed while navigated away
+    refresh();
+    return () => window.removeEventListener('focus', refresh);
+  }, []);
   const [pipeline] = useState<Pipeline>(() => getDefaultPipeline());
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
 
