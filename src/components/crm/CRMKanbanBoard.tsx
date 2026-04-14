@@ -388,24 +388,22 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const navigate = useNavigate();
   const { toast } = useToast();
   const { canCreateOpportunities, canEditOpportunities, filterByScope } = useCRMPermissions();
+  const { user } = useAuth();
 
   const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
   const [pipeline] = useState<Pipeline>(() => getDefaultPipeline());
-  const [search, setSearch] = useState('');
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
 
   const activeStages = useMemo(() => pipeline.stages.filter(s => s.id !== 'lost'), [pipeline.stages]);
 
-  const filteredOpportunities = useMemo(() => {
-    return opportunities.filter(
-      (o) =>
-        o.stage !== 'lost' &&
-        (o.name.toLowerCase().includes(search.toLowerCase()) ||
-        o.contactName.toLowerCase().includes(search.toLowerCase()) ||
-        (o.companyName?.toLowerCase().includes(search.toLowerCase()) ?? false))
-    );
-  }, [opportunities, search]);
+  // Apply filters
+  const filteredOpportunities = useFilteredOpportunities(
+    // Default: exclude lost unless "Lost" filter is active
+    activeFilters.filters.has('lost') ? opportunities : opportunities.filter(o => o.stage !== 'lost'),
+    activeFilters,
+    user?.id,
+  );
 
   const opportunitiesByStage = useMemo(() => {
     const grouped: Record<string, Opportunity[]> = {};
