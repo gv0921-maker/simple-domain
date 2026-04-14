@@ -102,20 +102,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer" />
           </div>
 
-          <div className="relative flex-1 max-w-md">
-            <div className="relative flex items-center border border-border rounded bg-card overflow-hidden">
-              <Search className="h-4 w-4 text-muted-foreground ml-2.5" />
-              <input
-                placeholder="Search pipeline..."
-                className="h-8 w-full text-sm bg-transparent border-0 outline-none px-2 placeholder:text-muted-foreground"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <button className="h-8 w-8 flex items-center justify-center border-l border-border text-muted-foreground hover:bg-muted">
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
+          <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
 
           <div className="flex items-center gap-1">
             {[
