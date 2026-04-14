@@ -11,17 +11,18 @@ import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  Search, List, LayoutGrid, ChevronDown, ChevronUp, Star,
-  SlidersHorizontal, Users, BarChart3, Activity, Clock, Settings,
-  CalendarDays, Map,
+  List, LayoutGrid, ChevronDown, ChevronUp,
+  Clock, Settings,
 } from 'lucide-react';
 import {
   getOpportunities, getDefaultPipeline, type Opportunity,
 } from '@/lib/data/crm';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import { CRMSearchDropdown, useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
 
 interface CRMPipelineListViewProps {
   onNewOpportunity?: () => void;
@@ -35,25 +36,25 @@ type SortDir = 'asc' | 'desc';
 export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CRMPipelineListViewProps) {
   const navigate = useNavigate();
   const { canCreateOpportunities, filterByScope } = useCRMPermissions();
+  const { user } = useAuth();
   const pipeline = getDefaultPipeline();
 
   const [allOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
-  const [search, setSearch] = useState('');
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [sortField, setSortField] = useState<SortField>('expectedRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // Apply filters
+  const filteredByFilters = useFilteredOpportunities(
+    activeFilters.filters.has('lost') ? opportunities : opportunities.filter(o => o.stage !== 'lost'),
+    activeFilters,
+    user?.id,
+  );
+
   const filtered = useMemo(() => {
-    let list = opportunities.filter(o => o.stage !== 'lost');
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(o =>
-        o.name.toLowerCase().includes(q) ||
-        o.contactName.toLowerCase().includes(q) ||
-        (o.companyName?.toLowerCase().includes(q) ?? false)
-      );
-    }
+    let list = [...filteredByFilters];
     list.sort((a, b) => {
       let cmp = 0;
       if (sortField === 'name') cmp = a.name.localeCompare(b.name);
@@ -69,7 +70,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
       return sortDir === 'desc' ? -cmp : cmp;
     });
     return list;
-  }, [opportunities, search, sortField, sortDir, pipeline.stages]);
+  }, [filteredByFilters, sortField, sortDir, pipeline.stages]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -101,20 +102,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer" />
           </div>
 
-          <div className="relative flex-1 max-w-md">
-            <div className="relative flex items-center border border-border rounded bg-card overflow-hidden">
-              <Search className="h-4 w-4 text-muted-foreground ml-2.5" />
-              <input
-                placeholder="Search pipeline..."
-                className="h-8 w-full text-sm bg-transparent border-0 outline-none px-2 placeholder:text-muted-foreground"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <button className="h-8 w-8 flex items-center justify-center border-l border-border text-muted-foreground hover:bg-muted">
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
+          <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
 
           <div className="flex items-center gap-1">
             {[
