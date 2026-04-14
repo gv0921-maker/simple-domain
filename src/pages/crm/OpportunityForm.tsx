@@ -122,7 +122,7 @@ export default function OpportunityForm() {
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => navigate('/crm/pipeline')}>Discard</Button>
+          <Button variant="outline" onClick={() => navigate('/crm')}>Discard</Button>
           <Button onClick={handleSubmit}>Create Opportunity</Button>
         </div>
       </div>
