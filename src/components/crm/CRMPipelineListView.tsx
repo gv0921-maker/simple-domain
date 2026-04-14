@@ -39,8 +39,16 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
   const { user } = useAuth();
   const pipeline = getDefaultPipeline();
 
-  const [allOpportunities] = useState<Opportunity[]>(() => getOpportunities());
+  const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
+
+  // Refresh data when component mounts or window regains focus
+  useEffect(() => {
+    const refresh = () => setAllOpportunities(getOpportunities());
+    window.addEventListener('focus', refresh);
+    refresh();
+    return () => window.removeEventListener('focus', refresh);
+  }, []);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [sortField, setSortField] = useState<SortField>('expectedRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
