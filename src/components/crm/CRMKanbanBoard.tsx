@@ -395,7 +395,17 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const [pipeline] = useState<Pipeline>(() => getDefaultPipeline());
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
 
-  const activeStages = useMemo(() => pipeline.stages.filter(s => s.id !== 'lost'), [pipeline.stages]);
+  const activeStages = useMemo(() => {
+    const stages = pipeline.stages.filter(s => s.id !== 'lost');
+    // Show the Lost column when the Lost filter is active
+    if (activeFilters.filters.has('lost')) {
+      const lostStage = pipeline.stages.find(s => s.id === 'lost');
+      if (lostStage && !stages.find(s => s.id === 'lost')) {
+        stages.push(lostStage);
+      }
+    }
+    return stages;
+  }, [pipeline.stages, activeFilters.filters]);
 
   // Apply filters
   const filteredOpportunities = useFilteredOpportunities(
