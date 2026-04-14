@@ -36,25 +36,25 @@ type SortDir = 'asc' | 'desc';
 export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CRMPipelineListViewProps) {
   const navigate = useNavigate();
   const { canCreateOpportunities, filterByScope } = useCRMPermissions();
+  const { user } = useAuth();
   const pipeline = getDefaultPipeline();
 
   const [allOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
-  const [search, setSearch] = useState('');
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [sortField, setSortField] = useState<SortField>('expectedRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // Apply filters
+  const filteredByFilters = useFilteredOpportunities(
+    activeFilters.filters.has('lost') ? opportunities : opportunities.filter(o => o.stage !== 'lost'),
+    activeFilters,
+    user?.id,
+  );
+
   const filtered = useMemo(() => {
-    let list = opportunities.filter(o => o.stage !== 'lost');
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(o =>
-        o.name.toLowerCase().includes(q) ||
-        o.contactName.toLowerCase().includes(q) ||
-        (o.companyName?.toLowerCase().includes(q) ?? false)
-      );
-    }
+    let list = [...filteredByFilters];
     list.sort((a, b) => {
       let cmp = 0;
       if (sortField === 'name') cmp = a.name.localeCompare(b.name);
@@ -70,7 +70,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
       return sortDir === 'desc' ? -cmp : cmp;
     });
     return list;
-  }, [opportunities, search, sortField, sortDir, pipeline.stages]);
+  }, [filteredByFilters, sortField, sortDir, pipeline.stages]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
