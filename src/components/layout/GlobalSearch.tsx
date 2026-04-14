@@ -63,8 +63,7 @@ export function GlobalSearch() {
 
     // Module navigation shortcuts
     const modules = [
-      { name: 'CRM', href: '/crm', icon: Target },
-      { name: 'CRM Pipeline', href: '/crm/pipeline', icon: TrendingUp },
+      { name: 'CRM', href: '/crm', icon: TrendingUp },
       { name: 'CRM Contacts', href: '/crm/contacts', icon: User },
       { name: 'Inventory', href: '/inventory', icon: Package },
       { name: 'Inventory Products', href: '/inventory/products', icon: Package },
