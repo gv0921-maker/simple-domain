@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -37,6 +38,8 @@ import { CRMImportDialog, CRMExportButton } from '@/components/crm/CRMImportExpo
 import { CRMFilterPopover, type FilterOption, type ActiveFilter } from '@/components/crm/CRMFilterPopover';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { isSuperAdminUser } from '@/lib/data/rbac';
 
 const CONTACT_FILTER_OPTIONS: FilterOption[] = [
   { id: 'status:active', label: 'Active', group: 'Status' },
@@ -51,12 +54,15 @@ const CONTACT_FILTER_OPTIONS: FilterOption[] = [
 export default function CRMContactsList() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { canCreateContacts, canDeleteContacts, canImportData, filterByScope } = useCRMPermissions();
+  const isSuperAdmin = user ? isSuperAdminUser(user.id) : false;
   
   const [contacts, setContacts] = useState<Contact[]>(() => getContacts());
   const [search, setSearch] = useState('');
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const scopedContacts = useMemo(() => filterByScope(contacts), [contacts, filterByScope]);
 
@@ -102,8 +108,35 @@ export default function CRMContactsList() {
   const handleDelete = (id: string) => {
     deleteContact(id);
     setContacts(getContacts());
+    setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     toast({ title: 'Contact deleted' });
   };
+
+  const handleBulkDelete = () => {
+    selectedIds.forEach(id => deleteContact(id));
+    setContacts(getContacts());
+    toast({ title: `${selectedIds.size} contact(s) deleted` });
+    setSelectedIds(new Set());
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(filteredContacts.map(c => c.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const n = new Set(prev);
+      if (checked) n.add(id); else n.delete(id);
+      return n;
+    });
+  };
+
+  const allSelected = filteredContacts.length > 0 && filteredContacts.every(c => selectedIds.has(c.id));
+  const someSelected = selectedIds.size > 0;
 
   return (
     <AppLayout title="CRM" moduleNav={CRM_NAV}>
@@ -114,6 +147,12 @@ export default function CRMContactsList() {
             <p className="text-muted-foreground">Manage your contacts and customer relationships</p>
           </div>
           <div className="flex gap-2">
+            {isSuperAdmin && someSelected && (
+              <Button variant="destructive" onClick={handleBulkDelete}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete ({selectedIds.size})
+              </Button>
+            )}
             <CRMExportButton type="contacts" />
             {canImportData && (
               <Button variant="outline" onClick={() => setIsImportOpen(true)}>
@@ -152,6 +191,14 @@ export default function CRMContactsList() {
           <Table>
             <TableHeader>
               <TableRow>
+                {isSuperAdmin && (
+                  <TableHead className="w-[40px]">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                    />
+                  </TableHead>
+                )}
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
@@ -164,7 +211,7 @@ export default function CRMContactsList() {
             <TableBody>
               {filteredContacts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={isSuperAdmin ? 8 : 7} className="text-center py-8 text-muted-foreground">
                     No contacts found
                   </TableCell>
                 </TableRow>
@@ -176,6 +223,14 @@ export default function CRMContactsList() {
                     style={{ animationDelay: `${index * 30}ms` }}
                     onClick={() => navigate(`/crm/contacts/${contact.id}`)}
                   >
+                    {isSuperAdmin && (
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(contact.id)}
+                          onCheckedChange={(checked) => handleSelectOne(contact.id, !!checked)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">

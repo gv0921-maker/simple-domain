@@ -331,7 +331,7 @@ export function setUserRoles(userId: string, roleIds: string[]): void {
   setItem('userRoles', userRoles);
 }
 
-function isSuperAdminUser(userId: string): boolean {
+export function isSuperAdminUser(userId: string): boolean {
   const userRole = getUserRole(userId);
   return Boolean(userRole?.roleIds.includes('super_admin'));
 }
