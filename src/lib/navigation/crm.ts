@@ -1,6 +1,5 @@
 // CRM Module Navigation
 export const CRM_NAV = [
-  { label: 'Leads', href: '/crm' },
-  { label: 'Pipeline', href: '/crm/pipeline' },
+  { label: 'Pipeline', href: '/crm' },
   { label: 'Contacts', href: '/crm/contacts' },
 ];
