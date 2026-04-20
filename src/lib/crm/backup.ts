@@ -73,7 +73,7 @@ export async function encryptBackup(backup: CRMBackup, passphrase: string): Prom
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(passphrase, salt);
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
+    { name: 'AES-GCM', iv: iv as BufferSource },
     key,
     enc.encode(JSON.stringify(backup))
   );
