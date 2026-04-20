@@ -82,6 +82,7 @@ export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const pipeline = getDefaultPipeline();
   const allOpportunities = getOpportunities();
 
@@ -93,7 +94,6 @@ export default function OpportunityDetail() {
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
-  const [chatterInput, setChatterInput] = useState('');
   const [formTab, setFormTab] = useState('notes');
 
   const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id]);
@@ -152,30 +152,35 @@ export default function OpportunityDetail() {
     toast({ title: 'Opportunity updated' });
   };
 
-  const handleChatterSubmit = () => {
-    if (!chatterInput.trim()) return;
+  const handleChatterSubmit = (value: RichComposerValue) => {
+    const text = value.html.replace(/<[^>]+>/g, '').trim();
+    if (!text && value.attachments.length === 0) return;
     if (chatterTab === 'note') {
       saveNote({
-        content: chatterInput,
+        content: value.html,
         relatedTo: 'opportunity',
         relatedId: opportunity.id,
-        userId: '1',
-        userName: 'Management',
+        userId: user?.id || '1',
+        userName: user?.name || 'User',
         visibility: 'team',
-      });
+        mentions: value.mentions,
+        attachments: value.attachments,
+      } as any);
     } else {
       saveActivity({
         type: 'note',
-        subject: chatterInput,
+        subject: text || '(attachment)',
+        description: value.html,
         relatedTo: 'opportunity',
         relatedId: opportunity.id,
-        userId: '1',
-        userName: 'Management',
+        userId: user?.id || '1',
+        userName: user?.name || 'User',
         completed: true,
         completedAt: new Date().toISOString(),
-      });
+        mentions: value.mentions,
+        attachments: value.attachments,
+      } as any);
     }
-    setChatterInput('');
     toast({ title: chatterTab === 'note' ? 'Note logged' : 'Message sent' });
   };
 
@@ -334,7 +339,7 @@ export default function OpportunityDetail() {
                     {isEditing ? (
                       <Input type="number" defaultValue={opportunity.expectedRevenue} className="h-8 text-sm w-32" onChange={e => setEditData({ ...editData, expectedRevenue: parseFloat(e.target.value) || 0 })} />
                     ) : (
-                      `₹ ${currentData.expectedRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                      displayRevenue(currentData.expectedRevenue, user?.id, 'crm')
                     )}
                   </div>
                 </div>
@@ -380,7 +385,9 @@ export default function OpportunityDetail() {
                     <Input defaultValue={opportunity.email} className="h-8 text-sm" onChange={e => setEditData({ ...editData, email: e.target.value })} />
                   ) : (
                     currentData.email ? (
-                      <a href={`mailto:${currentData.email}`} className="text-primary hover:underline">{currentData.email}</a>
+                      canViewSensitive(user?.id, 'crm', 'email')
+                        ? <a href={`mailto:${currentData.email}`} className="text-primary hover:underline">{currentData.email}</a>
+                        : <span className="text-muted-foreground">{maskEmail(currentData.email)}</span>
                     ) : '—'
                   )}
                 </OdooField>
@@ -408,7 +415,9 @@ export default function OpportunityDetail() {
                   {isEditing ? (
                     <Input defaultValue={opportunity.phone} className="h-8 text-sm" onChange={e => setEditData({ ...editData, phone: e.target.value })} />
                   ) : (
-                    currentData.phone || '—'
+                    currentData.phone
+                      ? (canViewSensitive(user?.id, 'crm', 'phone') ? currentData.phone : maskPhone(currentData.phone))
+                      : '—'
                   )}
                 </OdooField>
 
@@ -639,42 +648,14 @@ export default function OpportunityDetail() {
             {(chatterTab === 'message' || chatterTab === 'note') && (
               <div className="p-3 border-b border-border">
                 <div className="flex gap-2.5">
-                  <ChatterAvatar name="Management" />
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Input
-                        placeholder={chatterTab === 'note' ? 'Log an internal note...' : 'Send a message...'}
-                        className="h-9 text-sm pr-8 rounded-full border-[#00A09D] focus-visible:ring-[#00A09D]"
-                        value={chatterInput}
-                        onChange={(e) => setChatterInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleChatterSubmit(); }}
-                      />
-                      <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        <Smile className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Button
-                        size="sm"
-                        className={cn(
-                          'h-7 text-xs px-3',
-                          chatterTab === 'note'
-                            ? 'bg-[#875A7B]/20 text-[#875A7B] hover:bg-[#875A7B]/30'
-                            : 'bg-[#00A09D] hover:bg-[#008f8c] text-white'
-                        )}
-                        disabled={!chatterInput.trim()}
-                        onClick={handleChatterSubmit}
-                      >
-                        {chatterTab === 'note' ? 'Log' : 'Send'}
-                      </Button>
-                      <div className="flex-1" />
-                      <button className="text-muted-foreground hover:text-foreground">
-                        <Paperclip className="h-3.5 w-3.5" />
-                      </button>
-                      <button className="text-muted-foreground hover:text-foreground">
-                        <Maximize2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                  <ChatterAvatar name={user?.name || 'User'} />
+                  <div className="flex-1 min-w-0">
+                    <RichComposer
+                      compact
+                      placeholder={chatterTab === 'note' ? 'Log an internal note… type @ to mention' : 'Send a message… type @ to mention'}
+                      submitLabel={chatterTab === 'note' ? 'Log' : 'Send'}
+                      onSubmit={handleChatterSubmit}
+                    />
                   </div>
                 </div>
               </div>
@@ -695,6 +676,8 @@ export default function OpportunityDetail() {
                 .map((item) => {
                   const isNoteItem = 'content' in item;
                   const userName = (item as any).userName || 'System';
+                  const html = isNoteItem ? (item as Note).content : ((item as any).description || (item as Activity).subject);
+                  const attachments = (item as any).attachments;
                   return (
                     <div key={item.id} className="flex gap-2.5 mb-3">
                       <ChatterAvatar name={userName} />
@@ -703,9 +686,9 @@ export default function OpportunityDetail() {
                           <span className="font-bold text-foreground">{userName}</span>
                           <span className="text-xs text-muted-foreground">{format(parseISO(item.createdAt), 'h:mm a')}</span>
                         </div>
-                        <p className="text-sm text-foreground mt-0.5">
-                          {isNoteItem ? (item as Note).content : (item as Activity).subject}
-                        </p>
+                        <div className="mt-0.5">
+                          <RichContent html={html} attachments={attachments} />
+                        </div>
                       </div>
                     </div>
                   );
