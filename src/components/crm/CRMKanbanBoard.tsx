@@ -510,11 +510,11 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
 
   // ============== Keyboard navigation ==============
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map<string, HTMLDivElement>());
+  const cardRefs = useRef<Record<string, HTMLDivElement>>({});
 
   const registerCardRef = useCallback((oppId: string, el: HTMLDivElement | null) => {
-    if (el) cardRefs.current.set(oppId, el);
-    else cardRefs.current.delete(oppId);
+    if (el) cardRefs.current[oppId] = el;
+    else delete cardRefs.current[oppId];
   }, []);
 
   const focusCard = useCallback((oppId: string | null) => {
@@ -522,7 +522,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     if (oppId) {
       // Defer focus to next frame so DOM updates settle
       requestAnimationFrame(() => {
-        cardRefs.current.get(oppId)?.focus();
+        cardRefs.current[oppId]?.focus();
       });
     }
   }, []);
@@ -624,6 +624,10 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
               onDrop={handleDrop}
               onPriorityChange={handlePriorityChange}
               onQuickCreate={handleQuickCreate}
+              focusedId={focusedId}
+              onCardFocus={(id) => setFocusedId(id)}
+              onKeyboardMove={handleKeyboardMove}
+              registerCardRef={registerCardRef}
             />
           ))}
         </div>
