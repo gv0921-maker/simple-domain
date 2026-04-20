@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -17,18 +18,31 @@ import {
   TrendingUp,
   ShoppingCart,
   FileText,
+  MessageSquare,
 } from 'lucide-react';
-import { getContact, getContacts, getLeads, getOpportunities, type Contact } from '@/lib/data/crm';
+import { getContact, getContacts, getLeads, getOpportunities, getNotes, saveNote, type Contact, type Note } from '@/lib/data/crm';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { format, parseISO } from 'date-fns';
+import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
 
 export default function CRMContactDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const contact = id ? getContact(id) : undefined;
   const allContacts = getContacts();
   const parentContact = contact?.parentContactId ? allContacts.find(c => c.id === contact.parentContactId) : undefined;
   const childContacts = id ? allContacts.filter(c => c.parentContactId === id) : [];
+
+  const [notesVersion, setNotesVersion] = useState(0);
+  const notes = useMemo(() => (id ? getNotes('contact', id) : []), [id, notesVersion]);
+
+  const showEmail = canViewSensitive(user?.id, 'crm', 'email');
+  const showPhone = canViewSensitive(user?.id, 'crm', 'phone');
 
   // Find linked leads for this contact
   const linkedLeads = getLeads().filter(
@@ -53,6 +67,26 @@ export default function CRMContactDetail() {
       </AppLayout>
     );
   }
+
+  const handleAddNote = (value: RichComposerValue) => {
+    const text = value.html.replace(/<[^>]+>/g, '').trim();
+    if (!text && value.attachments.length === 0) return;
+    saveNote({
+      content: value.html,
+      relatedTo: 'contact',
+      relatedId: contact.id,
+      userId: user?.id || '1',
+      userName: user?.name || 'User',
+      visibility: 'team',
+      mentions: value.mentions,
+      attachments: value.attachments,
+    });
+    setNotesVersion(v => v + 1);
+    toast({ title: 'Note added' });
+  };
+
+  const displayEmail = (e?: string) => !e ? '—' : (showEmail ? e : maskEmail(e));
+  const displayPhone = (p?: string) => !p ? '—' : (showPhone ? p : maskPhone(p));
 
   return (
     <AppLayout title="CRM" moduleNav={CRM_NAV}>
@@ -84,8 +118,8 @@ export default function CRMContactDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InfoRow icon={Mail} label="Email" value={contact.email} />
-                  <InfoRow icon={Phone} label="Phone" value={contact.phone || '—'} />
+                  <InfoRow icon={Mail} label="Email" value={displayEmail(contact.email)} />
+                  <InfoRow icon={Phone} label="Phone" value={displayPhone(contact.phone)} />
                   <InfoRow icon={Building} label="Company" value={contact.companyName || '—'} />
                   <InfoRow icon={Briefcase} label="Job Title" value={contact.jobTitle || '—'} />
                   <InfoRow icon={User} label="Department" value={contact.department || '—'} />
@@ -106,7 +140,7 @@ export default function CRMContactDetail() {
                           <p className="text-sm font-medium mb-1">Additional Emails</p>
                           {contact.emails.map((e, i) => (
                             <p key={i} className="text-sm text-muted-foreground">
-                              {e.email} <Badge variant="outline" className="text-xs ml-1">{e.type}</Badge>
+                              {displayEmail(e.email)} <Badge variant="outline" className="text-xs ml-1">{e.type}</Badge>
                             </p>
                           ))}
                         </div>
@@ -116,7 +150,7 @@ export default function CRMContactDetail() {
                           <p className="text-sm font-medium mb-1">Additional Phones</p>
                           {contact.phones.map((p, i) => (
                             <p key={i} className="text-sm text-muted-foreground">
-                              {p.phone} <Badge variant="outline" className="text-xs ml-1">{p.type}</Badge>
+                              {displayPhone(p.phone)} <Badge variant="outline" className="text-xs ml-1">{p.type}</Badge>
                             </p>
                           ))}
                         </div>
@@ -210,13 +244,66 @@ export default function CRMContactDetail() {
                   <>
                     <Separator />
                     <div>
-                      <p className="text-sm font-medium mb-1">Notes</p>
+                      <p className="text-sm font-medium mb-1">Description</p>
                       <div
                         className="text-sm text-muted-foreground prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold [&_b]:font-semibold"
                         dangerouslySetInnerHTML={{ __html: contact.notes }}
                       />
                     </div>
                   </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Notes / Communication Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Notes & Communication
+                  {notes.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-xs">{notes.length}</Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <RichComposer
+                  compact
+                  placeholder="Log an internal note… type @ to mention"
+                  submitLabel="Log Note"
+                  onSubmit={handleAddNote}
+                />
+
+                {notes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No notes yet. Be the first to log one.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {notes
+                      .slice()
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .map((n: Note) => (
+                        <div key={n.id} className="flex gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                            {n.userName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-semibold">{n.userName}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(parseISO(n.createdAt), 'MMM dd, yyyy h:mm a')}
+                              </span>
+                            </div>
+                            <RichContent
+                              html={n.content}
+                              attachments={n.attachments}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -271,7 +358,7 @@ export default function CRMContactDetail() {
                 <CardTitle className="text-base">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {contact.email && (
+                {contact.email && showEmail && (
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <a href={`mailto:${contact.email}`}>
                       <Mail className="h-4 w-4 mr-2" />
@@ -279,13 +366,18 @@ export default function CRMContactDetail() {
                     </a>
                   </Button>
                 )}
-                {contact.phone && (
+                {contact.phone && showPhone && (
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <a href={`tel:${contact.phone}`}>
                       <Phone className="h-4 w-4 mr-2" />
                       Call
                     </a>
                   </Button>
+                )}
+                {(!showEmail || !showPhone) && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Some quick actions hidden — sensitive contact details masked.
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -332,7 +424,7 @@ export default function CRMContactDetail() {
                           <p className="font-medium text-sm">{opp.name}</p>
                           <p className="text-xs text-muted-foreground capitalize">{opp.stage}</p>
                         </div>
-                        <span className="text-xs font-medium">₹{opp.expectedRevenue.toLocaleString('en-IN')}</span>
+                        <span className="text-xs font-medium">{displayRevenue(opp.expectedRevenue, user?.id, 'crm')}</span>
                       </div>
                     ))}
                   </div>

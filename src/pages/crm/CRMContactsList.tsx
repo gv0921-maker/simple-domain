@@ -40,6 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { isSuperAdminUser } from '@/lib/data/rbac';
+import { canViewSensitive, maskEmail, maskPhone } from '@/lib/crm/fieldMask';
 
 const CONTACT_FILTER_OPTIONS: FilterOption[] = [
   { id: 'status:active', label: 'Active', group: 'Status' },
@@ -247,14 +248,14 @@ export default function CRMContactsList() {
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <Mail className="h-3 w-3 text-muted-foreground" />
-                        {contact.email}
+                        {canViewSensitive(user?.id, 'crm', 'email') ? contact.email : maskEmail(contact.email)}
                       </div>
                     </TableCell>
                     <TableCell>
                       {contact.phone && (
                         <div className="flex items-center gap-1 text-sm">
                           <Phone className="h-3 w-3 text-muted-foreground" />
-                          {contact.phone}
+                          {canViewSensitive(user?.id, 'crm', 'phone') ? contact.phone : maskPhone(contact.phone)}
                         </div>
                       )}
                     </TableCell>

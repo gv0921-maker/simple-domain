@@ -166,6 +166,14 @@ export interface Opportunity {
   updatedAt: string;
 }
 
+export interface RichAttachment {
+  name: string;
+  type: string;
+  size?: number;
+  dataUrl?: string;
+  url?: string;
+}
+
 export interface Activity {
   id: string;
   type: ActivityType;
@@ -179,6 +187,8 @@ export interface Activity {
   completed: boolean;
   completedAt?: string;
   priority?: LeadPriority;
+  mentions?: string[];
+  attachments?: RichAttachment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -192,7 +202,7 @@ export interface Note {
   userName: string;
   visibility: NoteVisibility;
   mentions?: string[];
-  attachments?: { name: string; url: string; type: string }[];
+  attachments?: RichAttachment[];
   createdAt: string;
   updatedAt: string;
 }

@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { CRMSearchDropdown, useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
+import { displayRevenue, canViewSensitive } from '@/lib/crm/fieldMask';
 
 interface CRMPipelineListViewProps {
   onNewOpportunity?: () => void;
@@ -200,7 +201,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                       <TableCell><span className="font-medium">{opp.name}</span></TableCell>
                       <TableCell className="text-muted-foreground">{opp.contactName || '—'}</TableCell>
                       <TableCell className="text-muted-foreground">{opp.salesTeam || '—'}</TableCell>
-                      <TableCell className="text-right font-medium">₹{opp.expectedRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right font-medium">{displayRevenue(opp.expectedRevenue, user?.id, 'crm')}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{opp.probability}%</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-[11px] capitalize font-medium border-0 px-2 py-0.5"
@@ -221,7 +222,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                   <TableCell colSpan={4} className="pl-4 text-xs text-muted-foreground">
                     {filtered.length} record{filtered.length !== 1 ? 's' : ''}
                   </TableCell>
-                  <TableCell className="text-right text-xs">₹{totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-right text-xs">{canViewSensitive(user?.id, 'crm', 'revenue') ? `₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}</TableCell>
                   <TableCell colSpan={4} />
                 </TableRow>
               </>

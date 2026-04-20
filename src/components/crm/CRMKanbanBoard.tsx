@@ -1,5 +1,5 @@
 // Odoo-style CRM Kanban Board — pixel-perfect replica from reference screenshots
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,7 @@ import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { CRMSearchDropdown, useFilteredOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
+import { displayRevenue } from '@/lib/crm/fieldMask';
 
 // Star rating (Odoo-style — golden stars)
 export function StarRating({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
@@ -118,13 +119,49 @@ function RevenueBar({ opportunities }: { opportunities: Opportunity[] }) {
 }
 
 // Kanban card — exact Odoo style from screenshot
-function KanbanCard({ opportunity, onPriorityChange }: { opportunity: Opportunity; onPriorityChange: (p: 0 | 1 | 2 | 3) => void }) {
+function KanbanCard({
+  opportunity,
+  onPriorityChange,
+  isFocused,
+  onFocus,
+  onKeyboardMove,
+  cardRef,
+  userId,
+}: {
+  opportunity: Opportunity;
+  onPriorityChange: (p: 0 | 1 | 2 | 3) => void;
+  isFocused: boolean;
+  onFocus: () => void;
+  onKeyboardMove: (dir: 'left' | 'right' | 'up' | 'down') => void;
+  cardRef?: (el: HTMLDivElement | null) => void;
+  userId?: string;
+}) {
   const navigate = useNavigate();
 
   return (
     <div
-      className="bg-card border border-border rounded px-3 py-2.5 cursor-pointer hover:shadow-md transition-shadow group"
+      ref={cardRef}
+      tabIndex={0}
+      role="button"
+      aria-label={`Opportunity ${opportunity.name}. Use arrow keys to navigate, Alt+arrow to move between stages, Enter to open.`}
+      className={cn(
+        'bg-card border border-border rounded px-3 py-2.5 cursor-pointer hover:shadow-md transition-shadow group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        isFocused && 'ring-2 ring-primary ring-offset-1'
+      )}
       onClick={() => navigate(`/crm/opportunities/${opportunity.id}`)}
+      onFocus={onFocus}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          navigate(`/crm/opportunities/${opportunity.id}`);
+          return;
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const dir = e.key.replace('Arrow', '').toLowerCase() as 'left' | 'right' | 'up' | 'down';
+          onKeyboardMove(dir);
+        }
+      }}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', opportunity.id);
@@ -138,7 +175,7 @@ function KanbanCard({ opportunity, onPriorityChange }: { opportunity: Opportunit
 
       {/* Revenue */}
       <div className="text-[13px] text-foreground mt-0.5">
-        ₹ {opportunity.expectedRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+        {displayRevenue(opportunity.expectedRevenue, userId, 'crm')}
       </div>
 
       {/* Contact with avatar */}
@@ -186,12 +223,22 @@ function KanbanColumn({
   onDrop,
   onPriorityChange,
   onQuickCreate,
+  focusedId,
+  onCardFocus,
+  onKeyboardMove,
+  registerCardRef,
+  userId,
 }: {
   stage: PipelineStage;
   opportunities: Opportunity[];
   onDrop: (oppId: string, stageId: string, stage: OpportunityStage) => void;
   onPriorityChange: (oppId: string, priority: 0 | 1 | 2 | 3) => void;
   onQuickCreate: (stageId: string, stage: OpportunityStage) => void;
+  focusedId: string | null;
+  onCardFocus: (oppId: string) => void;
+  onKeyboardMove: (oppId: string, dir: 'left' | 'right' | 'up' | 'down') => void;
+  registerCardRef: (oppId: string, el: HTMLDivElement | null) => void;
+  userId?: string;
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -294,6 +341,11 @@ function KanbanColumn({
             key={opp.id}
             opportunity={opp}
             onPriorityChange={(p) => onPriorityChange(opp.id, p)}
+            isFocused={focusedId === opp.id}
+            onFocus={() => onCardFocus(opp.id)}
+            onKeyboardMove={(dir) => onKeyboardMove(opp.id, dir)}
+            cardRef={(el) => registerCardRef(opp.id, el)}
+            userId={userId}
           />
         ))}
 
@@ -462,6 +514,64 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     []
   );
 
+  // ============== Keyboard navigation ==============
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement>>({});
+
+  const registerCardRef = useCallback((oppId: string, el: HTMLDivElement | null) => {
+    if (el) cardRefs.current[oppId] = el;
+    else delete cardRefs.current[oppId];
+  }, []);
+
+  const focusCard = useCallback((oppId: string | null) => {
+    setFocusedId(oppId);
+    if (oppId) {
+      // Defer focus to next frame so DOM updates settle
+      requestAnimationFrame(() => {
+        cardRefs.current[oppId]?.focus();
+      });
+    }
+  }, []);
+
+  const stageMap: Record<string, OpportunityStage> = {
+    new: 'new', qualified: 'qualified', proposition: 'proposition', won: 'won', lost: 'lost' as OpportunityStage,
+  };
+
+  const handleKeyboardMove = useCallback(
+    (oppId: string, dir: 'left' | 'right' | 'up' | 'down') => {
+      const opp = allOpportunities.find(o => o.id === oppId);
+      if (!opp) return;
+      const stageIdx = activeStages.findIndex(s => s.id === opp.stageId);
+      if (stageIdx === -1) return;
+      const currentColumn = opportunitiesByStage[opp.stageId] || [];
+      const cardIdx = currentColumn.findIndex(o => o.id === oppId);
+
+      // Up/Down — move focus within column
+      if (dir === 'up' || dir === 'down') {
+        const nextIdx = dir === 'up' ? cardIdx - 1 : cardIdx + 1;
+        const target = currentColumn[nextIdx];
+        if (target) focusCard(target.id);
+        return;
+      }
+
+      // Left/Right — move card to adjacent stage (requires edit permission)
+      if (!canEditOpportunities) {
+        toast({ title: 'You don\'t have permission to move opportunities', variant: 'destructive' });
+        return;
+      }
+      const nextStageIdx = dir === 'left' ? stageIdx - 1 : stageIdx + 1;
+      const nextStage = activeStages[nextStageIdx];
+      if (!nextStage) return;
+      const nextStageType = stageMap[nextStage.id] || 'new';
+      updateOpportunityStage(oppId, nextStage.id, nextStageType);
+      setAllOpportunities(getOpportunities());
+      toast({ title: `Moved to ${nextStage.name}` });
+      // Re-focus the same card after re-render
+      focusCard(oppId);
+    },
+    [allOpportunities, activeStages, opportunitiesByStage, canEditOpportunities, focusCard, toast]
+  );
+
   return (
     <div className="h-full flex flex-col">
       {/* Odoo-style control panel */}
@@ -520,6 +630,11 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
               onDrop={handleDrop}
               onPriorityChange={handlePriorityChange}
               onQuickCreate={handleQuickCreate}
+              focusedId={focusedId}
+              onCardFocus={(id) => setFocusedId(id)}
+              onKeyboardMove={handleKeyboardMove}
+              registerCardRef={registerCardRef}
+              userId={user?.id}
             />
           ))}
         </div>
