@@ -127,7 +127,10 @@ export default function CRMContactDetail() {
                     <Separator />
                     <div>
                       <p className="text-sm font-medium mb-1">Notes</p>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{contact.notes}</p>
+                      <div
+                        className="text-sm text-muted-foreground prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold [&_b]:font-semibold"
+                        dangerouslySetInnerHTML={{ __html: contact.notes }}
+                      />
                     </div>
                   </>
                 )}
