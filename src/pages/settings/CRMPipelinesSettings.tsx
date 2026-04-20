@@ -77,6 +77,7 @@ export default function CRMPipelinesSettings() {
   const [showNewPipeline, setShowNewPipeline] = useState(false);
   const [newPipelineName, setNewPipelineName] = useState('');
   const [confirmDeletePipeline, setConfirmDeletePipeline] = useState<string | null>(null);
+  const [automationStageId, setAutomationStageId] = useState<string | null>(null);
 
   const active = useMemo(() => pipelines.find(p => p.id === activeId), [pipelines, activeId]);
 
@@ -340,6 +341,23 @@ export default function CRMPipelinesSettings() {
                             />
                           </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 text-muted-foreground hover:text-primary",
+                            (stage.automationHooks?.length || 0) > 0 && "text-primary"
+                          )}
+                          onClick={() => setAutomationStageId(stage.id)}
+                          title="Automation hooks"
+                        >
+                          <Zap className="h-4 w-4" />
+                          {(stage.automationHooks?.length || 0) > 0 && (
+                            <span className="absolute -mt-3 ml-3 h-3.5 min-w-3.5 px-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                              {stage.automationHooks!.length}
+                            </span>
+                          )}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
