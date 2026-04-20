@@ -83,6 +83,7 @@ import UsersManagement from "@/pages/settings/UsersManagement";
 import RolesManagement from "@/pages/settings/RolesManagement";
 import AuditLogs from "@/pages/settings/AuditLogs";
 import BackupsSettings from "@/pages/settings/BackupsSettings";
+import CRMPipelinesSettings from "@/pages/settings/CRMPipelinesSettings";
 
 import NotFound from "@/pages/NotFound";
 
@@ -156,6 +157,7 @@ const App = () => (
             <Route path="/settings/roles" element={<ProtectedRoute><RolesManagement /></ProtectedRoute>} />
             <Route path="/settings/audit" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
             <Route path="/settings/backups" element={<ProtectedRoute><BackupsSettings /></ProtectedRoute>} />
+            <Route path="/settings/crm-pipelines" element={<ProtectedRoute><CRMPipelinesSettings /></ProtectedRoute>} />
 
             {/* Placeholder routes */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
