@@ -293,7 +293,7 @@
   @apply bg-success text-success-foreground;
 }
 
-/* Reduce motion for accessibility */
+/* Reduce motion for accessibility - either via system preference or .reduce-motion class */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -302,4 +302,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
