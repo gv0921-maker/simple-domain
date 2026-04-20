@@ -510,7 +510,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
 
   // ============== Keyboard navigation ==============
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map<string, HTMLDivElement>());
 
   const registerCardRef = useCallback((oppId: string, el: HTMLDivElement | null) => {
     if (el) cardRefs.current.set(oppId, el);
