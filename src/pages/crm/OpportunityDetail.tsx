@@ -792,6 +792,27 @@ export default function OpportunityDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Email composer */}
+      <EmailComposerDialog
+        open={showEmail}
+        onOpenChange={setShowEmail}
+        defaultTo={opportunity.email || ''}
+        defaultSubject={`Re: ${opportunity.name}`}
+        relatedTo="opportunity"
+        relatedId={opportunity.id}
+        onLogged={() => setTimelineVersion(v => v + 1)}
+      />
+
+      {/* Meeting composer */}
+      <MeetingComposerDialog
+        open={showMeeting}
+        onOpenChange={setShowMeeting}
+        relatedTo="opportunity"
+        relatedId={opportunity.id}
+        defaultSubject={`Meeting: ${opportunity.name}`}
+        onLogged={() => setTimelineVersion(v => v + 1)}
+      />
     </AppLayout>
   );
 }
