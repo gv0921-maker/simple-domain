@@ -220,12 +220,20 @@ function KanbanColumn({
   onDrop,
   onPriorityChange,
   onQuickCreate,
+  focusedId,
+  onCardFocus,
+  onKeyboardMove,
+  registerCardRef,
 }: {
   stage: PipelineStage;
   opportunities: Opportunity[];
   onDrop: (oppId: string, stageId: string, stage: OpportunityStage) => void;
   onPriorityChange: (oppId: string, priority: 0 | 1 | 2 | 3) => void;
   onQuickCreate: (stageId: string, stage: OpportunityStage) => void;
+  focusedId: string | null;
+  onCardFocus: (oppId: string) => void;
+  onKeyboardMove: (oppId: string, dir: 'left' | 'right' | 'up' | 'down') => void;
+  registerCardRef: (oppId: string, el: HTMLDivElement | null) => void;
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -328,6 +336,10 @@ function KanbanColumn({
             key={opp.id}
             opportunity={opp}
             onPriorityChange={(p) => onPriorityChange(opp.id, p)}
+            isFocused={focusedId === opp.id}
+            onFocus={() => onCardFocus(opp.id)}
+            onKeyboardMove={(dir) => onKeyboardMove(opp.id, dir)}
+            cardRef={(el) => registerCardRef(opp.id, el)}
           />
         ))}
 
