@@ -146,7 +146,9 @@ export function RichComposer({
             <div key={i} className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1 text-xs">
               <FileText className="h-3 w-3" />
               <span className="max-w-[160px] truncate">{a.name}</span>
-              <span className="text-muted-foreground">({Math.round(a.size / 1024)}KB)</span>
+              {a.size !== undefined && (
+                <span className="text-muted-foreground">({Math.round(a.size / 1024)}KB)</span>
+              )}
               <button
                 type="button"
                 onClick={() => removeAttachment(i)}
@@ -224,13 +226,15 @@ export function RichContent({
           {attachments.map((a, i) => (
             <a
               key={i}
-              href={a.dataUrl}
+              href={a.dataUrl || a.url || '#'}
               download={a.name}
               className="flex items-center gap-1.5 bg-muted hover:bg-muted/70 rounded-md px-2 py-1 text-xs transition-colors"
             >
               <FileText className="h-3 w-3" />
               <span className="max-w-[180px] truncate">{a.name}</span>
-              <span className="text-muted-foreground">({Math.round(a.size / 1024)}KB)</span>
+              {a.size !== undefined && (
+                <span className="text-muted-foreground">({Math.round(a.size / 1024)}KB)</span>
+              )}
             </a>
           ))}
         </div>
