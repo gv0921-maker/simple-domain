@@ -517,6 +517,22 @@ export function savePipeline(pipeline: Partial<Pipeline> & { id?: string }): Pip
   return newPipeline;
 }
 
+export function deletePipeline(id: string): { ok: boolean; reason?: string } {
+  const pipelines = getPipelines();
+  const target = pipelines.find(p => p.id === id);
+  if (!target) return { ok: false, reason: 'Pipeline not found' };
+  if (target.isDefault) return { ok: false, reason: 'Cannot delete the default pipeline' };
+  const inUse = getOpportunities().some(o => o.pipelineId === id);
+  if (inUse) return { ok: false, reason: 'Pipeline is used by existing opportunities' };
+  setItem('crm_pipelines', pipelines.filter(p => p.id !== id));
+  return { ok: true };
+}
+
+export function setDefaultPipeline(id: string): void {
+  const pipelines = getPipelines().map(p => ({ ...p, isDefault: p.id === id, updatedAt: new Date().toISOString() }));
+  setItem('crm_pipelines', pipelines);
+}
+
 // Force reset CRM data to new Odoo-style pipeline on version change
 const CRM_VERSION_KEY = 'crm_data_version';
 const CRM_CURRENT_VERSION = 3;
