@@ -30,7 +30,10 @@ import {
   Star,
   ChevronRight,
   PlusCircle,
+  Zap,
 } from 'lucide-react';
+import { AUTOMATION_HOOKS, parseHook, serializeHook, type AutomationHookId } from '@/lib/crm/automation';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import {
