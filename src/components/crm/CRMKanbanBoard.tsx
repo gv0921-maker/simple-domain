@@ -445,6 +445,11 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     (oppId: string, stageId: string, stage: OpportunityStage) => {
       if (!canEditOpportunities) return;
       updateOpportunityStage(oppId, stageId, stage);
+      // Run stage-based automation hooks
+      import('@/lib/crm/automation').then(({ triggerStageAutomation }) => {
+        triggerStageAutomation(oppId, stageId);
+        setAllOpportunities(getOpportunities());
+      });
       setAllOpportunities(getOpportunities());
       const stageName = pipeline.stages.find((s) => s.id === stageId)?.name;
       toast({ title: `Moved to ${stageName}` });

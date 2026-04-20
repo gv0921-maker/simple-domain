@@ -62,6 +62,9 @@ import { CRM_NAV } from '@/lib/navigation/crm';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { RichComposer } from '@/components/ui/rich-composer';
+import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
+import { MeetingComposerDialog } from '@/components/crm/MeetingComposerDialog';
+import { Mail, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 
@@ -95,6 +98,8 @@ export default function OpportunityDetail() {
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
   const [formTab, setFormTab] = useState('notes');
   const [timelineVersion, setTimelineVersion] = useState(0);
+  const [showEmail, setShowEmail] = useState(false);
+  const [showMeeting, setShowMeeting] = useState(false);
 
   const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id, timelineVersion]);
   const notes = useMemo(() => id ? getNotes('opportunity', id) : [], [id, timelineVersion]);
@@ -628,6 +633,22 @@ export default function OpportunityDetail() {
               >
                 Activity
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => setShowEmail(true)}
+              >
+                <Mail className="h-3 w-3" /> Email
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => setShowMeeting(true)}
+              >
+                <CalendarIcon className="h-3 w-3" /> Meeting
+              </Button>
               <div className="flex-1" />
               <button className="text-muted-foreground hover:text-foreground">
                 <Search className="h-4 w-4" />
@@ -771,6 +792,27 @@ export default function OpportunityDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Email composer */}
+      <EmailComposerDialog
+        open={showEmail}
+        onOpenChange={setShowEmail}
+        defaultTo={opportunity.email || ''}
+        defaultSubject={`Re: ${opportunity.name}`}
+        relatedTo="opportunity"
+        relatedId={opportunity.id}
+        onLogged={() => setTimelineVersion(v => v + 1)}
+      />
+
+      {/* Meeting composer */}
+      <MeetingComposerDialog
+        open={showMeeting}
+        onOpenChange={setShowMeeting}
+        relatedTo="opportunity"
+        relatedId={opportunity.id}
+        defaultSubject={`Meeting: ${opportunity.name}`}
+        onLogged={() => setTimelineVersion(v => v + 1)}
+      />
     </AppLayout>
   );
 }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -20,11 +21,15 @@ import {
 } from 'lucide-react';
 import { getContact, getContacts, getLeads, getOpportunities, type Contact } from '@/lib/data/crm';
 import { CRM_NAV } from '@/lib/navigation/crm';
+import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
+import { MeetingComposerDialog } from '@/components/crm/MeetingComposerDialog';
 import { format, parseISO } from 'date-fns';
 
 export default function CRMContactDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showEmail, setShowEmail] = useState(false);
+  const [showMeeting, setShowMeeting] = useState(false);
   const contact = id ? getContact(id) : undefined;
   const allContacts = getContacts();
   const parentContact = contact?.parentContactId ? allContacts.find(c => c.id === contact.parentContactId) : undefined;
@@ -70,10 +75,32 @@ export default function CRMContactDetail() {
               <p className="text-muted-foreground">{contact.jobTitle}{contact.department ? ` · ${contact.department}` : ''}</p>
             )}
           </div>
+          <Button variant="outline" size="sm" onClick={() => setShowEmail(true)} className="gap-1">
+            <Mail className="h-3.5 w-3.5" /> Email
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowMeeting(true)} className="gap-1">
+            <Calendar className="h-3.5 w-3.5" /> Meeting
+          </Button>
           <Badge variant={contact.status === 'active' ? 'default' : 'secondary'} className="capitalize">
             {contact.status}
           </Badge>
         </div>
+
+        <EmailComposerDialog
+          open={showEmail}
+          onOpenChange={setShowEmail}
+          defaultTo={contact.email}
+          defaultSubject={`Hello ${contact.firstName}`}
+          relatedTo="contact"
+          relatedId={contact.id}
+        />
+        <MeetingComposerDialog
+          open={showMeeting}
+          onOpenChange={setShowMeeting}
+          relatedTo="contact"
+          relatedId={contact.id}
+          defaultSubject={`Meeting with ${contact.firstName} ${contact.lastName}`}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info */}

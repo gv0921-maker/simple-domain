@@ -30,7 +30,10 @@ import {
   Star,
   ChevronRight,
   PlusCircle,
+  Zap,
 } from 'lucide-react';
+import { AUTOMATION_HOOKS, parseHook, serializeHook, type AutomationHookId } from '@/lib/crm/automation';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import {
@@ -74,6 +77,7 @@ export default function CRMPipelinesSettings() {
   const [showNewPipeline, setShowNewPipeline] = useState(false);
   const [newPipelineName, setNewPipelineName] = useState('');
   const [confirmDeletePipeline, setConfirmDeletePipeline] = useState<string | null>(null);
+  const [automationStageId, setAutomationStageId] = useState<string | null>(null);
 
   const active = useMemo(() => pipelines.find(p => p.id === activeId), [pipelines, activeId]);
 
@@ -340,6 +344,23 @@ export default function CRMPipelinesSettings() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          className={cn(
+                            "h-8 w-8 text-muted-foreground hover:text-primary",
+                            (stage.automationHooks?.length || 0) > 0 && "text-primary"
+                          )}
+                          onClick={() => setAutomationStageId(stage.id)}
+                          title="Automation hooks"
+                        >
+                          <Zap className="h-4 w-4" />
+                          {(stage.automationHooks?.length || 0) > 0 && (
+                            <span className="absolute -mt-3 ml-3 h-3.5 min-w-3.5 px-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                              {stage.automationHooks!.length}
+                            </span>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           onClick={() => handleDeleteStage(stage.id)}
                         >
@@ -400,6 +421,118 @@ export default function CRMPipelinesSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Stage automation hooks editor */}
+      <AutomationDialog
+        stageId={automationStageId}
+        pipeline={active}
+        onClose={() => setAutomationStageId(null)}
+        onSave={(stageId, hooks) => {
+          updateActive(p => ({
+            ...p,
+            stages: p.stages.map(s => (s.id === stageId ? { ...s, automationHooks: hooks } : s)),
+          }));
+          setAutomationStageId(null);
+          toast({ title: 'Automation hooks saved' });
+        }}
+      />
     </AppLayout>
+  );
+}
+
+// ============== Automation Dialog ==============
+interface AutomationDialogProps {
+  stageId: string | null;
+  pipeline: Pipeline | undefined;
+  onClose: () => void;
+  onSave: (stageId: string, hooks: string[]) => void;
+}
+
+function AutomationDialog({ stageId, pipeline, onClose, onSave }: AutomationDialogProps) {
+  const stage = pipeline?.stages.find(s => s.id === stageId);
+  const [draft, setDraft] = useState<{ id: AutomationHookId; config: Record<string, string | number> }[]>([]);
+
+  // Sync draft when stage changes
+  useMemo(() => {
+    if (stage) {
+      setDraft(
+        (stage.automationHooks || [])
+          .map(parseHook)
+          .filter((h): h is { id: AutomationHookId; config: Record<string, string | number> } => h !== null)
+      );
+    }
+  }, [stage?.id]);
+
+  if (!stage) return null;
+
+  const toggle = (hookId: AutomationHookId, checked: boolean) => {
+    if (checked) {
+      const def = AUTOMATION_HOOKS.find(h => h.id === hookId);
+      const initialConfig: Record<string, string | number> = {};
+      def?.configurable?.forEach(c => {
+        initialConfig[c.key] = c.type === 'number' || c.type === 'days' ? 3 : '';
+      });
+      setDraft([...draft, { id: hookId, config: initialConfig }]);
+    } else {
+      setDraft(draft.filter(d => d.id !== hookId));
+    }
+  };
+
+  const updateConfig = (hookId: AutomationHookId, key: string, value: string) => {
+    setDraft(draft.map(d => (d.id === hookId ? { ...d, config: { ...d.config, [key]: value } } : d)));
+  };
+
+  return (
+    <Dialog open={!!stageId} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Automation hooks · {stage.name}</DialogTitle>
+        </DialogHeader>
+        <div className="py-2 space-y-3 max-h-[60vh] overflow-y-auto">
+          <p className="text-xs text-muted-foreground">
+            These actions run automatically when an opportunity moves into this stage.
+          </p>
+          {AUTOMATION_HOOKS.map(def => {
+            const enabled = draft.find(d => d.id === def.id);
+            return (
+              <div key={def.id} className="border border-border rounded-md p-3">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={!!enabled}
+                    onCheckedChange={(v) => toggle(def.id, !!v)}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{def.label}</p>
+                    <p className="text-xs text-muted-foreground">{def.description}</p>
+                  </div>
+                </label>
+                {enabled && def.configurable && (
+                  <div className="mt-2 ml-6 space-y-2">
+                    {def.configurable.map(field => (
+                      <div key={field.key}>
+                        <Label className="text-xs">{field.label}</Label>
+                        <Input
+                          type={field.type === 'text' ? 'text' : 'number'}
+                          value={String(enabled.config[field.key] ?? '')}
+                          onChange={(e) => updateConfig(def.id, field.key, e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onSave(stage.id, draft.map(d => serializeHook(d.id, d.config)))}>
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
