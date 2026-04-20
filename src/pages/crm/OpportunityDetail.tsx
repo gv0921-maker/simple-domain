@@ -62,6 +62,9 @@ import { CRM_NAV } from '@/lib/navigation/crm';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
+import { useAuth } from '@/contexts/AuthContext';
+import { displayRevenue, canViewSensitive, maskEmail, maskPhone } from '@/lib/crm/fieldMask';
 
 // Contact avatar
 function ChatterAvatar({ name }: { name: string }) {
