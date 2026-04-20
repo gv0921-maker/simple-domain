@@ -645,42 +645,18 @@ export default function OpportunityDetail() {
             {(chatterTab === 'message' || chatterTab === 'note') && (
               <div className="p-3 border-b border-border">
                 <div className="flex gap-2.5">
-                  <ChatterAvatar name="Management" />
+                  <ChatterAvatar name={user?.name || 'User'} />
                   <div className="flex-1">
-                    <div className="relative">
-                      <Input
-                        placeholder={chatterTab === 'note' ? 'Log an internal note...' : 'Send a message...'}
-                        className="h-9 text-sm pr-8 rounded-full border-[#00A09D] focus-visible:ring-[#00A09D]"
-                        value={chatterInput}
-                        onChange={(e) => setChatterInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleChatterSubmit(); }}
-                      />
-                      <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        <Smile className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Button
-                        size="sm"
-                        className={cn(
-                          'h-7 text-xs px-3',
-                          chatterTab === 'note'
-                            ? 'bg-[#875A7B]/20 text-[#875A7B] hover:bg-[#875A7B]/30'
-                            : 'bg-[#00A09D] hover:bg-[#008f8c] text-white'
-                        )}
-                        disabled={!chatterInput.trim()}
-                        onClick={handleChatterSubmit}
-                      >
-                        {chatterTab === 'note' ? 'Log' : 'Send'}
-                      </Button>
-                      <div className="flex-1" />
-                      <button className="text-muted-foreground hover:text-foreground">
-                        <Paperclip className="h-3.5 w-3.5" />
-                      </button>
-                      <button className="text-muted-foreground hover:text-foreground">
-                        <Maximize2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <RichComposer
+                      placeholder={chatterTab === 'note' ? 'Log an internal note... use @ to mention' : 'Send a message... use @ to mention'}
+                      submitLabel={chatterTab === 'note' ? 'Log' : 'Send'}
+                      submitClassName={
+                        chatterTab === 'note'
+                          ? 'bg-[#875A7B]/20 text-[#875A7B] hover:bg-[#875A7B]/30'
+                          : 'bg-[#00A09D] hover:bg-[#008f8c] text-white'
+                      }
+                      onSubmit={handleChatterSubmit}
+                    />
                   </div>
                 </div>
               </div>
@@ -701,17 +677,50 @@ export default function OpportunityDetail() {
                 .map((item) => {
                   const isNoteItem = 'content' in item;
                   const userName = (item as any).userName || 'System';
+                  const noteItem = isNoteItem ? (item as Note) : null;
+                  const actItem = !isNoteItem ? (item as Activity) : null;
+                  const html = noteItem?.content ?? actItem?.description ?? actItem?.subject ?? '';
+                  const attachments = noteItem?.attachments ?? [];
+                  const mentions = noteItem?.mentions ?? [];
                   return (
                     <div key={item.id} className="flex gap-2.5 mb-3">
                       <ChatterAvatar name={userName} />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-2 text-sm flex-wrap">
                           <span className="font-bold text-foreground">{userName}</span>
                           <span className="text-xs text-muted-foreground">{format(parseISO(item.createdAt), 'h:mm a')}</span>
+                          {noteItem && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 capitalize">{noteItem.visibility}</Badge>
+                          )}
                         </div>
-                        <p className="text-sm text-foreground mt-0.5">
-                          {isNoteItem ? (item as Note).content : (item as Activity).subject}
-                        </p>
+                        <div
+                          className="text-sm text-foreground mt-0.5 prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold"
+                          dangerouslySetInnerHTML={{ __html: html }}
+                        />
+                        {mentions.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            {mentions.map((m, i) => (
+                              <span key={i} className="text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">@{m}</span>
+                            ))}
+                          </div>
+                        )}
+                        {attachments.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {attachments.map((a, i) => (
+                              <a
+                                key={i}
+                                href={a.url}
+                                download={a.name}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1.5 bg-muted hover:bg-muted/70 rounded px-2 py-1 text-xs text-foreground"
+                              >
+                                <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                <span className="truncate max-w-[160px]">{a.name}</span>
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
