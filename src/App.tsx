@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CustomizationProvider } from "@/contexts/CustomizationContext";
+import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Auth pages
@@ -84,6 +85,9 @@ import RolesManagement from "@/pages/settings/RolesManagement";
 import AuditLogs from "@/pages/settings/AuditLogs";
 import BackupsSettings from "@/pages/settings/BackupsSettings";
 import CRMPipelinesSettings from "@/pages/settings/CRMPipelinesSettings";
+import CRMBackupSettings from "@/pages/settings/CRMBackupSettings";
+import CRMDataSchema from "@/pages/settings/CRMDataSchema";
+import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
 
 import NotFound from "@/pages/NotFound";
 
@@ -93,10 +97,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <CustomizationProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <AccessibilityProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
           <Routes>
             {/* Auth routes */}
             <Route path="/select-user" element={<UserSelectPage />} />
@@ -158,6 +163,9 @@ const App = () => (
             <Route path="/settings/audit" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
             <Route path="/settings/backups" element={<ProtectedRoute><BackupsSettings /></ProtectedRoute>} />
             <Route path="/settings/crm-pipelines" element={<ProtectedRoute><CRMPipelinesSettings /></ProtectedRoute>} />
+            <Route path="/settings/crm-backup" element={<ProtectedRoute><CRMBackupSettings /></ProtectedRoute>} />
+            <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
+            <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
 
             {/* Placeholder routes */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
@@ -203,7 +211,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </AccessibilityProvider>
     </CustomizationProvider>
   </AuthProvider>
 </QueryClientProvider>

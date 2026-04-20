@@ -70,7 +70,7 @@ export function useCRMPermissions(): CRMPermissions {
         recordScope: 'none' as const,
         can: () => false,
         filterByScope: <T,>() => [] as T[],
-      };
+      } as CRMPermissions;
     }
     
     const canView = hasPermission(user.id, 'crm', 'view');
@@ -80,6 +80,9 @@ export function useCRMPermissions(): CRMPermissions {
     const isAdmin = hasPermission(user.id, 'crm', 'admin');
     const canExport = hasModulePermission(user.id, 'crm', 'export');
     const canImport = hasModulePermission(user.id, 'crm', 'import');
+    // Granular toggles - default behaviour preserved if not explicitly set
+    const canConvertLeads = hasModulePermission(user.id, 'crm', 'convert_leads');
+    const canModifyPipeline = hasModulePermission(user.id, 'crm', 'modify_pipeline');
     
     const recordScope = getModuleRecordScope(user.id, 'crm');
     
@@ -100,9 +103,9 @@ export function useCRMPermissions(): CRMPermissions {
         case 'delete_opportunities':
           return canDelete;
         case 'convert_leads':
-          return canEdit;
+          return canConvertLeads;
         case 'modify_pipeline':
-          return isAdmin;
+          return canModifyPipeline;
         case 'view_analytics':
           return canView;
         case 'export_data':
@@ -114,9 +117,20 @@ export function useCRMPermissions(): CRMPermissions {
       }
     };
 
-    const filterByScope = <T extends { assignedTo?: string; createdBy?: string }>(records: T[]): T[] => {
+    const filterByScope = <T extends { assignedTo?: string; createdBy?: string; teamId?: string }>(records: T[]): T[] => {
       if (recordScope === 'none') return [];
       if (recordScope === 'all') return records;
+      if (recordScope === 'department') return records;
+      if (recordScope === 'team') {
+        // Filter to records in the same team as the user
+        // Team membership is derived from the user's permission.teamId
+        return records.filter(r => 
+          r.teamId && (
+            r.assignedTo === user.name || r.assignedTo === user.id ||
+            r.createdBy === user.name || r.createdBy === user.id
+          )
+        );
+      }
       // 'own' — filter to records assigned to or created by current user
       return records.filter(r => 
         r.assignedTo === user.name || 
@@ -134,11 +148,11 @@ export function useCRMPermissions(): CRMPermissions {
       canCreateLeads: canCreate,
       canEditLeads: canEdit,
       canDeleteLeads: canDelete,
-      canConvertLeads: canEdit,
+      canConvertLeads: canConvertLeads,
       canCreateOpportunities: canCreate,
       canEditOpportunities: canEdit,
       canDeleteOpportunities: canDelete,
-      canModifyPipeline: isAdmin,
+      canModifyPipeline: canModifyPipeline,
       canViewAnalytics: canView,
       canExportData: canExport,
       canImportData: canImport,

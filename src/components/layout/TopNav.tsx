@@ -16,7 +16,6 @@ import {
   Home,
 } from 'lucide-react';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
-import { NotificationsBell } from '@/components/layout/NotificationsBell';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Sheet,
@@ -138,7 +137,6 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
       {/* Right side */}
       <div className="flex items-center gap-2 md:gap-3 shrink-0">
         <GlobalSearch />
-        <NotificationsBell />
 
         {/* User menu */}
         <DropdownMenu>

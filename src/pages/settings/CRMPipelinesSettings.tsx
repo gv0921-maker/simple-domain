@@ -1,538 +1,313 @@
-// CRM Pipeline Stage Editor — drag-to-reorder stages, edit name/probability/color, manage multiple pipelines
-import { useMemo, useState, useCallback } from 'react';
+// CRM Pipelines management (multi-pipeline + drag-and-drop stage editor)
+import { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Plus,
-  Trash2,
-  GripVertical,
-  Star,
-  ChevronRight,
-  PlusCircle,
-  Zap,
+  Plus, Trash2, GripVertical, Star, Edit, Save, X, GitBranch,
 } from 'lucide-react';
-import { AUTOMATION_HOOKS, parseHook, serializeHook, type AutomationHookId } from '@/lib/crm/automation';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useNavigate } from 'react-router-dom';
-import { CRM_NAV } from '@/lib/navigation/crm';
+import { SETTINGS_NAV } from '@/lib/navigation/settings';
 import {
-  getPipelines,
-  savePipeline,
-  deletePipeline,
-  setDefaultPipeline,
-  type Pipeline,
-  type PipelineStage,
+  getPipelines, savePipeline, getDefaultPipeline,
+  deletePipeline, setDefaultPipeline,
+  type Pipeline, type PipelineStage,
 } from '@/lib/data/crm';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { isSuperAdminUser } from '@/lib/data/rbac';
+import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { cn } from '@/lib/utils';
-
-const DEFAULT_STAGE_COLORS = [
-  'hsl(210, 70%, 55%)',
-  'hsl(174, 60%, 45%)',
-  'hsl(38, 90%, 55%)',
-  'hsl(142, 60%, 45%)',
-  'hsl(280, 60%, 55%)',
-  'hsl(0, 70%, 55%)',
-];
-
-function nextStageId(): string {
-  return `stage_${Math.random().toString(36).slice(2, 9)}`;
-}
+import { useNavigate } from 'react-router-dom';
 
 export default function CRMPipelinesSettings() {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const isAdmin = user ? isSuperAdminUser(user.id) || user.role === 'admin' : false;
-
+  const navigate = useNavigate();
+  const { canModifyPipeline } = useCRMPermissions();
   const [pipelines, setPipelines] = useState<Pipeline[]>(() => getPipelines());
-  const [activeId, setActiveId] = useState<string>(() => {
-    const all = getPipelines();
-    return (all.find(p => p.isDefault) || all[0])?.id || '';
-  });
-  const [draggedStageId, setDraggedStageId] = useState<string | null>(null);
-  const [showNewPipeline, setShowNewPipeline] = useState(false);
-  const [newPipelineName, setNewPipelineName] = useState('');
-  const [confirmDeletePipeline, setConfirmDeletePipeline] = useState<string | null>(null);
-  const [automationStageId, setAutomationStageId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string>(() => getDefaultPipeline().id);
+  const selected = useMemo(() => pipelines.find(p => p.id === selectedId), [pipelines, selectedId]);
+  const [draggedStage, setDraggedStage] = useState<string | null>(null);
 
-  const active = useMemo(() => pipelines.find(p => p.id === activeId), [pipelines, activeId]);
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
+  const [newName, setNewName] = useState('');
 
-  const refresh = useCallback(() => {
-    setPipelines(getPipelines());
-  }, []);
+  const refresh = () => setPipelines(getPipelines());
 
-  if (!isAdmin) {
+  useEffect(() => {
+    if (!selected && pipelines[0]) setSelectedId(pipelines[0].id);
+  }, [selected, pipelines]);
+
+  if (!canModifyPipeline) {
     return (
-      <AppLayout title="CRM" moduleNav={CRM_NAV}>
-        <div className="p-6">
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              You need admin privileges to manage pipelines.
-            </CardContent>
-          </Card>
+      <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>
+        <div className="p-8 text-center">
+          <p className="text-muted-foreground">You do not have permission to modify pipeline stages.</p>
+          <Button variant="outline" className="mt-4" onClick={() => navigate('/settings')}>Back to Settings</Button>
         </div>
       </AppLayout>
     );
   }
 
-  const updateActive = (mut: (p: Pipeline) => Pipeline) => {
-    if (!active) return;
-    const updated = mut(active);
-    savePipeline(updated);
-    refresh();
-    setActiveId(updated.id);
-  };
-
-  const handleAddStage = () => {
-    if (!active) return;
-    const order = active.stages.length + 1;
-    const color = DEFAULT_STAGE_COLORS[active.stages.length % DEFAULT_STAGE_COLORS.length];
-    const newStage: PipelineStage = {
-      id: nextStageId(),
-      pipelineId: active.id,
-      name: 'New Stage',
-      order,
-      probability: 50,
-      color,
-    };
-    updateActive(p => ({ ...p, stages: [...p.stages, newStage] }));
-    toast({ title: 'Stage added' });
-  };
-
-  const handleDeleteStage = (stageId: string) => {
-    if (!active) return;
-    if (active.stages.length <= 1) {
-      toast({ title: 'A pipeline must have at least one stage', variant: 'destructive' });
-      return;
-    }
-    updateActive(p => ({
-      ...p,
-      stages: p.stages
-        .filter(s => s.id !== stageId)
-        .map((s, i) => ({ ...s, order: i + 1 })),
-    }));
-    toast({ title: 'Stage removed' });
-  };
-
-  const handleStageField = (stageId: string, patch: Partial<PipelineStage>) => {
-    updateActive(p => ({
-      ...p,
-      stages: p.stages.map(s => (s.id === stageId ? { ...s, ...patch } : s)),
-    }));
-  };
-
-  const handleDragStart = (stageId: string) => setDraggedStageId(stageId);
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDropOn = (targetStageId: string) => {
-    if (!active || !draggedStageId || draggedStageId === targetStageId) return;
-    const stages = [...active.stages];
-    const fromIdx = stages.findIndex(s => s.id === draggedStageId);
-    const toIdx = stages.findIndex(s => s.id === targetStageId);
-    if (fromIdx === -1 || toIdx === -1) return;
-    const [moved] = stages.splice(fromIdx, 1);
-    stages.splice(toIdx, 0, moved);
-    updateActive(p => ({ ...p, stages: stages.map((s, i) => ({ ...s, order: i + 1 })) }));
-    setDraggedStageId(null);
-  };
-
   const handleCreatePipeline = () => {
-    const name = newPipelineName.trim();
-    if (!name) return;
-    const created = savePipeline({
-      name,
+    if (!newName.trim()) return;
+    const p = savePipeline({
+      name: newName,
       isDefault: false,
       stages: [
-        { id: nextStageId(), pipelineId: '', name: 'New', order: 1, probability: 10, color: DEFAULT_STAGE_COLORS[0] },
-        { id: nextStageId(), pipelineId: '', name: 'Qualified', order: 2, probability: 30, color: DEFAULT_STAGE_COLORS[1] },
-        { id: nextStageId(), pipelineId: '', name: 'Won', order: 3, probability: 100, color: DEFAULT_STAGE_COLORS[3] },
+        { id: crypto.randomUUID(), pipelineId: '', name: 'New', order: 1, probability: 10, color: 'hsl(210, 70%, 55%)' },
+        { id: crypto.randomUUID(), pipelineId: '', name: 'Won', order: 2, probability: 100, color: 'hsl(142, 60%, 45%)' },
       ],
     });
-    // Patch pipelineId on stages
-    savePipeline({ ...created, stages: created.stages.map(s => ({ ...s, pipelineId: created.id })) });
+    // Patch stages with the actual pipelineId
+    savePipeline({ ...p, stages: p.stages.map(s => ({ ...s, pipelineId: p.id })) });
     refresh();
-    setActiveId(created.id);
-    setNewPipelineName('');
-    setShowNewPipeline(false);
+    setSelectedId(p.id);
+    setNewDialogOpen(false);
+    setNewName('');
     toast({ title: 'Pipeline created' });
   };
 
-  const handleDeletePipeline = () => {
-    if (!confirmDeletePipeline) return;
-    const result = deletePipeline(confirmDeletePipeline);
-    if (!result.ok) {
-      toast({ title: 'Cannot delete pipeline', description: result.reason, variant: 'destructive' });
-    } else {
-      toast({ title: 'Pipeline deleted' });
-      const remaining = getPipelines();
-      setPipelines(remaining);
-      setActiveId((remaining.find(p => p.isDefault) || remaining[0])?.id || '');
+  const handleDeletePipeline = (id: string) => {
+    const r = deletePipeline(id);
+    if (!r.success) {
+      toast({ title: 'Cannot delete pipeline', description: r.reason, variant: 'destructive' });
+      return;
     }
-    setConfirmDeletePipeline(null);
+    refresh();
+    toast({ title: 'Pipeline deleted' });
   };
 
-  const handleSetDefault = (id: string) => {
+  const handleMakeDefault = (id: string) => {
     setDefaultPipeline(id);
     refresh();
     toast({ title: 'Default pipeline updated' });
   };
 
+  // Stage operations on the selected pipeline
+  const updateStages = (next: PipelineStage[]) => {
+    if (!selected) return;
+    savePipeline({ ...selected, stages: next });
+    refresh();
+  };
+
+  const handleAddStage = () => {
+    if (!selected) return;
+    const newStage: PipelineStage = {
+      id: crypto.randomUUID(),
+      pipelineId: selected.id,
+      name: 'New stage',
+      order: selected.stages.length + 1,
+      probability: 50,
+      color: 'hsl(220, 50%, 60%)',
+    };
+    updateStages([...selected.stages, newStage]);
+  };
+
+  const handleStageChange = (id: string, patch: Partial<PipelineStage>) => {
+    if (!selected) return;
+    updateStages(selected.stages.map(s => s.id === id ? { ...s, ...patch } : s));
+  };
+
+  const handleDeleteStage = (id: string) => {
+    if (!selected) return;
+    if (selected.stages.length <= 2) {
+      toast({ title: 'A pipeline must have at least 2 stages', variant: 'destructive' });
+      return;
+    }
+    updateStages(selected.stages.filter(s => s.id !== id).map((s, i) => ({ ...s, order: i + 1 })));
+  };
+
+  const handleReorder = (draggedId: string, overId: string) => {
+    if (!selected || draggedId === overId) return;
+    const stages = [...selected.stages];
+    const fromIdx = stages.findIndex(s => s.id === draggedId);
+    const toIdx = stages.findIndex(s => s.id === overId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const [moved] = stages.splice(fromIdx, 1);
+    stages.splice(toIdx, 0, moved);
+    updateStages(stages.map((s, i) => ({ ...s, order: i + 1 })));
+  };
+
   return (
-    <AppLayout title="CRM" moduleNav={CRM_NAV}>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <button
-              onClick={() => navigate('/crm')}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-1"
-            >
-              CRM <ChevronRight className="h-3 w-3" /> Settings <ChevronRight className="h-3 w-3" /> Pipelines
-            </button>
-            <h1 className="text-2xl font-semibold">Pipeline Editor</h1>
-            <p className="text-muted-foreground text-sm">
-              Drag to reorder stages. Configure probability, color, and multiple pipelines.
-            </p>
+    <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <GitBranch className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-lg font-medium">CRM Pipelines</h1>
+              <p className="text-sm text-muted-foreground">Manage multiple sales pipelines and their stages</p>
+            </div>
           </div>
-          <Button onClick={() => setShowNewPipeline(true)} className="gap-2">
-            <PlusCircle className="h-4 w-4" /> New Pipeline
+          <Button onClick={() => setNewDialogOpen(true)} className="gap-1">
+            <Plus className="h-4 w-4" /> New Pipeline
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-          {/* Pipeline list */}
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-semibold">Pipelines</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {pipelines.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setActiveId(p.id)}
-                    className={cn(
-                      'w-full text-left px-3 py-2.5 flex items-center justify-between hover:bg-muted/50 transition-colors',
-                      activeId === p.id && 'bg-muted'
-                    )}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.stages.length} stages</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Pipelines list */}
+          <div className="space-y-2">
+            {pipelines.map(p => (
+              <Card
+                key={p.id}
+                className={cn(
+                  'p-3 cursor-pointer transition-colors',
+                  selectedId === p.id ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
+                )}
+                onClick={() => setSelectedId(p.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-sm flex items-center gap-2">
+                      {p.name}
+                      {p.isDefault && <Badge variant="default" className="text-[10px] h-4 px-1.5">Default</Badge>}
                     </div>
-                    {p.isDefault && (
-                      <Badge variant="secondary" className="text-[10px] gap-1">
-                        <Star className="h-2.5 w-2.5 fill-current" /> Default
-                      </Badge>
+                    <div className="text-xs text-muted-foreground">{p.stages.length} stages</div>
+                  </div>
+                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                    {!p.isDefault && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleMakeDefault(p.id)} title="Make default">
+                        <Star className="h-3.5 w-3.5" />
+                      </Button>
                     )}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stage editor */}
-          {active ? (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Input
-                    value={active.name}
-                    onChange={(e) => updateActive(p => ({ ...p, name: e.target.value }))}
-                    className="text-base font-semibold h-9 max-w-md"
-                  />
-                  {!active.isDefault && (
-                    <Button variant="outline" size="sm" onClick={() => handleSetDefault(active.id)}>
-                      <Star className="h-3.5 w-3.5 mr-1" /> Set as default
-                    </Button>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={handleAddStage} className="gap-1">
-                    <Plus className="h-3.5 w-3.5" /> Add Stage
-                  </Button>
-                  {!active.isDefault && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfirmDeletePipeline(active.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeletePipeline(p.id)} title="Delete">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  )}
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Stage editor */}
+          <div className="lg:col-span-2">
+            {selected ? (
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-base font-medium">Stages — {selected.name}</h2>
+                  <Button size="sm" variant="outline" onClick={handleAddStage} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Add stage
+                  </Button>
+                </div>
+
                 <div className="space-y-2">
-                  {active.stages
-                    .slice()
-                    .sort((a, b) => a.order - b.order)
-                    .map((stage) => (
+                  {selected.stages.map(stage => (
+                    <div
+                      key={stage.id}
+                      draggable
+                      onDragStart={() => setDraggedStage(stage.id)}
+                      onDragOver={e => e.preventDefault()}
+                      onDrop={() => { if (draggedStage) { handleReorder(draggedStage, stage.id); setDraggedStage(null); } }}
+                      className="flex items-center gap-2 border border-border rounded-md p-2 bg-card hover:bg-muted/30 transition-colors"
+                    >
+                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab shrink-0" />
                       <div
-                        key={stage.id}
-                        draggable
-                        onDragStart={() => handleDragStart(stage.id)}
-                        onDragOver={handleDragOver}
-                        onDrop={() => handleDropOn(stage.id)}
-                        className={cn(
-                          'flex items-center gap-3 p-3 rounded-md border bg-card transition-all',
-                          draggedStageId === stage.id && 'opacity-50',
-                          'hover:border-primary/40'
-                        )}
-                      >
-                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
-                        <div
-                          className="h-7 w-7 rounded-full shrink-0 border border-border"
-                          style={{ backgroundColor: stage.color }}
-                          title="Stage color"
-                        >
-                          <input
-                            type="color"
-                            value={stage.color.startsWith('#') ? stage.color : '#888888'}
-                            onChange={(e) => handleStageField(stage.id, { color: e.target.value })}
-                            className="opacity-0 w-full h-full cursor-pointer"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-2">
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Stage name</Label>
-                            <Input
-                              value={stage.name}
-                              onChange={(e) => handleStageField(stage.id, { name: e.target.value })}
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Probability (%)</Label>
-                            <Input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={stage.probability}
-                              onChange={(e) =>
-                                handleStageField(stage.id, {
-                                  probability: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)),
-                                })
-                              }
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-8 w-8 text-muted-foreground hover:text-primary",
-                            (stage.automationHooks?.length || 0) > 0 && "text-primary"
-                          )}
-                          onClick={() => setAutomationStageId(stage.id)}
-                          title="Automation hooks"
-                        >
-                          <Zap className="h-4 w-4" />
-                          {(stage.automationHooks?.length || 0) > 0 && (
-                            <span className="absolute -mt-3 ml-3 h-3.5 min-w-3.5 px-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
-                              {stage.automationHooks!.length}
-                            </span>
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDeleteStage(stage.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        className="h-6 w-6 rounded shrink-0 border border-border"
+                        style={{ backgroundColor: stage.color }}
+                      />
+                      <Input
+                        value={stage.name}
+                        onChange={e => handleStageChange(stage.id, { name: e.target.value })}
+                        className="h-8 text-sm flex-1"
+                      />
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Label className="text-xs text-muted-foreground">Prob</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={stage.probability}
+                          onChange={e => handleStageChange(stage.id, { probability: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) })}
+                          className="h-8 text-sm w-16"
+                        />
+                        <span className="text-xs text-muted-foreground">%</span>
                       </div>
-                    ))}
+                      <Input
+                        type="color"
+                        value={hslToHex(stage.color)}
+                        onChange={e => handleStageChange(stage.id, { color: hexToHsl(e.target.value) })}
+                        className="h-8 w-12 p-1 cursor-pointer shrink-0"
+                        title="Stage color"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive shrink-0"
+                        onClick={() => handleDeleteStage(stage.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                Select or create a pipeline.
-              </CardContent>
-            </Card>
-          )}
+
+                <p className="text-xs text-muted-foreground mt-3">
+                  Drag the handle on the left to reorder stages. Changes save automatically.
+                </p>
+              </Card>
+            ) : (
+              <Card className="p-8 text-center text-muted-foreground">Select a pipeline to edit its stages</Card>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* New pipeline dialog */}
-      <Dialog open={showNewPipeline} onOpenChange={setShowNewPipeline}>
-        <DialogContent>
+      <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>New Pipeline</DialogTitle>
           </DialogHeader>
-          <div className="py-2 space-y-2">
+          <div className="space-y-2 py-2">
             <Label className="text-xs">Pipeline name</Label>
-            <Input
-              autoFocus
-              value={newPipelineName}
-              onChange={(e) => setNewPipelineName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleCreatePipeline(); }}
-              placeholder=""
-            />
+            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="" autoFocus />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewPipeline(false)}>Cancel</Button>
-            <Button onClick={handleCreatePipeline} disabled={!newPipelineName.trim()}>Create</Button>
+            <Button variant="outline" onClick={() => setNewDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreatePipeline}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete confirm */}
-      <AlertDialog open={!!confirmDeletePipeline} onOpenChange={(o) => !o && setConfirmDeletePipeline(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete pipeline?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The pipeline must not be in use by any opportunities.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePipeline} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Stage automation hooks editor */}
-      <AutomationDialog
-        stageId={automationStageId}
-        pipeline={active}
-        onClose={() => setAutomationStageId(null)}
-        onSave={(stageId, hooks) => {
-          updateActive(p => ({
-            ...p,
-            stages: p.stages.map(s => (s.id === stageId ? { ...s, automationHooks: hooks } : s)),
-          }));
-          setAutomationStageId(null);
-          toast({ title: 'Automation hooks saved' });
-        }}
-      />
     </AppLayout>
   );
 }
 
-// ============== Automation Dialog ==============
-interface AutomationDialogProps {
-  stageId: string | null;
-  pipeline: Pipeline | undefined;
-  onClose: () => void;
-  onSave: (stageId: string, hooks: string[]) => void;
+// Color converters (HSL string <-> hex) for native color picker
+function hslToHex(hslStr: string): string {
+  const m = hslStr.match(/hsl\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%/);
+  if (!m) return '#888888';
+  const h = parseFloat(m[1]) / 360;
+  const s = parseFloat(m[2]) / 100;
+  const l = parseFloat(m[3]) / 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h * 12) % 12;
+    return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))));
+  };
+  const toHex = (x: number) => x.toString(16).padStart(2, '0');
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
 }
 
-function AutomationDialog({ stageId, pipeline, onClose, onSave }: AutomationDialogProps) {
-  const stage = pipeline?.stages.find(s => s.id === stageId);
-  const [draft, setDraft] = useState<{ id: AutomationHookId; config: Record<string, string | number> }[]>([]);
-
-  // Sync draft when stage changes
-  useMemo(() => {
-    if (stage) {
-      setDraft(
-        (stage.automationHooks || [])
-          .map(parseHook)
-          .filter((h): h is { id: AutomationHookId; config: Record<string, string | number> } => h !== null)
-      );
+function hexToHsl(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+      case g: h = ((b - r) / d + 2); break;
+      case b: h = ((r - g) / d + 4); break;
     }
-  }, [stage?.id]);
-
-  if (!stage) return null;
-
-  const toggle = (hookId: AutomationHookId, checked: boolean) => {
-    if (checked) {
-      const def = AUTOMATION_HOOKS.find(h => h.id === hookId);
-      const initialConfig: Record<string, string | number> = {};
-      def?.configurable?.forEach(c => {
-        initialConfig[c.key] = c.type === 'number' || c.type === 'days' ? 3 : '';
-      });
-      setDraft([...draft, { id: hookId, config: initialConfig }]);
-    } else {
-      setDraft(draft.filter(d => d.id !== hookId));
-    }
-  };
-
-  const updateConfig = (hookId: AutomationHookId, key: string, value: string) => {
-    setDraft(draft.map(d => (d.id === hookId ? { ...d, config: { ...d.config, [key]: value } } : d)));
-  };
-
-  return (
-    <Dialog open={!!stageId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Automation hooks · {stage.name}</DialogTitle>
-        </DialogHeader>
-        <div className="py-2 space-y-3 max-h-[60vh] overflow-y-auto">
-          <p className="text-xs text-muted-foreground">
-            These actions run automatically when an opportunity moves into this stage.
-          </p>
-          {AUTOMATION_HOOKS.map(def => {
-            const enabled = draft.find(d => d.id === def.id);
-            return (
-              <div key={def.id} className="border border-border rounded-md p-3">
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <Checkbox
-                    checked={!!enabled}
-                    onCheckedChange={(v) => toggle(def.id, !!v)}
-                    className="mt-0.5"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{def.label}</p>
-                    <p className="text-xs text-muted-foreground">{def.description}</p>
-                  </div>
-                </label>
-                {enabled && def.configurable && (
-                  <div className="mt-2 ml-6 space-y-2">
-                    {def.configurable.map(field => (
-                      <div key={field.key}>
-                        <Label className="text-xs">{field.label}</Label>
-                        <Input
-                          type={field.type === 'text' ? 'text' : 'number'}
-                          value={String(enabled.config[field.key] ?? '')}
-                          onChange={(e) => updateConfig(def.id, field.key, e.target.value)}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => onSave(stage.id, draft.map(d => serializeHook(d.id, d.config)))}>
-            Save
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+    h /= 6;
+  }
+  return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
 }

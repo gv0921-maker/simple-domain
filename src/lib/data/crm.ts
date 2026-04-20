@@ -1,6 +1,7 @@
 // CRM Data Management - Contacts, Companies, Leads, Opportunities, Activities, Pipelines
 
 import { getItem, setItem } from '../storage';
+import { logCRM } from '@/lib/crm/audit';
 
 // ================== Types ==================
 
@@ -283,8 +284,10 @@ export function saveCompany(company: Partial<Company> & { id?: string }): Compan
 }
 
 export function deleteCompany(id: string): void {
+  const target = getCompany(id);
   const companies = getCompanies().filter(c => c.id !== id);
   setItem('crm_companies', companies);
+  if (target) logCRM('delete', 'company', id, `Deleted company "${target.name}"`);
 }
 
 // Contacts
@@ -329,8 +332,10 @@ export function saveContact(contact: Partial<Contact> & { id?: string }): Contac
 }
 
 export function deleteContact(id: string): void {
+  const target = getContact(id);
   const contacts = getContacts().filter(c => c.id !== id);
   setItem('crm_contacts', contacts);
+  if (target) logCRM('delete', 'contact', id, `Deleted contact "${target.firstName} ${target.lastName}"`);
 }
 
 // Check for duplicate contacts (matches on email OR any phone — primary or secondary)
@@ -435,8 +440,10 @@ export function updateLeadStatus(id: string, status: LeadStatus): Lead | undefin
 }
 
 export function deleteLead(id: string): void {
+  const target = getLead(id);
   const leads = getLeads().filter(l => l.id !== id);
   setItem('crm_leads', leads);
+  if (target) logCRM('delete', 'lead', id, `Deleted lead "${target.title}"`);
 }
 
 // Convert lead to opportunity
@@ -515,22 +522,6 @@ export function savePipeline(pipeline: Partial<Pipeline> & { id?: string }): Pip
   pipelines.push(newPipeline);
   setItem('crm_pipelines', pipelines);
   return newPipeline;
-}
-
-export function deletePipeline(id: string): { ok: boolean; reason?: string } {
-  const pipelines = getPipelines();
-  const target = pipelines.find(p => p.id === id);
-  if (!target) return { ok: false, reason: 'Pipeline not found' };
-  if (target.isDefault) return { ok: false, reason: 'Cannot delete the default pipeline' };
-  const inUse = getOpportunities().some(o => o.pipelineId === id);
-  if (inUse) return { ok: false, reason: 'Pipeline is used by existing opportunities' };
-  setItem('crm_pipelines', pipelines.filter(p => p.id !== id));
-  return { ok: true };
-}
-
-export function setDefaultPipeline(id: string): void {
-  const pipelines = getPipelines().map(p => ({ ...p, isDefault: p.id === id, updatedAt: new Date().toISOString() }));
-  setItem('crm_pipelines', pipelines);
 }
 
 // Force reset CRM data to new Odoo-style pipeline on version change
@@ -616,8 +607,10 @@ export function updateOpportunityStage(id: string, stageId: string, stage: Oppor
 }
 
 export function deleteOpportunity(id: string): void {
+  const target = getOpportunity(id);
   const opportunities = getOpportunities().filter(o => o.id !== id);
   setItem('crm_opportunities', opportunities);
+  if (target) logCRM('delete', 'opportunity', id, `Deleted opportunity "${target.name}"`);
 }
 
 // Activities
@@ -677,8 +670,10 @@ export function completeActivity(id: string): Activity | undefined {
 }
 
 export function deleteActivity(id: string): void {
+  const target = getActivity(id);
   const activities = getActivities().filter(a => a.id !== id);
   setItem('crm_activities', activities);
+  if (target) logCRM('delete', 'activity', id, `Deleted activity "${target.subject}"`);
 }
 
 // Notes
@@ -723,6 +718,26 @@ export function saveNote(note: Partial<Note> & { id?: string }): Note {
 export function deleteNote(id: string): void {
   const notes = getNotes().filter(n => n.id !== id);
   setItem('crm_notes', notes);
+  logCRM('delete', 'note', id, 'Deleted note');
+}
+
+// New: pipeline & stage delete with audit logging
+export function deletePipeline(id: string): { success: boolean; reason?: string } {
+  const pipelines = getPipelines();
+  const target = pipelines.find(p => p.id === id);
+  if (!target) return { success: false, reason: 'Pipeline not found' };
+  if (target.isDefault) return { success: false, reason: 'Cannot delete the default pipeline' };
+  const opps = getOpportunities().filter(o => o.pipelineId === id);
+  if (opps.length > 0) return { success: false, reason: `${opps.length} opportunity(ies) still use this pipeline` };
+  setItem('crm_pipelines', pipelines.filter(p => p.id !== id));
+  logCRM('delete', 'pipeline', id, `Deleted pipeline "${target.name}"`);
+  return { success: true };
+}
+
+export function setDefaultPipeline(id: string): void {
+  const pipelines = getPipelines().map(p => ({ ...p, isDefault: p.id === id }));
+  setItem('crm_pipelines', pipelines);
+  logCRM('update', 'pipeline', id, 'Set as default pipeline');
 }
 
 // Tags

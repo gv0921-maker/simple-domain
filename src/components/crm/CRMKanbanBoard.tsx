@@ -40,7 +40,6 @@ import {
 } from 'lucide-react';
 import {
   getOpportunities,
-  getPipelines,
   getDefaultPipeline,
   updateOpportunityStage,
   saveOpportunity,
@@ -394,23 +393,15 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>(() => getOpportunities());
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
 
-  const [pipelines, setPipelines] = useState<Pipeline[]>(() => getPipelines());
-  const [pipelineId, setPipelineId] = useState<string>(() => getDefaultPipeline().id);
-  const pipeline = useMemo(
-    () => pipelines.find(p => p.id === pipelineId) || pipelines[0],
-    [pipelines, pipelineId]
-  );
-
   // Refresh data when component mounts or window regains focus (e.g., after navigating back from detail page)
   useEffect(() => {
-    const refresh = () => {
-      setAllOpportunities(getOpportunities());
-      setPipelines(getPipelines());
-    };
+    const refresh = () => setAllOpportunities(getOpportunities());
     window.addEventListener('focus', refresh);
+    // Also refresh on mount in case data changed while navigated away
     refresh();
     return () => window.removeEventListener('focus', refresh);
   }, []);
+  const [pipeline] = useState<Pipeline>(() => getDefaultPipeline());
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
 
   const activeStages = useMemo(() => {
@@ -445,11 +436,6 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     (oppId: string, stageId: string, stage: OpportunityStage) => {
       if (!canEditOpportunities) return;
       updateOpportunityStage(oppId, stageId, stage);
-      // Run stage-based automation hooks
-      import('@/lib/crm/automation').then(({ triggerStageAutomation }) => {
-        triggerStageAutomation(oppId, stageId);
-        setAllOpportunities(getOpportunities());
-      });
       setAllOpportunities(getOpportunities());
       const stageName = pipeline.stages.find((s) => s.id === stageId)?.name;
       toast({ title: `Moved to ${stageName}` });
@@ -491,33 +477,8 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             >
               New
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 text-sm font-semibold text-foreground hover:text-primary">
-                  {pipeline?.name || 'Pipeline'}
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-[200px]">
-                {pipelines.map(p => (
-                  <DropdownMenuItem key={p.id} onClick={() => setPipelineId(p.id)}>
-                    <span className={cn('flex-1', p.id === pipelineId && 'font-semibold text-primary')}>{p.name}</span>
-                    {p.isDefault && <span className="text-[10px] text-muted-foreground ml-2">default</span>}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/settings/crm-pipelines')}>
-                  <Settings className="h-3.5 w-3.5 mr-2" /> Manage pipelines
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <button
-              onClick={() => navigate('/settings/crm-pipelines')}
-              title="Edit stages"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </button>
+            <span className="text-sm font-semibold text-foreground">Pipeline</span>
+            <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer hover:text-foreground" />
           </div>
 
           <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />

@@ -4,7 +4,7 @@ import { getItem, setItem } from '../storage';
 import { getModuleTabIds, getModuleTabs } from './moduleTabs';
 
 export type PermissionLevel = 'none' | 'view' | 'create' | 'edit' | 'delete' | 'admin';
-export type RecordScope = 'own' | 'department' | 'all';
+export type RecordScope = 'own' | 'team' | 'department' | 'all';
 
 export interface TabPermission {
   moduleId: string;
@@ -15,9 +15,13 @@ export interface Permission {
   module: string;
   level: PermissionLevel;
   scope: RecordScope;
+  teamId?: string; // optional team scoping when scope='team'
   canImport?: boolean;
   canExport?: boolean;
   canPrint?: boolean;
+  // Granular CRM action toggles (apply only when module='crm')
+  canConvertLeads?: boolean;
+  canModifyPipeline?: boolean;
 }
 
 export interface Role {
@@ -402,7 +406,7 @@ export function hasPermission(userId: string, module: string, requiredLevel: Per
   return getPermissionWeight(modulePermission.level) >= getPermissionWeight(requiredLevel);
 }
 
-export function hasModulePermission(userId: string, module: string, permission: 'import' | 'export' | 'print'): boolean {
+export function hasModulePermission(userId: string, module: string, permission: 'import' | 'export' | 'print' | 'convert_leads' | 'modify_pipeline'): boolean {
   if (isSuperAdminUser(userId)) return true;
 
   const permissions = getUserPermissions(userId);
@@ -413,8 +417,15 @@ export function hasModulePermission(userId: string, module: string, permission: 
     case 'import': return modulePermission.canImport ?? isAdmin;
     case 'export': return modulePermission.canExport ?? isAdmin;
     case 'print': return modulePermission.canPrint ?? isAdmin;
+    case 'convert_leads': return modulePermission.canConvertLeads ?? (modulePermission.level === 'edit' || modulePermission.level === 'delete' || isAdmin);
+    case 'modify_pipeline': return modulePermission.canModifyPipeline ?? isAdmin;
     default: return false;
   }
+}
+
+export function getUserTeamId(userId: string): string | undefined {
+  const perms = getUserPermissions(userId);
+  return perms.find(p => p.scope === 'team')?.teamId;
 }
 
 export function getModuleRecordScope(userId: string, module: string): RecordScope | 'none' {
