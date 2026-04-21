@@ -91,6 +91,7 @@ export default function CRMContactDetail() {
   const displayPhone = (p?: string) => !p ? '—' : (showPhone ? p : maskPhone(p));
 
   return (
+    <>
     <AppLayout title="CRM" moduleNav={CRM_NAV}>
       <div className="p-6 space-y-6">
         {/* Back + Header */}
@@ -440,17 +441,13 @@ export default function CRMContactDetail() {
         </div>
       </div>
     </AppLayout>
-  );
-  return (
-    <>
-      {content}
-      <EmailComposerDialog
-        open={emailOpen}
-        onOpenChange={setEmailOpen}
-        defaultTo={contact.email}
-        relatedTo="contact"
-        relatedId={contact.id}
-      />
+    <EmailComposerDialog
+      open={emailOpen}
+      onOpenChange={setEmailOpen}
+      defaultTo={contact.email}
+      relatedTo="contact"
+      relatedId={contact.id}
+    />
     </>
   );
 }
