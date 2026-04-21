@@ -274,6 +274,7 @@ export function saveCompany(company: Partial<Company> & { id?: string }): Compan
     if (index >= 0) {
       companies[index] = { ...companies[index], ...company, updatedAt: now };
       setItem('crm_companies', companies);
+      logCRM('update', 'company', company.id, `Updated company "${companies[index].name}"`);
       return companies[index];
     }
   }
@@ -318,6 +319,7 @@ export function saveContact(contact: Partial<Contact> & { id?: string }): Contac
     if (index >= 0) {
       contacts[index] = { ...contacts[index], ...contact, updatedAt: now };
       setItem('crm_contacts', contacts);
+      logCRM('update', 'contact', contact.id!, `Updated contact "${contacts[index].firstName} ${contacts[index].lastName}"`);
       return contacts[index];
     }
   }
@@ -388,6 +390,7 @@ export function saveLead(lead: Partial<Lead> & { id?: string }): Lead {
     if (index >= 0) {
       leads[index] = { ...leads[index], ...lead, updatedAt: now };
       setItem('crm_leads', leads);
+      logCRM('update', 'lead', lead.id!, `Updated lead "${leads[index].title}"`);
       return leads[index];
     }
   }
@@ -516,6 +519,7 @@ export function savePipeline(pipeline: Partial<Pipeline> & { id?: string }): Pip
     if (index >= 0) {
       pipelines[index] = { ...pipelines[index], ...pipeline, updatedAt: now };
       setItem('crm_pipelines', pipelines);
+      logCRM('update', 'pipeline', pipeline.id, `Updated pipeline "${pipelines[index].name}"`);
       return pipelines[index];
     }
   }
@@ -573,6 +577,7 @@ export function saveOpportunity(opp: Partial<Opportunity> & { id?: string }): Op
     if (index >= 0) {
       opportunities[index] = { ...opportunities[index], ...opp, updatedAt: now };
       setItem('crm_opportunities', opportunities);
+      logCRM('update', 'opportunity', opp.id, `Updated opportunity "${opportunities[index].name}"`);
       return opportunities[index];
     }
   }
@@ -644,6 +649,7 @@ export function saveActivity(activity: Partial<Activity> & { id?: string }): Act
     const index = activities.findIndex(a => a.id === activity.id);
     if (index >= 0) {
       activities[index] = { ...activities[index], ...activity, updatedAt: now };
+      logCRM('update', 'activity', activity.id!, `Updated activity "${activities[index].subject}"`);
       setItem('crm_activities', activities);
       return activities[index];
     }
@@ -704,6 +710,7 @@ export function saveNote(note: Partial<Note> & { id?: string }): Note {
     if (index >= 0) {
       notes[index] = { ...notes[index], ...note, updatedAt: now };
       setItem('crm_notes', notes);
+      logCRM('update', 'note', note.id!, 'Updated note');
       return notes[index];
     }
   }
