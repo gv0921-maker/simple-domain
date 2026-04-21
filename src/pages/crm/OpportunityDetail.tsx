@@ -41,6 +41,7 @@ import {
   FileText,
   Package,
   User,
+  Mail,
 } from 'lucide-react';
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import {
