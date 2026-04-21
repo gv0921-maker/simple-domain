@@ -441,6 +441,18 @@ export default function CRMContactDetail() {
       </div>
     </AppLayout>
   );
+  return (
+    <>
+      {content}
+      <EmailComposerDialog
+        open={emailOpen}
+        onOpenChange={setEmailOpen}
+        defaultTo={contact.email}
+        relatedTo="contact"
+        relatedId={contact.id}
+      />
+    </>
+  );
 }
 
 function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
