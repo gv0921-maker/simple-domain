@@ -328,7 +328,7 @@ export function CRMDashboard() {
                       <span className="text-sm font-semibold">₹{deal.expectedRevenue.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
+                      <CalendarIcon className="h-3 w-3" />
                       {format(parseISO(deal.expectedCloseDate), 'MMM d')}
                       <span>•</span>
                       <span>{deal.probability}%</span>
