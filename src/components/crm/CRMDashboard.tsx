@@ -83,7 +83,37 @@ function StatCard({ title, value, subtitle, icon: Icon, trend, color = 'primary'
 
 export function CRMDashboard() {
   const navigate = useNavigate();
-  
+
+  // ── Filters ──
+  const [dateRange, setDateRange] = useState<'all' | '7d' | '30d' | 'this_month' | 'custom'>('all');
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
+  const [userFilter, setUserFilter] = useState<string>('all');
+
+  const dateInterval = useMemo(() => {
+    const now = new Date();
+    switch (dateRange) {
+      case '7d': return { start: startOfDay(subDays(now, 7)), end: endOfDay(now) };
+      case '30d': return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
+      case 'this_month': return { start: startOfMonth(now), end: endOfMonth(now) };
+      case 'custom': return customFrom && customTo ? { start: startOfDay(customFrom), end: endOfDay(customTo) } : null;
+      default: return null;
+    }
+  }, [dateRange, customFrom, customTo]);
+
+  const inRange = useCallback((dateStr: string) => {
+    if (!dateInterval) return true;
+    try {
+      const d = parseISO(dateStr);
+      return isWithinInterval(d, dateInterval);
+    } catch { return true; }
+  }, [dateInterval]);
+
+  const byUser = useCallback(<T extends { assignedTo?: string }>(items: T[]) => {
+    if (userFilter === 'all') return items;
+    return items.filter(i => i.assignedTo === userFilter);
+  }, [userFilter]);
+
   const stats = useMemo(() => getCRMStats(), []);
   const leadsBySource = useMemo(() => getLeadsBySource(), []);
   const opportunitiesByStage = useMemo(() => getOpportunitiesByStage(), []);
@@ -91,10 +121,38 @@ export function CRMDashboard() {
   const allLeads = useMemo(() => getLeads(), []);
   const activities = useMemo(() => getActivities(), []);
 
-  // Note: Dashboard shows aggregate stats for all users (admin view)
-  // Individual list pages enforce record scope filtering
-  const opportunities = allOpportunities;
-  const leads = allLeads;
+  // Apply filters
+  const opportunities = useMemo(() => byUser(allOpportunities).filter(o => inRange(o.createdAt)), [allOpportunities, byUser, inRange]);
+  const leads = useMemo(() => byUser(allLeads).filter(l => inRange(l.createdAt)), [allLeads, byUser, inRange]);
+  const filteredActivities = useMemo(() => activities.filter(a => inRange(a.createdAt)), [activities, inRange]);
+
+  // Activity completion rate
+  const activityCompletionRate = useMemo(() => {
+    if (filteredActivities.length === 0) return 0;
+    return Math.round((filteredActivities.filter(a => a.completed).length / filteredActivities.length) * 100);
+  }, [filteredActivities]);
+
+  // CSV export helpers
+  const exportPipelineCSV = () => {
+    const rows = opportunitiesByStage.map(s => ({ Stage: s.stage, Count: s.count, Value: s.value }));
+    downloadCSV('crm-pipeline.csv', toCSV(rows));
+  };
+  const exportLeadsCSV = () => {
+    const rows = leadsBySource.map(s => ({ Source: s.source, Count: s.count, Value: s.value }));
+    downloadCSV('crm-leads-by-source.csv', toCSV(rows));
+  };
+  const exportDealsCSV = () => {
+    const rows = opportunities.filter(o => o.stage !== 'won' && o.stage !== 'lost').map(o => ({
+      Name: o.name, Revenue: o.expectedRevenue, Stage: o.stage, Probability: o.probability, CloseDate: o.expectedCloseDate,
+    }));
+    downloadCSV('crm-upcoming-deals.csv', toCSV(rows));
+  };
+  const exportActivitiesCSV = () => {
+    const rows = filteredActivities.map(a => ({
+      Subject: a.subject, Type: a.type, Completed: a.completed, DueDate: a.dueDate || '', CreatedAt: a.createdAt,
+    }));
+    downloadCSV('crm-activities.csv', toCSV(rows));
+  };
 
   const upcomingDeals = useMemo(() => {
     return opportunities
