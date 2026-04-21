@@ -23,6 +23,7 @@ import {
   Check,
   Bell,
   FileText,
+  Download,
 } from 'lucide-react';
 import {
   getActivities,
@@ -37,6 +38,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
+import { downloadICS } from '@/lib/crm/ics';
 import { cn } from '@/lib/utils';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 
@@ -93,6 +95,17 @@ function ActivityTimelineItem({ activity, onComplete }: ActivityTimelineItemProp
               onClick={() => onComplete(activity.id)}
             >
               <Check className="h-3 w-3" />
+            </Button>
+          )}
+          {activity.type === 'meeting' && activity.dueDate && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              title="Download .ics"
+              onClick={() => downloadICS(activity)}
+            >
+              <Download className="h-3 w-3" />
             </Button>
           )}
         </div>

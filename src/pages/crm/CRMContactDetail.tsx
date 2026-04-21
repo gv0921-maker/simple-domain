@@ -27,6 +27,7 @@ import { RichComposer, RichContent, type RichComposerValue } from '@/components/
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
+import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 
 export default function CRMContactDetail() {
   const { id } = useParams();
@@ -40,6 +41,7 @@ export default function CRMContactDetail() {
 
   const [notesVersion, setNotesVersion] = useState(0);
   const notes = useMemo(() => (id ? getNotes('contact', id) : []), [id, notesVersion]);
+  const [emailOpen, setEmailOpen] = useState(false);
 
   const showEmail = canViewSensitive(user?.id, 'crm', 'email');
   const showPhone = canViewSensitive(user?.id, 'crm', 'phone');
@@ -89,6 +91,7 @@ export default function CRMContactDetail() {
   const displayPhone = (p?: string) => !p ? '—' : (showPhone ? p : maskPhone(p));
 
   return (
+    <>
     <AppLayout title="CRM" moduleNav={CRM_NAV}>
       <div className="p-6 space-y-6">
         {/* Back + Header */}
@@ -107,6 +110,9 @@ export default function CRMContactDetail() {
           <Badge variant={contact.status === 'active' ? 'default' : 'secondary'} className="capitalize">
             {contact.status}
           </Badge>
+          <Button variant="outline" size="sm" onClick={() => setEmailOpen(true)}>
+            <Mail className="h-4 w-4 mr-1" /> Email
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -435,6 +441,14 @@ export default function CRMContactDetail() {
         </div>
       </div>
     </AppLayout>
+    <EmailComposerDialog
+      open={emailOpen}
+      onOpenChange={setEmailOpen}
+      defaultTo={contact.email}
+      relatedTo="contact"
+      relatedId={contact.id}
+    />
+    </>
   );
 }
 

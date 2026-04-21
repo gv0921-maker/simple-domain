@@ -11,8 +11,18 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus, Trash2, GripVertical, Star, Edit, Save, X, GitBranch,
+  ChevronDown, Zap,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
+
+const AUTOMATION_HOOKS = [
+  { id: 'notify', label: 'Send notification' },
+  { id: 'follow_up', label: 'Create follow-up activity' },
+  { id: 'update_prob', label: 'Update probability' },
+  { id: 'assign_team', label: 'Assign to team' },
+];
 import {
   getPipelines, savePipeline, getDefaultPipeline,
   deletePipeline, setDefaultPipeline,
@@ -196,8 +206,8 @@ export default function CRMPipelinesSettings() {
 
                 <div className="space-y-2">
                   {selected.stages.map(stage => (
+                    <div key={stage.id} className="space-y-0">
                     <div
-                      key={stage.id}
                       draggable
                       onDragStart={() => setDraggedStage(stage.id)}
                       onDragOver={e => e.preventDefault()}
@@ -241,6 +251,33 @@ export default function CRMPipelinesSettings() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
+                    </div>
+                    {/* Automation hooks */}
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground ml-8 -mt-1 mb-1">
+                        <Zap className="h-3 w-3" />
+                        <span>Automation hooks</span>
+                        <ChevronDown className="h-3 w-3" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="ml-8 mb-2 pl-2 border-l-2 border-muted space-y-1">
+                        {AUTOMATION_HOOKS.map(hook => {
+                          const checked = stage.automationHooks?.includes(hook.id) ?? false;
+                          return (
+                            <label key={hook.id} className="flex items-center gap-2 text-xs cursor-pointer">
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={v => {
+                                  const hooks = stage.automationHooks ?? [];
+                                  const next = v ? [...hooks, hook.id] : hooks.filter(h => h !== hook.id);
+                                  handleStageChange(stage.id, { automationHooks: next });
+                                }}
+                              />
+                              {hook.label}
+                            </label>
+                          );
+                        })}
+                      </CollapsibleContent>
+                    </Collapsible>
                     </div>
                   ))}
                 </div>

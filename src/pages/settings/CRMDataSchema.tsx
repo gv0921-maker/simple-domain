@@ -3,7 +3,10 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Database } from 'lucide-react';
+import { BookOpen, Database, Copy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useToast } from '@/hooks/use-toast';
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
 
 interface SchemaEntry {
@@ -12,6 +15,7 @@ interface SchemaEntry {
   description: string;
   shape: string;
   operations: string[];
+  endpoints: { method: string; path: string; fn: string }[];
 }
 
 const SCHEMAS: SchemaEntry[] = [
@@ -20,6 +24,12 @@ const SCHEMAS: SchemaEntry[] = [
     label: 'Contact',
     description: 'People and company contacts (Person/Company toggle).',
     operations: ['getContacts()', 'getContact(id)', 'saveContact(data)', 'deleteContact(id)', 'findDuplicateContacts(email, phone, excludeId?)'],
+    endpoints: [
+      { method: 'GET', path: '/contacts', fn: 'getContacts()' },
+      { method: 'GET', path: '/contacts/:id', fn: 'getContact(id)' },
+      { method: 'POST', path: '/contacts', fn: 'saveContact(data)' },
+      { method: 'DELETE', path: '/contacts/:id', fn: 'deleteContact(id)' },
+    ],
     shape: `{
   id: string,
   type: 'individual' | 'company',
@@ -47,6 +57,13 @@ const SCHEMAS: SchemaEntry[] = [
     label: 'Opportunity',
     description: 'Deals in the sales pipeline.',
     operations: ['getOpportunities()', 'getOpportunity(id)', 'saveOpportunity(data)', 'updateOpportunityStage(id, stageId, stage)', 'deleteOpportunity(id)'],
+    endpoints: [
+      { method: 'GET', path: '/opportunities', fn: 'getOpportunities()' },
+      { method: 'GET', path: '/opportunities/:id', fn: 'getOpportunity(id)' },
+      { method: 'POST', path: '/opportunities', fn: 'saveOpportunity(data)' },
+      { method: 'PATCH', path: '/opportunities/:id/stage', fn: 'updateOpportunityStage(id, stageId, stage)' },
+      { method: 'DELETE', path: '/opportunities/:id', fn: 'deleteOpportunity(id)' },
+    ],
     shape: `{
   id: string,
   name: string,
@@ -71,6 +88,11 @@ const SCHEMAS: SchemaEntry[] = [
     label: 'Pipeline + Stages',
     description: 'Multiple pipelines, each with ordered stages.',
     operations: ['getPipelines()', 'getDefaultPipeline()', 'savePipeline(data)', 'deletePipeline(id)', 'setDefaultPipeline(id)'],
+    endpoints: [
+      { method: 'GET', path: '/pipelines', fn: 'getPipelines()' },
+      { method: 'POST', path: '/pipelines', fn: 'savePipeline(data)' },
+      { method: 'DELETE', path: '/pipelines/:id', fn: 'deletePipeline(id)' },
+    ],
     shape: `{
   id: string,
   name: string, description?: string,
@@ -88,6 +110,12 @@ const SCHEMAS: SchemaEntry[] = [
     label: 'Activity',
     description: 'Calls, emails, meetings, tasks, notes attached to a CRM record.',
     operations: ['getActivities(relatedTo?, relatedId?)', 'saveActivity(data)', 'completeActivity(id)', 'deleteActivity(id)'],
+    endpoints: [
+      { method: 'GET', path: '/activities', fn: 'getActivities(relatedTo?, relatedId?)' },
+      { method: 'POST', path: '/activities', fn: 'saveActivity(data)' },
+      { method: 'PATCH', path: '/activities/:id/complete', fn: 'completeActivity(id)' },
+      { method: 'DELETE', path: '/activities/:id', fn: 'deleteActivity(id)' },
+    ],
     shape: `{
   id: string,
   type: 'call' | 'email' | 'meeting' | 'task' | 'note' | 'follow_up',
@@ -105,6 +133,11 @@ const SCHEMAS: SchemaEntry[] = [
     label: 'Note',
     description: 'Rich-text discussion thread items (chatter). Supports mentions and base64 attachments.',
     operations: ['getNotes(relatedTo?, relatedId?)', 'saveNote(data)', 'deleteNote(id)'],
+    endpoints: [
+      { method: 'GET', path: '/notes', fn: 'getNotes(relatedTo?, relatedId?)' },
+      { method: 'POST', path: '/notes', fn: 'saveNote(data)' },
+      { method: 'DELETE', path: '/notes/:id', fn: 'deleteNote(id)' },
+    ],
     shape: `{
   id: string,
   content: string,                 // HTML rich text
@@ -120,11 +153,29 @@ const SCHEMAS: SchemaEntry[] = [
     label: 'CRMTag',
     description: 'Reusable tags applied to contacts and opportunities.',
     operations: ['getTags()', 'saveTag(data)'],
+    endpoints: [
+      { method: 'GET', path: '/tags', fn: 'getTags()' },
+      { method: 'POST', path: '/tags', fn: 'saveTag(data)' },
+    ],
     shape: `{ id, name, color, category? }`,
   },
 ];
 
+const METHOD_COLORS: Record<string, string> = {
+  GET: 'bg-success/15 text-success',
+  POST: 'bg-info/15 text-info',
+  PATCH: 'bg-warning/15 text-warning',
+  DELETE: 'bg-destructive/15 text-destructive',
+};
+
 export default function CRMDataSchema() {
+  const { toast } = useToast();
+
+  const copyShape = (label: string, shape: string) => {
+    navigator.clipboard.writeText(shape);
+    toast({ title: `${label} interface copied` });
+  };
+
   return (
     <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>
       <div className="p-4 max-w-4xl space-y-4">
@@ -161,8 +212,26 @@ export default function CRMDataSchema() {
             </div>
 
             <div>
-              <div className="text-xs font-semibold text-muted-foreground uppercase mb-1">Shape</div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-xs font-semibold text-muted-foreground uppercase">Shape</div>
+                <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => copyShape(s.label, s.shape)}>
+                  <Copy className="h-3 w-3" /> Copy
+                </Button>
+              </div>
               <pre className="bg-muted/50 rounded-md p-3 text-xs font-mono overflow-x-auto whitespace-pre">{s.shape}</pre>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase mb-1">Endpoints</div>
+              <div className="space-y-1">
+                {s.endpoints.map(ep => (
+                  <div key={ep.path + ep.method} className="flex items-center gap-2 text-xs font-mono">
+                    <Badge className={`${METHOD_COLORS[ep.method]} text-[10px] px-1.5 py-0 font-bold w-14 justify-center`}>{ep.method}</Badge>
+                    <span className="text-foreground">/api/crm{ep.path}</span>
+                    <span className="text-muted-foreground">→ {ep.fn}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>

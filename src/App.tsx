@@ -65,6 +65,8 @@ import CRMContactDetail from "@/pages/crm/CRMContactDetail";
 import ContactForm from "@/pages/crm/ContactForm";
 import OpportunityForm from "@/pages/crm/OpportunityForm";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
+import CRMLeadsList from "@/pages/crm/CRMLeadsList";
+import LeadDetail from "@/pages/crm/LeadDetail";
 
 // Accounting pages
 import AccountingOverview from "@/pages/accounting/AccountingOverview";
@@ -181,6 +183,8 @@ const App = () => (
             <Route path="/crm/contacts/new" element={<ProtectedRoute><ContactForm /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id/edit" element={<ProtectedRoute><ContactForm /></ProtectedRoute>} />
+            <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
+            <Route path="/crm/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
 
             {/* Manufacturing module */}
             <Route path="/manufacturing" element={<ProtectedRoute><ManufacturingOverview /></ProtectedRoute>} />
