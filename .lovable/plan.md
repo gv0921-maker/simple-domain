@@ -1,166 +1,162 @@
 
 
-# Plan: Complete 22 Actionable Sales Module Items
+# Plan: Complete 6 Remaining CRM Module Items
 
-## Revised Assessment
+## Overview
 
-From the original 26, **4 are already done** (CSV export from reports, revenue forecast tab, quotations by status, conversion rate KPI exist in SalesReports.tsx). **4 are architecturally impossible** (REST API, OpenAPI docs, server-side pagination, DB indexes). That leaves **22 actionable items**.
-
-Items removed from scope:
-- Export to CSV/Excel — already implemented (handleExport in SalesReports.tsx)
-- Revenue forecast — already implemented (Forecasts tab)
-- Testing (items 27-30) — deferred to a separate testing pass, not mixed with feature work
-
-That reduces to **18 feature items** plus 4 testing items if desired separately.
+Implement the 6 incomplete CRM requirements: Supabase database schema, REST API via Edge Functions, unit tests, integration tests, performance tests, and user/admin documentation.
 
 ---
 
-## Pass 1: Utilities & Audit (no UI dependencies)
+## Item 1: Database Schema with Indexes (Supabase Migration)
 
-### 1. Sales Audit Logger
-**Create:** `src/lib/sales/audit.ts` (mirrors `src/lib/crm/audit.ts`)
-- `logSales(action, resource, resourceId, details)` wrapper
-- Resources: `quotation`, `order`, `subscription`, `pricelist`
+Create a single migration that mirrors the existing localStorage data model into normalized Supabase tables.
 
-### 2. Wire Audit Logs into All Sales CRUD
-**Edit:** `src/lib/data/sales/storage.ts`
-- Add `logSales()` calls to: `saveQuotation`, `deleteQuotation`, `saveSalesOrder`, `deleteSalesOrder`, `saveSubscription`, `savePricelist`, `deletePricelist`
-- Log price changes, discount overrides, status transitions, order confirmations
+**Tables to create:**
+- `crm_contacts` — all contact fields including type (individual/company), emails/phones as JSONB arrays, addresses as JSONB, custom_fields as JSONB, tags as text array
+- `crm_companies` — name, website, industry, employee_count, annual_revenue, addresses JSONB, parent_company_id (self-ref), tags
+- `crm_leads` — title, contact_id (FK), email, phone, source enum, status enum, priority enum, score, expected_revenue, probability, assigned_to, team_id, tags, lost_reason
+- `crm_opportunities` — name, contact_id (FK), pipeline_id (FK), stage_id, stage enum, expected_revenue, probability, priority, expected_close_date, products JSONB, tags, lost_reason, won_at, lost_at
+- `crm_pipelines` — name, description, is_default boolean
+- `crm_pipeline_stages` — pipeline_id (FK), name, order, probability, color, automation_hooks JSONB
+- `crm_activities` — type enum, subject, description, related_to enum, related_id UUID, user_id, due_date, completed boolean, completed_at, priority enum, mentions JSONB
+- `crm_notes` — content (HTML), related_to, related_id, user_id, visibility enum, mentions JSONB, attachments JSONB
+- `crm_tags` — name, color, category
+- `crm_audit_logs` — user_id, user_name, action, resource, resource_id, details, timestamp
 
-### 3. Price Immutability After Confirmation
-**Edit:** `src/lib/data/sales/storage.ts`
-- In `saveSalesOrder`: if existing order is `confirmed` or `locked`, reject line price/discount changes (only allow status transitions and non-financial field edits)
+**Indexes on:**
+- `crm_contacts`: email, phone, assigned_to, status, created_at
+- `crm_leads`: email, assigned_to, status, source, created_at
+- `crm_opportunities`: stage, assigned_to, pipeline_id, expected_close_date, created_at
+- `crm_activities`: related_to + related_id, user_id, due_date, completed
+- `crm_notes`: related_to + related_id
 
-### 4. Auto-Expire Quotations
-**Create:** `src/lib/sales/automation.ts`
-- `autoExpireQuotations()`: scan all `sent`/`draft` quotations, set `expired` if `validUntil < today`
-- Call on SalesOverview and QuotationsList mount
+**Enums to create:** contact_type, contact_status, lead_source, lead_priority, lead_status, opportunity_stage, activity_type, note_visibility
 
-### 5. Auto-Create Order on Acceptance
-**Edit:** `src/lib/data/sales/storage.ts` or `QuotationForm.tsx`
-- When quotation status changes to `accepted`, automatically call `convertQuotationToOrder()`
+**RLS policies:** All tables will have RLS enabled. Authenticated users can read all records; create/update/delete restricted to authenticated users. The `crm_audit_logs` table is insert-only for authenticated, select for admins.
 
----
-
-## Pass 2: Quotation Enhancements
-
-### 6. Quotation PDF Download
-**Create:** `src/lib/sales/quotationPdf.ts`
-- Generate a quotation PDF using browser-native approach (build HTML string, open in new window for print/save)
-- Include: company header, quotation ref, customer, lines table, tax breakdown, totals, T&C
-**Edit:** `QuotationForm.tsx` — add "Download PDF" button
-
-### 7. Quotation Versioning UI
-**Edit:** `QuotationForm.tsx`
-- On "Revise" action: snapshot current quotation into `versions[]`, increment `currentVersion`, reset to draft
-- Add a "Version History" collapsible section showing past versions with timestamps
-- Allow viewing (read-only) any previous version
-
-### 8. Email Send (Simulated)
-**Edit:** `QuotationForm.tsx`
-- "Send" action opens a dialog showing recipient, subject (auto-filled from quotation ref), and a preview
-- On confirm: marks quotation as `sent`, logs activity with email details (no actual SMTP — localStorage only, same pattern as CRM EmailComposerDialog)
+**Triggers:** `update_updated_at_column()` on all tables with updated_at.
 
 ---
 
-## Pass 3: CRM ↔ Sales Integration
+## Item 2: REST API + OpenAPI Spec (Edge Functions)
 
-### 9. Create Quotation from CRM Opportunity
-**Edit:** `src/pages/crm/OpportunityDetail.tsx`
-- Add "New Quotation" button that navigates to `/sales/quotations/new?opportunityId=xxx&customerId=xxx`
-**Edit:** `QuotationForm.tsx`
-- Read `opportunityId` and `customerId` from URL params, pre-fill customer and link to opportunity
+Create Supabase Edge Functions that expose RESTful endpoints for all CRM entities.
 
-### 10. Create Quotation from CRM Contact
-**Edit:** `src/pages/crm/CRMContactDetail.tsx`
-- Add "New Quotation" action button that navigates to `/sales/quotations/new?customerId=xxx`
+**Edge Function: `crm-api`** (single function, route-based)
 
-### 11. Sales History in CRM Records
-**Edit:** `src/pages/crm/OpportunityDetail.tsx`, `CRMContactDetail.tsx`
-- Add a "Sales" tab showing linked quotations and orders (query by customerId/opportunityId)
-- Display: reference, status, total, date
+Endpoints:
+- `GET/POST /contacts`, `GET/PATCH/DELETE /contacts/:id`
+- `GET/POST /companies`, `GET/PATCH/DELETE /companies/:id`
+- `GET/POST /leads`, `GET/PATCH/DELETE /leads/:id`, `POST /leads/:id/convert`
+- `GET/POST /opportunities`, `GET/PATCH/DELETE /opportunities/:id`, `PATCH /opportunities/:id/stage`
+- `GET/POST /activities`, `PATCH /activities/:id/complete`, `DELETE /activities/:id`
+- `GET/POST /notes`, `DELETE /notes/:id`
+- `GET/POST /pipelines`, `DELETE /pipelines/:id`
+- `GET /tags`, `POST /tags`
 
-### 12. Update Opportunity Stage on Quotation Acceptance
-**Edit:** `QuotationForm.tsx` (in the accept handler)
-- If quotation has `opportunityId`, update that opportunity's stage to `won`
+Features per endpoint:
+- Pagination (`?page=1&limit=25`)
+- Filtering (`?status=active&assigned_to=xxx`)
+- Search (`?q=search_term`)
+- Sorting (`?sort=created_at&order=desc`)
+- JWT auth validation — role-aware responses based on user permissions
 
----
+**Edge Function: `crm-openapi`**
 
-## Pass 4: Customer Portal
+Returns a complete OpenAPI 3.0 JSON spec documenting all endpoints, request/response schemas, authentication requirements, and query parameters. Accessible at `/crm-openapi`.
 
-### 13. Customer Portal Pages
-**Create:** `src/pages/sales/CustomerPortal.tsx`, `src/pages/sales/CustomerPortalQuotation.tsx`
-**Edit:** `src/App.tsx` (add routes `/portal`, `/portal/quotation/:id`)
-- Token-based access: URL contains `?token=xxx`, validated against a generated token stored on the customer record
-- Read-only view of quotations and orders for that customer
-- Accept/Reject buttons on quotations (updates status)
-- Mobile-friendly, minimal chrome layout (no full AppLayout)
+**Update CRMDataSchema.tsx** to link to the live OpenAPI spec and show the real API endpoints instead of localStorage references.
 
 ---
 
-## Pass 5: Reports & Import/Export
+## Item 3: Unit Tests
 
-### 14. Sales by Salesperson Report
-**Edit:** `SalesReports.tsx`
-- Add a "Salesperson" tab with revenue and order count grouped by salesperson
+Create test files using Vitest (already configured):
 
-### 15. Report Grouping
-**Edit:** `SalesReports.tsx`
-- Add group-by dropdown (Customer, Salesperson, Month, Status) to the quotations and orders tables
+**`src/test/crm/crm-data.test.ts`** — CRM logic unit tests:
+- Contact CRUD: create, read, update, delete
+- Duplicate detection: by email, by phone, exclusion logic
+- Lead CRUD and status transitions
+- Lead scoring calculation (rule matching, score aggregation)
+- Opportunity CRUD, stage update logic (won sets probability=100, lost sets probability=0)
+- Pipeline CRUD, default pipeline logic, deletion guards
+- Activity CRUD, completion logic
+- Note CRUD with visibility
+- Tag CRUD
+- Analytics: getCRMStats, getLeadsBySource, getOpportunitiesByStage
+- Import contacts: success, duplicate detection, field mapping
 
-### 16. Import Quotations & Orders from CSV
-**Create:** `src/components/sales/SalesImportExport.tsx`
-- Reuse the CRM import pattern (CRMImportExport.tsx)
-- Parse CSV → validate → save quotations or orders
-- Add import button to QuotationsList and SalesOrdersList
+**`src/test/crm/crm-audit.test.ts`** — Audit logging:
+- Verify logCRM creates entries
+- Verify all CRUD operations produce audit logs
 
-### 17. Export Quotations & Orders (Dedicated)
-- Already partially done in SalesReports; extend to list pages
-**Edit:** `QuotationsListNew.tsx`, `SalesOrdersListNew.tsx`
-- Add "Export CSV" button to list toolbars (export all or filtered records)
+**`src/test/crm/crm-permissions.test.ts`** — Permission logic:
+- hasPermission checks per level
+- Record scope filtering (own vs all)
+- Field masking (maskEmail, maskPhone, maskRevenue)
+- canViewSensitive by permission level
 
 ---
 
-## Pass 6: UI/UX Polish
+## Item 4: Integration Tests
 
-### 18. Micro-Animations
-**Edit:** `QuotationForm.tsx`, `SalesOrderForm.tsx`, list pages
-- Add framer-motion `AnimatePresence` for line add/remove
-- Status badge transition animations
-- Button hover/confirm feedback animations
+**`src/test/crm/crm-integration.test.ts`**:
+- Lead → Opportunity conversion: create lead, convert, verify opportunity fields, verify lead status = converted
+- Pipeline stage changes: create opportunity, move through stages, verify probability updates, verify won/lost timestamps
+- Permission-gated operations: verify scope filtering returns correct records
+- Contact-Lead linking: create lead with email, verify auto-created contact, verify contactId linkage
+- CRM backup/restore cycle: export, import, verify data integrity
 
-### 19. Mobile Quick Quotation
-**Edit:** `QuotationForm.tsx` or create `src/pages/sales/QuickQuote.tsx`
-- Simplified mobile view: customer select, product select, quantity → create draft quotation
-- Accessible from SalesOverview on mobile
+---
 
-### 20. Smooth State Transitions
-**Edit:** `QuotationForm.tsx`, `SalesOrderForm.tsx`
-- Animate status bar/badge changes using framer-motion `layout` transitions
+## Item 5: Performance Tests
+
+**`src/test/crm/crm-performance.test.ts`**:
+- **10k+ contacts**: generate 10,000 contacts, measure getContacts() time (target: < 500ms), measure findDuplicateContacts time, measure importContacts with 1,000 records
+- **50k+ activities**: generate 50,000 activities, measure getActivities() time, measure filtered getActivities(relatedTo, relatedId) time
+- **Analytics at scale**: with 10k contacts and 5k opportunities, measure getCRMStats(), getOpportunitiesByStage(), getLeadsBySource() performance
+- Use `performance.now()` for timing, assert reasonable thresholds
+
+---
+
+## Item 6: User & Admin Documentation
+
+Generate two DOCX documents to `/mnt/documents/`:
+
+**`crm-user-guide.docx`** — Step-by-step workflow guide:
+1. Logging in and navigating to CRM
+2. Managing Contacts (create, edit, archive, duplicate detection)
+3. Managing Leads (create, qualify, convert to opportunity)
+4. Pipeline & Opportunities (Kanban view, drag-drop, stage transitions, win/loss)
+5. Activities & Timeline (scheduling calls/meetings, completing tasks, ICS export)
+6. Notes & Communication (rich text, @mentions, attachments, visibility)
+7. Search & Filtering (global search, pipeline filters, group-by)
+8. Import/Export (CSV import with field mapping, CSV export)
+9. Analytics Dashboard (date filters, user filters, chart widgets)
+10. Notifications (bell icon, reminders, automation alerts)
+
+**`crm-admin-guide.docx`** — Administration reference:
+1. Role management (CRM Admin, Sales Manager, Sales Rep, Read-only)
+2. Permission levels (View/Create/Edit/Delete/Admin)
+3. Record scope configuration (Own/Team/All)
+4. Field-level masking (sensitive field visibility)
+5. Pipeline configuration (multi-pipeline, stages, automation hooks)
+6. Backup & restore (encrypted export/import)
+7. Audit logs (viewing, filtering, interpreting)
+8. CRM Data Schema / API reference
 
 ---
 
 ## Execution Order
 
-Build in 6 sequential passes:
-1. **Utilities & Audit** (items 1-5) — foundational, no UI
-2. **Quotation Enhancements** (items 6-8) — PDF, versioning, email
-3. **CRM ↔ Sales Integration** (items 9-12) — cross-module linking
-4. **Customer Portal** (item 13) — standalone pages
-5. **Reports & Import/Export** (items 14-17) — data features
-6. **UI/UX Polish** (items 18-20) — animations, mobile
+1. **Database migration** — Create all tables, enums, indexes, RLS, triggers
+2. **Edge Functions** — `crm-api` + `crm-openapi`, update CRMDataSchema.tsx
+3. **Unit tests** — 3 test files covering data, audit, permissions
+4. **Integration tests** — 1 test file covering cross-feature flows
+5. **Performance tests** — 1 test file with scale benchmarks
+6. **Documentation** — 2 DOCX files generated to /mnt/documents/
 
-Estimated: ~6 new files, ~15 edited files.
-
----
-
-## Items NOT Included (with reasons)
-
-| Item | Reason |
-|------|--------|
-| REST API, OpenAPI docs | No server/backend — architecturally impossible |
-| Server-side pagination | No server |
-| DB indexes | No database (localStorage) |
-| Unit/integration/perf tests | Separate testing pass — can be planned after features |
-| Email via SMTP | No backend; simulated email logging only |
+**Estimated new files:** ~8 (migration, 2 edge functions, 5 test files, 2 docs)
+**Estimated edited files:** ~2 (CRMDataSchema.tsx, App.tsx or config)
 
