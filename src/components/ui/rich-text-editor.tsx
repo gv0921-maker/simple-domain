@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Bold, Italic, Underline, List, ListOrdered, Link as LinkIcon, Strikethrough } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface RichTextEditorProps {
   value: string;
@@ -25,7 +26,10 @@ export function RichTextEditor({
   // Sync external value into editor only when it differs (avoids cursor jump while typing)
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value || '';
+      editorRef.current.innerHTML = DOMPurify.sanitize(value || '', {
+        ALLOWED_TAGS: ['p','b','i','ul','ol','li','strong','em','br','span','a','s','u','div'],
+        ALLOWED_ATTR: ['href','class','target','data-user-id','contenteditable'],
+      });
       setIsEmpty(!value);
     }
   }, [value]);

@@ -7,6 +7,12 @@ import { Paperclip, X, AtSign, Send, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DEMO_USERS } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
+import DOMPurify from 'dompurify';
+
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ['p','b','i','ul','ol','li','strong','em','br','span','a','s','u','div'],
+  ALLOWED_ATTR: ['href','class','target','data-user-id','contenteditable'],
+};
 
 export interface RichAttachment {
   name: string;
@@ -218,7 +224,7 @@ export function RichContent({
       {html && (
         <div
           className="prose prose-sm max-w-none text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold [&_.mention]:bg-primary/10 [&_.mention]:text-primary [&_.mention]:px-1 [&_.mention]:rounded [&_.mention]:font-medium"
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html, SANITIZE_CONFIG) }}
         />
       )}
       {attachments && attachments.length > 0 && (

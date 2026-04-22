@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import { getQuotations, getSalesOrders } from '@/lib/data/sales/storage';
+import DOMPurify from 'dompurify';
 
 export default function CRMContactDetail() {
   const { id } = useParams();
@@ -261,7 +262,7 @@ export default function CRMContactDetail() {
                       <p className="text-sm font-medium mb-1">Description</p>
                       <div
                         className="text-sm text-muted-foreground prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_strong]:font-semibold [&_b]:font-semibold"
-                        dangerouslySetInnerHTML={{ __html: contact.notes }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contact.notes, { ALLOWED_TAGS: ['p','b','i','ul','ol','li','strong','em','br','span','a','s','u','div'], ALLOWED_ATTR: ['href','class','target'] }) }}
                       />
                     </div>
                   </>
