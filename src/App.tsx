@@ -46,6 +46,8 @@ import SubscriptionForm from "@/pages/sales/SubscriptionForm";
 import PricelistsPage from "@/pages/sales/PricelistsPage";
 import PricelistForm from "@/pages/sales/PricelistForm";
 import SalesReports from "@/pages/sales/SalesReports";
+import CustomerPortal from "@/pages/sales/CustomerPortal";
+import CustomerPortalQuotation from "@/pages/sales/CustomerPortalQuotation";
 
 // Manufacturing pages
 import ManufacturingOverview from "@/pages/manufacturing/ManufacturingOverview";
@@ -155,6 +157,10 @@ const App = () => (
             <Route path="/sales/customers" element={<ProtectedRoute><CustomersList /></ProtectedRoute>} />
             <Route path="/sales/customers/new" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
             <Route path="/sales/customers/:id/edit" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
+
+            {/* Customer Portal (no auth required) */}
+            <Route path="/portal" element={<CustomerPortal />} />
+            <Route path="/portal/quotation/:id" element={<CustomerPortalQuotation />} />
 
             {/* Settings module */}
             <Route path="/settings" element={<ProtectedRoute><GeneralSettings /></ProtectedRoute>} />
