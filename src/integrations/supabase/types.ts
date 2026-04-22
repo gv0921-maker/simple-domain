@@ -625,12 +625,43 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_type:
@@ -640,6 +671,7 @@ export type Database = {
         | "task"
         | "note"
         | "follow_up"
+      app_role: "admin" | "sales_manager" | "sales_rep" | "readonly"
       contact_status: "active" | "archived"
       contact_type: "individual" | "company"
       lead_priority: "low" | "medium" | "high" | "urgent"
@@ -790,6 +822,7 @@ export const Constants = {
   public: {
     Enums: {
       activity_type: ["call", "email", "meeting", "task", "note", "follow_up"],
+      app_role: ["admin", "sales_manager", "sales_rep", "readonly"],
       contact_status: ["active", "archived"],
       contact_type: ["individual", "company"],
       lead_priority: ["low", "medium", "high", "urgent"],
