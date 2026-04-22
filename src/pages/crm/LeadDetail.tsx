@@ -151,6 +151,11 @@ export default function LeadDetail() {
             onStepClick={canEditLeads ? handleStatusChange : undefined}
           />
         )}
+        {lead.status === 'new' && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Advance this lead to <strong>Contacted</strong> to unlock conversion to an opportunity.
+          </p>
+        )}
         {isTerminal && (
           <Badge className={cn(
             'text-sm',
