@@ -519,6 +519,68 @@ export default function SalesReports() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="salesperson">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Sales by Salesperson</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const spData = Object.entries(
+                      orders.filter(o => o.status !== 'cancelled').reduce<Record<string, { name: string; revenue: number; orders: number }>>((acc, o) => {
+                        const sp = o.salespersonName || 'Unassigned';
+                        if (!acc[sp]) acc[sp] = { name: sp, revenue: 0, orders: 0 };
+                        acc[sp].revenue += o.total;
+                        acc[sp].orders += 1;
+                        return acc;
+                      }, {})
+                    ).sort((a, b) => b[1].revenue - a[1].revenue);
+                    const csv = 'Salesperson,Revenue,Orders\n' + spData.map(([, d]) => `${d.name},${d.revenue},${d.orders}`).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = 'salesperson_report.csv'; a.click();
+                    URL.revokeObjectURL(url);
+                    toast({ title: 'Report exported' });
+                  }}>
+                    <Download className="h-4 w-4 mr-2" /> Export CSV
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Salesperson</TableHead>
+                      <TableHead className="text-right">Orders</TableHead>
+                      <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Avg Deal</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Object.entries(
+                      orders.filter(o => o.status !== 'cancelled').reduce<Record<string, { name: string; revenue: number; orders: number }>>((acc, o) => {
+                        const sp = o.salespersonName || 'Unassigned';
+                        if (!acc[sp]) acc[sp] = { name: sp, revenue: 0, orders: 0 };
+                        acc[sp].revenue += o.total;
+                        acc[sp].orders += 1;
+                        return acc;
+                      }, {})
+                    ).sort((a, b) => b[1].revenue - a[1].revenue).map(([key, data], i) => (
+                      <TableRow key={key}>
+                        <TableCell><Badge variant={i < 3 ? 'default' : 'outline'}>{i + 1}</Badge></TableCell>
+                        <TableCell className="font-medium">{data.name}</TableCell>
+                        <TableCell className="text-right">{data.orders}</TableCell>
+                        <TableCell className="text-right font-semibold">₹{data.revenue.toLocaleString('en-IN')}</TableCell>
+                        <TableCell className="text-right">₹{Math.round(data.revenue / data.orders).toLocaleString('en-IN')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>
