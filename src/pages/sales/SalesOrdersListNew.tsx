@@ -172,6 +172,7 @@ export default function SalesOrdersListNew() {
             <Plus className="h-4 w-4" />
             New Order
           </Button>
+          <SalesImportExport type="orders" onImportComplete={() => setOrders(getSalesOrders())} />
         </div>
 
         {/* Stats */}
