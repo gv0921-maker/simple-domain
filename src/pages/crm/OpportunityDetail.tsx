@@ -34,7 +34,6 @@ import {
   Clock,
   Send,
   Search,
-  Paperclip,
   Maximize2,
   Smile,
   Settings,
@@ -99,6 +98,8 @@ export default function OpportunityDetail() {
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
   const [formTab, setFormTab] = useState('notes');
   const [emailOpen, setEmailOpen] = useState(false);
+  const [chatterSearch, setChatterSearch] = useState('');
+  const [showChatterSearch, setShowChatterSearch] = useState(false);
 
   const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id]);
   const notes = useMemo(() => id ? getNotes('opportunity', id) : [], [id]);
@@ -642,12 +643,10 @@ export default function OpportunityDetail() {
                 Activity
               </Button>
               <div className="flex-1" />
-              <button className="text-muted-foreground hover:text-foreground">
+              <button className="text-muted-foreground hover:text-foreground" onClick={() => { setShowChatterSearch(s => !s); setChatterSearch(''); }}>
                 <Search className="h-4 w-4" />
               </button>
-              <button className="text-muted-foreground hover:text-foreground">
-                <Paperclip className="h-4 w-4" />
-              </button>
+
               <button className="relative text-muted-foreground hover:text-foreground">
                 <span className="text-[10px] font-bold">👤</span>
                 <span className="absolute -top-1 -right-1 bg-[#875A7B] text-white text-[8px] rounded-full h-3 w-3 flex items-center justify-center">1</span>
@@ -671,6 +670,19 @@ export default function OpportunityDetail() {
               </div>
             )}
 
+            {/* Chatter search */}
+            {showChatterSearch && (
+              <div className="px-3 py-2 border-b border-border">
+                <Input
+                  autoFocus
+                  placeholder="Search messages..."
+                  className="h-7 text-xs"
+                  value={chatterSearch}
+                  onChange={(e) => setChatterSearch(e.target.value)}
+                />
+              </div>
+            )}
+
             {/* Timeline */}
             <div className="flex-1 overflow-y-auto px-3 py-3">
               {/* Date separator */}
@@ -682,6 +694,13 @@ export default function OpportunityDetail() {
 
               {[...notes, ...activities.filter(a => a.completed)]
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .filter((item) => {
+                  if (!chatterSearch.trim()) return true;
+                  const q = chatterSearch.toLowerCase();
+                  const text = 'content' in item ? (item as Note).content : ((item as any).description || (item as Activity).subject);
+                  const userName = (item as any).userName || '';
+                  return text?.toLowerCase().includes(q) || userName.toLowerCase().includes(q);
+                })
                 .slice(0, 20)
                 .map((item) => {
                   const isNoteItem = 'content' in item;
