@@ -330,6 +330,7 @@ export default function SalesReports() {
             <TabsTrigger value="quotations">Quotations</TabsTrigger>
             <TabsTrigger value="customers">Top Customers</TabsTrigger>
             <TabsTrigger value="forecasts">Forecasts</TabsTrigger>
+            <TabsTrigger value="salesperson">By Salesperson</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
