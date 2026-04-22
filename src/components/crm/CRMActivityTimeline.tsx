@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Activity Timeline Component for CRM entities
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';

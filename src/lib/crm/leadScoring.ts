@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Rule-based lead scoring engine
 import { getItem, setItem } from '@/lib/storage';
 import type { Lead, LeadSource, LeadPriority } from '@/lib/data/crm';

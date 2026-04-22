@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Contact/Company Form Dialog
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';

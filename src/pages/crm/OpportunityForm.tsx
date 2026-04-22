@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';

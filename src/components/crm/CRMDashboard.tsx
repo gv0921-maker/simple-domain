@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Dashboard with Analytics
 import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';

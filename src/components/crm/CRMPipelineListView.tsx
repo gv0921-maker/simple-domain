@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Odoo-style List View for Pipeline
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

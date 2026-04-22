@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Pipelines management (multi-pipeline + drag-and-drop stage editor)
 import { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';

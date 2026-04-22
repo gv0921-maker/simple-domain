@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Contacts List Page
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';

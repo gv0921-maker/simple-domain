@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Odoo-style Opportunity Detail Form — exact replica from reference screenshots
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';

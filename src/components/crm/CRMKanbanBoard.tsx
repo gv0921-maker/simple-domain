@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Odoo-style CRM Kanban Board — pixel-perfect replica from reference screenshots
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';

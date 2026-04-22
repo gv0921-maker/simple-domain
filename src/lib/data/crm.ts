@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Data Management - Contacts, Companies, Leads, Opportunities, Activities, Pipelines
 
 import { getItem, setItem } from '../storage';

@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // ICS calendar file generator for CRM meeting activities
 import type { Activity } from '@/lib/data/crm';
 
