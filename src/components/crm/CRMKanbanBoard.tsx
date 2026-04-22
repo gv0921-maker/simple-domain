@@ -147,8 +147,46 @@ function KanbanCard({
   userId?: string;
 }) {
   const navigate = useNavigate();
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
+  const [activityData, setActivityData] = useState({ type: 'task' as 'call' | 'email' | 'meeting' | 'task' | 'follow_up', dueDate: '', note: '' });
+  const [callData, setCallData] = useState({ duration: '', notes: '', outcome: '' });
+
+  const handleSchedule = () => {
+    if (!activityData.note.trim()) return;
+    saveActivity({
+      type: activityData.type,
+      subject: activityData.note.slice(0, 80),
+      description: activityData.note,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: userId || '1',
+      userName: opportunity.assignedTo || 'User',
+      dueDate: activityData.dueDate || undefined,
+      completed: false,
+    } as any);
+    setScheduleOpen(false);
+    setActivityData({ type: 'task', dueDate: '', note: '' });
+  };
+
+  const handleLogCall = () => {
+    saveActivity({
+      type: 'call',
+      subject: `Call: ${callData.outcome || opportunity.name}`,
+      description: `Duration: ${callData.duration || 'N/A'}\nNotes: ${callData.notes}\nOutcome: ${callData.outcome}`,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: userId || '1',
+      userName: opportunity.assignedTo || 'User',
+      completed: true,
+      completedAt: new Date().toISOString(),
+    } as any);
+    setCallOpen(false);
+    setCallData({ duration: '', notes: '', outcome: '' });
+  };
 
   return (
+    <>
     <div
       ref={cardRef}
       tabIndex={0}
@@ -203,7 +241,7 @@ function KanbanCard({
           <div className="flex items-center gap-1 ml-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="text-muted-foreground/40 hover:text-[#00A09D] transition-colors" onClick={(e) => e.stopPropagation()}>
+                <button className="text-muted-foreground/40 hover:text-[#00A09D] transition-colors" onClick={(e) => { e.stopPropagation(); setScheduleOpen(true); }}>
                   <Clock className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
@@ -211,7 +249,7 @@ function KanbanCard({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="text-muted-foreground/40 hover:text-[#00A09D] transition-colors" onClick={(e) => e.stopPropagation()}>
+                <button className="text-muted-foreground/40 hover:text-[#00A09D] transition-colors" onClick={(e) => { e.stopPropagation(); setCallOpen(true); }}>
                   <Phone className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
@@ -223,6 +261,70 @@ function KanbanCard({
         <ContactAvatar name={opportunity.assignedTo || opportunity.companyName || 'U'} />
       </div>
     </div>
+
+    {/* Schedule Activity Dialog */}
+    <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+      <DialogContent className="sm:max-w-[400px]" onClick={(e) => e.stopPropagation()}>
+        <DialogHeader>
+          <DialogTitle>Schedule Activity — {opportunity.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-semibold">Type</Label>
+            <SelectUI value={activityData.type} onValueChange={(v) => setActivityData(d => ({ ...d, type: v as any }))}>
+              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="task">Task</SelectItem>
+                <SelectItem value="call">Call</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="meeting">Meeting</SelectItem>
+                <SelectItem value="follow_up">Follow Up</SelectItem>
+              </SelectContent>
+            </SelectUI>
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-semibold">Due Date</Label>
+            <Input type="date" className="h-8 text-sm" value={activityData.dueDate} onChange={(e) => setActivityData(d => ({ ...d, dueDate: e.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-semibold">Note</Label>
+            <Textarea className="min-h-[80px] text-sm" value={activityData.note} onChange={(e) => setActivityData(d => ({ ...d, note: e.target.value }))} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setScheduleOpen(false)}>Cancel</Button>
+          <Button size="sm" onClick={handleSchedule}>Schedule</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Log Call Dialog */}
+    <Dialog open={callOpen} onOpenChange={setCallOpen}>
+      <DialogContent className="sm:max-w-[400px]" onClick={(e) => e.stopPropagation()}>
+        <DialogHeader>
+          <DialogTitle>Log Call — {opportunity.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-semibold">Duration</Label>
+            <Input className="h-8 text-sm" placeholder="e.g. 15 min" value={callData.duration} onChange={(e) => setCallData(d => ({ ...d, duration: e.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-semibold">Outcome</Label>
+            <Input className="h-8 text-sm" placeholder="e.g. Interested, Follow-up needed" value={callData.outcome} onChange={(e) => setCallData(d => ({ ...d, outcome: e.target.value }))} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="text-xs font-semibold">Notes</Label>
+            <Textarea className="min-h-[80px] text-sm" value={callData.notes} onChange={(e) => setCallData(d => ({ ...d, notes: e.target.value }))} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setCallOpen(false)}>Cancel</Button>
+          <Button size="sm" onClick={handleLogCall}>Log Call</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
@@ -598,7 +700,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
               New
             </Button>
             <span className="text-sm font-semibold text-foreground">Pipeline</span>
-            <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer hover:text-foreground" />
+            <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => navigate('/settings/crm-pipelines')} />
           </div>
 
           <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
@@ -614,15 +716,16 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => id && onViewChange?.(id)}
+                    disabled={!id}
                     className={cn(
                       'h-8 w-8 flex items-center justify-center rounded transition-colors',
-                      id && view === id ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                      id && view === id ? 'bg-muted text-foreground' : !id ? 'text-muted-foreground/30 cursor-not-allowed' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                     )}
                   >
                     <Icon className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">{title}</TooltipContent>
+                <TooltipContent side="bottom" className="text-xs">{!id ? 'Coming soon' : title}</TooltipContent>
               </Tooltip>
             ))}
           </div>
