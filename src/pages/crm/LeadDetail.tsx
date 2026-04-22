@@ -78,6 +78,12 @@ export default function LeadDetail() {
     if (opp) {
       toast({ title: 'Lead converted to opportunity' });
       navigate(`/crm/opportunities/${opp.id}`);
+    } else {
+      toast({
+        title: 'Conversion failed',
+        description: 'Could not convert lead. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -127,7 +133,7 @@ export default function LeadDetail() {
               <Button variant="outline" size="sm" onClick={() => setEmailOpen(true)}>
                 <Mail className="h-4 w-4 mr-1" /> Email
               </Button>
-              {lead.status === 'qualified' && canConvertLeads && (
+              {!['new', 'unqualified', 'converted', 'lost'].includes(lead.status) && canConvertLeads && (
                 <Button size="sm" onClick={handleConvert}>
                   <ArrowRight className="h-4 w-4 mr-1" /> Convert to Opportunity
                 </Button>
@@ -144,6 +150,11 @@ export default function LeadDetail() {
             steps={buildWorkflow(lead.status)}
             onStepClick={canEditLeads ? handleStatusChange : undefined}
           />
+        )}
+        {lead.status === 'new' && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Advance this lead to <strong>Contacted</strong> to unlock conversion to an opportunity.
+          </p>
         )}
         {isTerminal && (
           <Badge className={cn(

@@ -43,6 +43,7 @@ export default function LeadForm() {
     status: 'new' as LeadStatus,
     assignedTo: '',
     expectedRevenue: 0,
+    probability: 20,
     notes: '',
   });
 
@@ -60,6 +61,7 @@ export default function LeadForm() {
           status: lead.status,
           assignedTo: lead.assignedTo || '',
           expectedRevenue: lead.expectedRevenue,
+      probability: lead.probability ?? 20,
           notes: lead.notes || '',
         });
       } else {
@@ -86,6 +88,7 @@ export default function LeadForm() {
       status: formData.status,
       assignedTo: formData.assignedTo || undefined,
       expectedRevenue: formData.expectedRevenue,
+      probability: formData.probability,
       notes: formData.notes || undefined,
     });
 
@@ -95,7 +98,7 @@ export default function LeadForm() {
       setFormData({
         title: '', contactName: '', email: '', phone: '',
         companyName: '', source: 'manual', status: 'new',
-        assignedTo: '', expectedRevenue: 0, notes: '',
+        assignedTo: '', expectedRevenue: 0, probability: 20, notes: '',
       });
     } else {
       navigate(`/crm/leads/${saved.id}`);
@@ -217,6 +220,23 @@ export default function LeadForm() {
                     onChange={(e) => update('expectedRevenue', parseFloat(e.target.value) || 0)}
                     className="pl-6"
                   />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Probability</Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.probability}
+                    onChange={(e) => update('probability', Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                    className="pr-7"
+                  />
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                 </div>
               </div>
             </div>
