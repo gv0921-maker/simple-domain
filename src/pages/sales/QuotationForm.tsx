@@ -111,6 +111,7 @@ export default function QuotationForm() {
   const [formData, setFormData] = useState<Partial<Quotation>>({
     customerId: '',
     customerName: '',
+    opportunityId: urlOpportunityId || undefined,
     quotationDate: new Date().toISOString().split('T')[0],
     validUntil: addDays(new Date(), 30).toISOString().split('T')[0],
     currency: 'INR',
