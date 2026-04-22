@@ -113,6 +113,9 @@ export default function CRMContactDetail() {
           <Button variant="outline" size="sm" onClick={() => setEmailOpen(true)}>
             <Mail className="h-4 w-4 mr-1" /> Email
           </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/sales/quotations/new?customerId=${id}`)}>
+            <FileText className="h-4 w-4 mr-1" /> New Quotation
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
