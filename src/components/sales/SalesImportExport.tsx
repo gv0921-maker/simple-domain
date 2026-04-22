@@ -85,6 +85,8 @@ export function SalesImportExport({ type, onImportComplete }: SalesImportExportP
             createdBy: 'Import',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            currentVersion: 1,
+            versions: [],
           });
         } else {
           saveSalesOrder({
