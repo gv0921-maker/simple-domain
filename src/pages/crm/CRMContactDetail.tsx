@@ -442,7 +442,7 @@ export default function CRMContactDetail() {
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Create Sales Order
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate('/invoicing')}>
+                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate('/accounting/invoices')}>
                   <FileText className="h-4 w-4 mr-2" />
                   View Invoices
                 </Button>
