@@ -1,6 +1,14 @@
 // TODO: Replace localStorage with Supabase queries
 // Odoo-style CRM Kanban Board — pixel-perfect replica from reference screenshots
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '''@/components/ui/dialog''';
+import { Label } from '''@/components/ui/label''';
+import { Textarea } from '''@/components/ui/textarea''';
+import {
+  Select as SelectUI, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '''@/components/ui/select''';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +56,7 @@ import {
   type Pipeline,
   type PipelineStage,
   type OpportunityStage,
+  saveActivity,
 } from '@/lib/data/crm';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
