@@ -342,6 +342,37 @@ export default function CRMContactDetail() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Sales History */}
+            {(linkedQuotations.length > 0 || linkedOrders.length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Sales History</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {linkedQuotations.map(q => (
+                    <div key={q.id} className="flex items-center justify-between p-2 border rounded-md text-sm cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/sales/quotations/${q.id}`)}>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-medium">{q.reference}</span>
+                        <Badge variant="outline" className="text-[10px] capitalize">{q.status}</Badge>
+                      </div>
+                      <span className="font-semibold">₹{q.total.toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                  {linkedOrders.map(o => (
+                    <div key={o.id} className="flex items-center justify-between p-2 border rounded-md text-sm cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/sales/orders/${o.id}`)}>
+                      <div className="flex items-center gap-2">
+                        <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-medium">{o.reference}</span>
+                        <Badge variant="outline" className="text-[10px] capitalize">{o.status}</Badge>
+                      </div>
+                      <span className="font-semibold">₹{o.total.toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
