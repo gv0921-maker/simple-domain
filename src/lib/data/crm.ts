@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Data Management - Contacts, Companies, Leads, Opportunities, Activities, Pipelines
 
 import { getItem, setItem } from '../storage';
@@ -72,6 +73,11 @@ export interface Contact {
   score: number;
   parentContactId?: string;
   customFields?: CustomField[];
+  salesperson?: string;
+  salesTeam?: string;
+  paymentTerms?: string;
+  priceList?: string;
+  purchasePaymentTerms?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -58,6 +59,11 @@ export default function ContactForm() {
     notes: '',
     tags: [] as string[],
     parentContactId: '' as string,
+    salesperson: '',
+    salesTeam: '',
+    paymentTerms: '',
+    priceList: '',
+    purchasePaymentTerms: '',
   });
   const [emails, setEmails] = useState<EmailEntry[]>([{ email: '', type: 'Work' }]);
   const [phones, setPhones] = useState<PhoneEntry[]>([{ phone: '', type: 'Work' }]);
@@ -110,6 +116,11 @@ export default function ContactForm() {
           notes: contact.notes || '',
           tags: contact.tags || [],
           parentContactId: contact.parentContactId || '',
+          salesperson: contact.salesperson || '',
+          salesTeam: contact.salesTeam || '',
+          paymentTerms: contact.paymentTerms || '',
+          priceList: contact.priceList || '',
+          purchasePaymentTerms: contact.purchasePaymentTerms || '',
         });
         // Emails
         const seedEmails: EmailEntry[] = [];
@@ -200,6 +211,11 @@ export default function ContactForm() {
       addresses,
       parentContactId: formData.parentContactId || undefined,
       customFields: customFields.filter(f => f.key.trim()),
+      salesperson: formData.salesperson || undefined,
+      salesTeam: formData.salesTeam || undefined,
+      paymentTerms: formData.paymentTerms || undefined,
+      priceList: formData.priceList || undefined,
+      purchasePaymentTerms: formData.purchasePaymentTerms || undefined,
     });
 
     toast({ title: isEdit ? 'Contact updated' : 'Contact created' });
@@ -209,6 +225,7 @@ export default function ContactForm() {
         type: 'individual', firstName: '', lastName: '',
         companyName: '', jobTitle: '', website: '', gstin: '',
         notes: '', tags: [], parentContactId: '',
+        salesperson: '', salesTeam: '', paymentTerms: '', priceList: '', purchasePaymentTerms: '',
       });
       setEmails([{ email: '', type: 'Work' }]);
       setPhones([{ phone: '', type: 'Work' }]);
@@ -595,7 +612,51 @@ export default function ContactForm() {
             </TabsContent>
 
             <TabsContent value="sales" className="pt-4">
-              <p className="text-sm text-muted-foreground">Sales & Purchase details will appear here.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3">
+                <div className="flex items-center gap-3">
+                  <Label className="w-32 text-sm font-semibold shrink-0">Salesperson</Label>
+                  <Input value={formData.salesperson} onChange={(e) => setFormData(p => ({ ...p, salesperson: e.target.value }))}
+                    className="h-8 border-0 border-b border-border rounded-none px-1 text-sm focus-visible:ring-0 bg-transparent" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label className="w-32 text-sm font-semibold shrink-0">Sales Team</Label>
+                  <Input value={formData.salesTeam} onChange={(e) => setFormData(p => ({ ...p, salesTeam: e.target.value }))}
+                    className="h-8 border-0 border-b border-border rounded-none px-1 text-sm focus-visible:ring-0 bg-transparent" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label className="w-32 text-sm font-semibold shrink-0">Payment Terms</Label>
+                  <Select value={formData.paymentTerms || '_none'} onValueChange={(v) => setFormData(p => ({ ...p, paymentTerms: v === '_none' ? '' : v }))}>
+                    <SelectTrigger className="h-8 border-0 border-b border-border rounded-none px-1 text-sm focus-visible:ring-0 bg-transparent"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">—</SelectItem>
+                      <SelectItem value="immediate">Immediate Payment</SelectItem>
+                      <SelectItem value="net15">Net 15</SelectItem>
+                      <SelectItem value="net30">Net 30</SelectItem>
+                      <SelectItem value="net45">Net 45</SelectItem>
+                      <SelectItem value="net60">Net 60</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label className="w-32 text-sm font-semibold shrink-0">Price List</Label>
+                  <Input value={formData.priceList} onChange={(e) => setFormData(p => ({ ...p, priceList: e.target.value }))}
+                    className="h-8 border-0 border-b border-border rounded-none px-1 text-sm focus-visible:ring-0 bg-transparent" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label className="w-32 text-sm font-semibold shrink-0">Purchase Terms</Label>
+                  <Select value={formData.purchasePaymentTerms || '_none'} onValueChange={(v) => setFormData(p => ({ ...p, purchasePaymentTerms: v === '_none' ? '' : v }))}>
+                    <SelectTrigger className="h-8 border-0 border-b border-border rounded-none px-1 text-sm focus-visible:ring-0 bg-transparent"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">—</SelectItem>
+                      <SelectItem value="immediate">Immediate Payment</SelectItem>
+                      <SelectItem value="net15">Net 15</SelectItem>
+                      <SelectItem value="net30">Net 30</SelectItem>
+                      <SelectItem value="net45">Net 45</SelectItem>
+                      <SelectItem value="net60">Net 60</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

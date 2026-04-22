@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Odoo-style Opportunity Detail Form — exact replica from reference screenshots
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -33,7 +34,6 @@ import {
   Clock,
   Send,
   Search,
-  Paperclip,
   Maximize2,
   Smile,
   Settings,
@@ -46,6 +46,7 @@ import {
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import {
   getOpportunity,
+  getContact,
   getOpportunities,
   saveOpportunity,
   updateOpportunityStage,
@@ -98,8 +99,12 @@ export default function OpportunityDetail() {
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
   const [formTab, setFormTab] = useState('notes');
   const [emailOpen, setEmailOpen] = useState(false);
+  const [chatterSearch, setChatterSearch] = useState('');
+  const [showChatterSearch, setShowChatterSearch] = useState(false);
+  const [activityForm, setActivityForm] = useState({ type: 'task' as 'call' | 'email' | 'meeting' | 'task' | 'follow_up', dueDate: '', assignedTo: '', summary: '' });
 
   const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id]);
+  const linkedContact = useMemo(() => opportunity?.contactId ? getContact(opportunity.contactId) : undefined, [opportunity?.contactId]);
   const notes = useMemo(() => id ? getNotes('opportunity', id) : [], [id]);
 
   // Navigation between records
@@ -187,6 +192,23 @@ export default function OpportunityDetail() {
     toast({ title: chatterTab === 'note' ? 'Note logged' : 'Message sent' });
   };
 
+  const handleActivitySubmit = () => {
+    if (!activityForm.summary.trim()) return;
+    saveActivity({
+      type: activityForm.type,
+      subject: activityForm.summary,
+      description: activityForm.summary,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: user?.id || '1',
+      userName: user?.name || 'User',
+      dueDate: activityForm.dueDate || undefined,
+      completed: false,
+    } as any);
+    setActivityForm({ type: 'task', dueDate: '', assignedTo: '', summary: '' });
+    toast({ title: 'Activity scheduled' });
+  };
+
   const navigateRecord = (dir: 'prev' | 'next') => {
     const newIndex = dir === 'prev' ? currentIndex - 1 : currentIndex + 1;
     if (newIndex >= 0 && newIndex < totalRecords) {
@@ -210,7 +232,7 @@ export default function OpportunityDetail() {
               <Button
                 size="sm"
                 className="h-8 text-xs font-semibold bg-[#875A7B] hover:bg-[#6e4a64] text-white"
-                onClick={() => navigate('/crm')}
+                onClick={() => navigate('/crm/opportunities/new')}
               >
                 New
               </Button>
@@ -475,7 +497,7 @@ export default function OpportunityDetail() {
                 </TabsContent>
 
                 <TabsContent value="contacts" className="mt-4">
-                  {/* Company Information + Contact Information — Odoo Extra Info layout */}
+                  {/* Company Information + Contact Information — real data from linked contact */}
                   <div className="grid grid-cols-2 gap-x-12 gap-y-6">
                     <div>
                       <h3 className="text-sm font-bold text-[#875A7B] uppercase tracking-wide mb-3 border-b border-border pb-1">
@@ -483,19 +505,23 @@ export default function OpportunityDetail() {
                       </h3>
                       <div className="space-y-2">
                         <OdooField label="Company Name" labelHint>
-                          {currentData.companyName || '—'}
+                          {currentData.companyName || linkedContact?.companyName || '—'}
                         </OdooField>
                         <OdooField label="Address">
-                          <div className="text-sm text-muted-foreground space-y-0.5">
-                            <div>Street...</div>
-                            <div>Street 2...</div>
-                            <div className="flex gap-4">
-                              <span>City</span>
-                              <span>ZIP</span>
-                              <span>State</span>
+                          {linkedContact?.addresses && linkedContact.addresses.length > 0 ? (
+                            <div className="text-sm text-muted-foreground space-y-0.5">
+                              {linkedContact.addresses[0].street && <div>{linkedContact.addresses[0].street}</div>}
+                              {linkedContact.addresses[0].street2 && <div>{linkedContact.addresses[0].street2}</div>}
+                              <div className="flex gap-4">
+                                {linkedContact.addresses[0].city && <span>{linkedContact.addresses[0].city}</span>}
+                                {linkedContact.addresses[0].postalCode && <span>{linkedContact.addresses[0].postalCode}</span>}
+                                {linkedContact.addresses[0].state && <span>{linkedContact.addresses[0].state}</span>}
+                              </div>
+                              {linkedContact.addresses[0].country && <div>{linkedContact.addresses[0].country}</div>}
                             </div>
-                            <div>Country</div>
-                          </div>
+                          ) : (
+                            <span className="text-muted-foreground/50 italic">No address on file</span>
+                          )}
                         </OdooField>
                       </div>
                     </div>
@@ -504,17 +530,36 @@ export default function OpportunityDetail() {
                       <h3 className="text-sm font-bold text-[#875A7B] uppercase tracking-wide mb-3 border-b border-border pb-1">
                         Contact Information
                       </h3>
-                      <div className="space-y-2">
-                        <OdooField label="Contact Name">
-                          {currentData.contactName || '—'}
-                        </OdooField>
-                        <OdooField label="Job Position">
-                          —
-                        </OdooField>
-                        <OdooField label="Website" labelHint>
-                          <span className="text-muted-foreground">e.g. https://www.odoo.com</span>
-                        </OdooField>
-                      </div>
+                      {linkedContact ? (
+                        <div className="space-y-2">
+                          <OdooField label="Contact Name">
+                            {linkedContact.firstName} {linkedContact.lastName}
+                          </OdooField>
+                          <OdooField label="Email">
+                            {linkedContact.email ? (
+                              <a href={`mailto:${linkedContact.email}`} className="text-primary hover:underline">{linkedContact.email}</a>
+                            ) : '—'}
+                          </OdooField>
+                          <OdooField label="Phone">
+                            {linkedContact.phone || '—'}
+                          </OdooField>
+                          <OdooField label="Job Position">
+                            {linkedContact.jobTitle || '—'}
+                          </OdooField>
+                          <OdooField label="Website" labelHint>
+                            {linkedContact.website ? (
+                              <a href={linkedContact.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{linkedContact.website}</a>
+                            ) : '—'}
+                          </OdooField>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <OdooField label="Contact Name">
+                            {currentData.contactName || '—'}
+                          </OdooField>
+                          <p className="text-xs text-muted-foreground/50 italic mt-2">No linked contact record</p>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -641,16 +686,21 @@ export default function OpportunityDetail() {
                 Activity
               </Button>
               <div className="flex-1" />
-              <button className="text-muted-foreground hover:text-foreground">
+              <button className="text-muted-foreground hover:text-foreground" onClick={() => { setShowChatterSearch(s => !s); setChatterSearch(''); }}>
                 <Search className="h-4 w-4" />
               </button>
-              <button className="text-muted-foreground hover:text-foreground">
-                <Paperclip className="h-4 w-4" />
-              </button>
-              <button className="relative text-muted-foreground hover:text-foreground">
-                <span className="text-[10px] font-bold">👤</span>
-                <span className="absolute -top-1 -right-1 bg-[#875A7B] text-white text-[8px] rounded-full h-3 w-3 flex items-center justify-center">1</span>
-              </button>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="relative text-muted-foreground inline-flex items-center">
+                    <span className="text-[10px] font-bold">👤</span>
+                    <span className="absolute -top-1 -right-1 bg-[#875A7B] text-white text-[8px] rounded-full h-3 w-3 flex items-center justify-center">1</span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Followers: {opportunity.assignedTo || user?.name || 'You'}
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Compose area */}
@@ -670,6 +720,53 @@ export default function OpportunityDetail() {
               </div>
             )}
 
+            {/* Activity compose area */}
+            {chatterTab === 'activity' && (
+              <div className="p-3 border-b border-border space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase">Type</label>
+                    <Select value={activityForm.type} onValueChange={(v) => setActivityForm(f => ({ ...f, type: v as any }))}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="task">Task</SelectItem>
+                        <SelectItem value="call">Call</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="meeting">Meeting</SelectItem>
+                        <SelectItem value="follow_up">Follow Up</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase">Due Date</label>
+                    <Input type="date" className="h-7 text-xs" value={activityForm.dueDate} onChange={(e) => setActivityForm(f => ({ ...f, dueDate: e.target.value }))} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase">Assigned To</label>
+                  <Input className="h-7 text-xs" placeholder="e.g. Sales Rep" value={activityForm.assignedTo} onChange={(e) => setActivityForm(f => ({ ...f, assignedTo: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase">Summary</label>
+                  <Textarea className="min-h-[60px] text-xs" placeholder="Describe the activity..." value={activityForm.summary} onChange={(e) => setActivityForm(f => ({ ...f, summary: e.target.value }))} />
+                </div>
+                <Button size="sm" className="h-7 text-xs" onClick={handleActivitySubmit}>Schedule</Button>
+              </div>
+            )}
+
+            {/* Chatter search */}
+            {showChatterSearch && (
+              <div className="px-3 py-2 border-b border-border">
+                <Input
+                  autoFocus
+                  placeholder="Search messages..."
+                  className="h-7 text-xs"
+                  value={chatterSearch}
+                  onChange={(e) => setChatterSearch(e.target.value)}
+                />
+              </div>
+            )}
+
             {/* Timeline */}
             <div className="flex-1 overflow-y-auto px-3 py-3">
               {/* Date separator */}
@@ -681,6 +778,13 @@ export default function OpportunityDetail() {
 
               {[...notes, ...activities.filter(a => a.completed)]
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .filter((item) => {
+                  if (!chatterSearch.trim()) return true;
+                  const q = chatterSearch.toLowerCase();
+                  const text = 'content' in item ? (item as Note).content : ((item as any).description || (item as Activity).subject);
+                  const userName = (item as any).userName || '';
+                  return text?.toLowerCase().includes(q) || userName.toLowerCase().includes(q);
+                })
                 .slice(0, 20)
                 .map((item) => {
                   const isNoteItem = 'content' in item;

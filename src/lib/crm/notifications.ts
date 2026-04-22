@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // In-app notification system for CRM — localStorage based
 import { getItem, setItem } from '@/lib/storage';
 import { getActivities, type Activity } from '@/lib/data/crm';

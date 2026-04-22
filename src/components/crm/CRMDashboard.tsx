@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Dashboard with Analytics
 import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -207,7 +208,7 @@ export function CRMDashboard() {
           <p className="text-muted-foreground">Overview of your customer relationships and sales pipeline</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('/crm')}>
+          <Button variant="outline" onClick={() => navigate('/crm/leads/new')}>
             <UserPlus className="h-4 w-4 mr-2" />
             New Lead
           </Button>
@@ -496,7 +497,7 @@ export function CRMDashboard() {
                   <div
                     key={lead.id}
                     className="p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
-                    onClick={() => navigate(`/crm`)}
+                    onClick={() => navigate(`/crm/leads/${lead.id}`)}
                   >
                     <p className="font-medium text-sm truncate">{lead.title}</p>
                     <p className="text-xs text-muted-foreground">{lead.contactName}</p>

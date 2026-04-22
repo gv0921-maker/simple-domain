@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Odoo-style Search Dropdown with Filters, Group By, and Favorites
 import { useState, useCallback, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';

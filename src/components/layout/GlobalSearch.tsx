@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // Global Search Component — searches across all CRM and app modules
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

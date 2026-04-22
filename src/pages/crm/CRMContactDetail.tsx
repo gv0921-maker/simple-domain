@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -335,7 +336,7 @@ export default function CRMContactDetail() {
                       <div
                         key={lead.id}
                         className="flex items-center justify-between p-3 rounded-md border cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate('/crm')}
+                        onClick={() => navigate(`/crm/leads/${lead.id}`)}
                       >
                         <div>
                           <p className="font-medium text-sm">{lead.title}</p>
@@ -442,7 +443,7 @@ export default function CRMContactDetail() {
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Create Sales Order
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate('/invoicing')}>
+                <Button variant="outline" className="w-full justify-start text-xs" onClick={() => navigate('/accounting/invoices')}>
                   <FileText className="h-4 w-4 mr-2" />
                   View Invoices
                 </Button>

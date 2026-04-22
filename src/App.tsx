@@ -69,6 +69,7 @@ import OpportunityForm from "@/pages/crm/OpportunityForm";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 import CRMLeadsList from "@/pages/crm/CRMLeadsList";
 import LeadDetail from "@/pages/crm/LeadDetail";
+import LeadForm from "@/pages/crm/LeadForm";
 
 // Accounting pages
 import AccountingOverview from "@/pages/accounting/AccountingOverview";
@@ -182,6 +183,7 @@ const App = () => (
             <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
             {/* CRM module */}
+            <Route path="/crm/dashboard" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
             <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/opportunities/new" element={<ProtectedRoute><OpportunityForm /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
@@ -190,6 +192,8 @@ const App = () => (
             <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id/edit" element={<ProtectedRoute><ContactForm /></ProtectedRoute>} />
             <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
+            <Route path="/crm/leads/new" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
+            <Route path="/crm/leads/:id/edit" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
             <Route path="/crm/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
 
             {/* Manufacturing module */}
@@ -213,6 +217,7 @@ const App = () => (
             <Route path="/accounting/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
             <Route path="/accounting/reports" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
             <Route path="/accounting/bills" element={<ProtectedRoute><AccountingOverview /></ProtectedRoute>} />
+            <Route path="/accounting/invoices" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
             <Route path="/invoicing" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
             <Route path="/invoicing/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
             <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />

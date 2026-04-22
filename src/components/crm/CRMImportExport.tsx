@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 // CRM Import/Export Component - Supports Odoo-format XLSX/CSV
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';

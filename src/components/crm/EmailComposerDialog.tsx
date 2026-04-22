@@ -1,3 +1,4 @@
+// TODO: Replace localStorage with Supabase queries
 import { useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
