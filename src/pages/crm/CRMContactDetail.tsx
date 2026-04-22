@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
+import { getQuotations, getSalesOrders } from '@/lib/data/sales/storage';
 
 export default function CRMContactDetail() {
   const { id } = useParams();
