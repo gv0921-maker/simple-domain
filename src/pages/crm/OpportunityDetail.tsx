@@ -46,6 +46,7 @@ import {
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import {
   getOpportunity,
+  getContact,
   getOpportunities,
   saveOpportunity,
   updateOpportunityStage,
@@ -102,6 +103,7 @@ export default function OpportunityDetail() {
   const [showChatterSearch, setShowChatterSearch] = useState(false);
 
   const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id]);
+  const linkedContact = useMemo(() => opportunity?.contactId ? getContact(opportunity.contactId) : undefined, [opportunity?.contactId]);
   const notes = useMemo(() => id ? getNotes('opportunity', id) : [], [id]);
 
   // Navigation between records
@@ -477,7 +479,7 @@ export default function OpportunityDetail() {
                 </TabsContent>
 
                 <TabsContent value="contacts" className="mt-4">
-                  {/* Company Information + Contact Information — Odoo Extra Info layout */}
+                  {/* Company Information + Contact Information — real data from linked contact */}
                   <div className="grid grid-cols-2 gap-x-12 gap-y-6">
                     <div>
                       <h3 className="text-sm font-bold text-[#875A7B] uppercase tracking-wide mb-3 border-b border-border pb-1">
@@ -485,19 +487,23 @@ export default function OpportunityDetail() {
                       </h3>
                       <div className="space-y-2">
                         <OdooField label="Company Name" labelHint>
-                          {currentData.companyName || '—'}
+                          {currentData.companyName || linkedContact?.companyName || '—'}
                         </OdooField>
                         <OdooField label="Address">
-                          <div className="text-sm text-muted-foreground space-y-0.5">
-                            <div>Street...</div>
-                            <div>Street 2...</div>
-                            <div className="flex gap-4">
-                              <span>City</span>
-                              <span>ZIP</span>
-                              <span>State</span>
+                          {linkedContact?.addresses && linkedContact.addresses.length > 0 ? (
+                            <div className="text-sm text-muted-foreground space-y-0.5">
+                              {linkedContact.addresses[0].street && <div>{linkedContact.addresses[0].street}</div>}
+                              {linkedContact.addresses[0].street2 && <div>{linkedContact.addresses[0].street2}</div>}
+                              <div className="flex gap-4">
+                                {linkedContact.addresses[0].city && <span>{linkedContact.addresses[0].city}</span>}
+                                {linkedContact.addresses[0].postalCode && <span>{linkedContact.addresses[0].postalCode}</span>}
+                                {linkedContact.addresses[0].state && <span>{linkedContact.addresses[0].state}</span>}
+                              </div>
+                              {linkedContact.addresses[0].country && <div>{linkedContact.addresses[0].country}</div>}
                             </div>
-                            <div>Country</div>
-                          </div>
+                          ) : (
+                            <span className="text-muted-foreground/50 italic">No address on file</span>
+                          )}
                         </OdooField>
                       </div>
                     </div>
@@ -506,17 +512,36 @@ export default function OpportunityDetail() {
                       <h3 className="text-sm font-bold text-[#875A7B] uppercase tracking-wide mb-3 border-b border-border pb-1">
                         Contact Information
                       </h3>
-                      <div className="space-y-2">
-                        <OdooField label="Contact Name">
-                          {currentData.contactName || '—'}
-                        </OdooField>
-                        <OdooField label="Job Position">
-                          —
-                        </OdooField>
-                        <OdooField label="Website" labelHint>
-                          <span className="text-muted-foreground">e.g. https://www.odoo.com</span>
-                        </OdooField>
-                      </div>
+                      {linkedContact ? (
+                        <div className="space-y-2">
+                          <OdooField label="Contact Name">
+                            {linkedContact.firstName} {linkedContact.lastName}
+                          </OdooField>
+                          <OdooField label="Email">
+                            {linkedContact.email ? (
+                              <a href={`mailto:${linkedContact.email}`} className="text-primary hover:underline">{linkedContact.email}</a>
+                            ) : '—'}
+                          </OdooField>
+                          <OdooField label="Phone">
+                            {linkedContact.phone || '—'}
+                          </OdooField>
+                          <OdooField label="Job Position">
+                            {linkedContact.jobTitle || '—'}
+                          </OdooField>
+                          <OdooField label="Website" labelHint>
+                            {linkedContact.website ? (
+                              <a href={linkedContact.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{linkedContact.website}</a>
+                            ) : '—'}
+                          </OdooField>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <OdooField label="Contact Name">
+                            {currentData.contactName || '—'}
+                          </OdooField>
+                          <p className="text-xs text-muted-foreground/50 italic mt-2">No linked contact record</p>
+                        </div>
+                      )}
                     </div>
 
                     <div>
