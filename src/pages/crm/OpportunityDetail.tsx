@@ -690,10 +690,17 @@ export default function OpportunityDetail() {
                 <Search className="h-4 w-4" />
               </button>
 
-              <button className="relative text-muted-foreground hover:text-foreground">
-                <span className="text-[10px] font-bold">👤</span>
-                <span className="absolute -top-1 -right-1 bg-[#875A7B] text-white text-[8px] rounded-full h-3 w-3 flex items-center justify-center">1</span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="relative text-muted-foreground inline-flex items-center">
+                    <span className="text-[10px] font-bold">👤</span>
+                    <span className="absolute -top-1 -right-1 bg-[#875A7B] text-white text-[8px] rounded-full h-3 w-3 flex items-center justify-center">1</span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Followers: {opportunity.assignedTo || user?.name || 'You'}
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Compose area */}
