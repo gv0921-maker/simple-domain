@@ -516,6 +516,16 @@ export default function OpportunityDetail() {
               </div>
 
               {/* Opportunity title — inline editable */}
+              {/* Unsaved changes bar */}
+              {isDirty && (
+                <div className="bg-amber-50 border-t border-b border-amber-200 px-4 py-2 flex items-center gap-3 -mx-4 mb-4">
+                  <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
+                  <Button size="sm" className="h-8 text-xs bg-[#875A7B] hover:bg-[#6e4a64] text-white" onClick={handleSave}>Save</Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleDiscard}>Discard</Button>
+                </div>
+              )}
+
+              {/* Opportunity title — inline editable */}
               <input
                 className="text-2xl font-normal text-foreground mb-4 w-full border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent outline-none transition-colors"
                 value={currentData.name}
@@ -852,14 +862,7 @@ export default function OpportunityDetail() {
                 </div>
               </div>
 
-              {/* Unsaved changes bar */}
-              {isDirty && (
-                <div className="sticky bottom-0 bg-amber-50 border-t border-amber-200 px-4 py-2 flex items-center gap-3 mt-4">
-                  <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
-                  <Button size="sm" className="h-8 text-xs bg-[#875A7B] hover:bg-[#6e4a64] text-white" onClick={handleSave}>Save</Button>
-                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleDiscard}>Discard</Button>
-                </div>
-              )}
+            </div>
             </div>
           </div>
 
