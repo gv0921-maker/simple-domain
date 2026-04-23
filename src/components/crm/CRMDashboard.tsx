@@ -114,15 +114,12 @@ export function CRMDashboard() {
   }, [userFilter]);
 
   const stats = useMemo(() => getCRMStats(), []);
-  const leadsBySource = useMemo(() => getLeadsBySource(), []);
   const opportunitiesByStage = useMemo(() => getOpportunitiesByStage(), []);
   const allOpportunities = useMemo(() => getOpportunities(), []);
-  const allLeads = useMemo(() => getLeads(), []);
   const activities = useMemo(() => getActivities(), []);
 
   // Apply filters
   const opportunities = useMemo(() => byUser(allOpportunities).filter(o => inRange(o.createdAt)), [allOpportunities, byUser, inRange]);
-  const leads = useMemo(() => byUser(allLeads).filter(l => inRange(l.createdAt)), [allLeads, byUser, inRange]);
   const filteredActivities = useMemo(() => activities.filter(a => inRange(a.createdAt)), [activities, inRange]);
 
   // Activity completion rate
