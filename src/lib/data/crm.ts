@@ -136,6 +136,7 @@ export interface Opportunity {
   lostReason?: string;
   wonAt?: string;
   lostAt?: string;
+  stageHistory?: { stageId: string; enteredAt: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -455,7 +456,9 @@ export function updateOpportunityStage(id: string, stageId: string, stage: Oppor
   const opp = getOpportunity(id);
   if (!opp) return undefined;
   
-  const updates: Partial<Opportunity> = { stageId, stage };
+  const history = opp.stageHistory || [];
+  history.push({ stageId, enteredAt: new Date().toISOString() });
+  const updates: Partial<Opportunity> = { stageId, stage, stageHistory: history };
   
   if (stage === 'won') {
     updates.wonAt = new Date().toISOString();
