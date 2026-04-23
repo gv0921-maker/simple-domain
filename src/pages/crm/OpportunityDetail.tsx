@@ -311,52 +311,53 @@ export default function OpportunityDetail() {
         <div className="flex-1 overflow-hidden flex">
           {/* Left: Form */}
           <div className="flex-1 overflow-y-auto border-r border-border">
-            <div className="p-4 max-w-4xl">
-              {/* Won/Lost buttons + Chevron Stage Bar */}
-              <div className="flex items-center gap-2 mb-4">
-                {!isWon && !isLost && (
-                  <>
-                    <Button
-                      size="sm"
-                      className="h-8 text-xs font-semibold bg-[#00A09D] hover:bg-[#008f8c] text-white rounded"
-                      onClick={handleWon}
-                    >
-                      Won
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs font-semibold rounded"
-                      onClick={() => setShowLostDialog(true)}
-                    >
-                      Lost
-                    </Button>
-                  </>
-                )}
-                {(isWon || isLost) && (
-                  <Badge className={cn(
-                    'text-xs px-2.5 py-1',
-                    isWon ? 'bg-[#00A09D] text-white' : 'bg-destructive text-destructive-foreground'
-                  )}>
-                    {isWon ? '🏆 Won' : '❌ Lost'}
-                  </Badge>
-                )}
+            <div className="p-4 max-w-4xl relative overflow-hidden">
+              {/* Won/Lost Ribbon Overlay */}
+              {isWon && (
+                <div className="absolute top-5 -right-8 rotate-45 bg-green-600 text-white text-xs font-bold px-10 py-1 z-20 shadow-md">
+                  WON
+                </div>
+              )}
+              {isLost && (
+                <div className="absolute top-5 -right-8 rotate-45 bg-gray-500 text-white text-xs font-bold px-10 py-1 z-20 shadow-md">
+                  LOST
+                </div>
+              )}
 
-                {/* Chevron stage bar */}
+              {/* Chevron Stage Bar */}
+              <div className="flex items-center gap-2 mb-4">
                 {!isLost && (
-                  <div className="flex items-stretch flex-1 ml-2">
+                  <div className="flex items-stretch flex-1">
                     {activeStages.map((stage, index) => {
                       const isActive = stage.id === opportunity.stageId;
                       const isPast = index < currentStageIndex;
                       const isLast = index === activeStages.length - 1;
                       const isFirst = index === 0;
 
+                      // Time-in-stage calculation
+                      const history = opportunity.stageHistory || [];
+                      const stageEntry = history.find(h => h.stageId === stage.id);
+                      let timeLabel = '';
+                      if (stageEntry) {
+                        const enteredAt = new Date(stageEntry.enteredAt).getTime();
+                        if (isActive) {
+                          timeLabel = formatElapsed(Date.now() - enteredAt);
+                        } else if (isPast) {
+                          // Find the next stage entry after this one
+                          const entryIndex = history.indexOf(stageEntry);
+                          const nextEntry = history[entryIndex + 1];
+                          if (nextEntry) {
+                            timeLabel = formatElapsed(new Date(nextEntry.enteredAt).getTime() - enteredAt);
+                          }
+                        }
+                      }
+
                       return (
                         <button
                           key={stage.id}
                           onClick={() => handleStageClick(stage.id)}
                           className={cn(
-                            'relative flex-1 py-1.5 text-center text-xs font-semibold transition-all flex items-center justify-center gap-1',
+                            'relative flex-1 py-1.5 text-center text-xs font-semibold transition-all flex flex-col items-center justify-center',
                             isActive && 'bg-[#875A7B] text-white z-10',
                             isPast && 'bg-[#875A7B]/20 text-[#875A7B]',
                             !isActive && !isPast && 'bg-muted/60 text-muted-foreground hover:bg-muted',
@@ -370,9 +371,9 @@ export default function OpportunityDetail() {
                           }}
                         >
                           {stage.name}
-                          {isActive && opportunity.createdAt && (
-                            <span className="text-[10px] font-normal opacity-80">
-                              {Math.ceil((Date.now() - new Date(opportunity.createdAt).getTime()) / (1000 * 60 * 60 * 24))}d
+                          {timeLabel && (
+                            <span className="text-[10px] font-normal opacity-80 leading-none">
+                              {timeLabel}
                             </span>
                           )}
                         </button>
