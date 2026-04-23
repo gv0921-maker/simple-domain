@@ -44,6 +44,12 @@ import {
   User,
   Mail,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import {
   getOpportunity,
@@ -69,6 +75,15 @@ import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
 import { useAuth } from '@/contexts/AuthContext';
 import { displayRevenue, canViewSensitive, maskEmail, maskPhone } from '@/lib/crm/fieldMask';
+
+// Format elapsed time: <1h → "Xm", <24h → "Xh", else → "Xd"
+function formatElapsed(ms: number): string {
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 60) return `${Math.max(1, minutes)}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
 
 // Contact avatar
 function ChatterAvatar({ name }: { name: string }) {
@@ -134,23 +149,52 @@ export default function OpportunityDetail() {
     };
     const stage = stageMap[stageId];
     if (stage) {
+      const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
+      const newStageName = activeStages.find(s => s.id === stageId)?.name || stageId;
       updateOpportunityStage(opportunity.id, stageId, stage);
       setOpportunity(getOpportunity(opportunity.id));
-      toast({ title: `Stage updated to ${activeStages.find(s => s.id === stageId)?.name}` });
+      toast({ title: `Stage updated to ${newStageName}` });
+      // Auto-log stage change in chatter
+      saveNote({
+        content: `<p><strong>Stage changed</strong><br/>${previousStageName} → ${newStageName} (Stage)</p>`,
+        relatedTo: 'opportunity',
+        relatedId: opportunity.id,
+        userId: user?.id || '1',
+        userName: 'System',
+        visibility: 'team',
+      } as any);
     }
   };
 
   const handleWon = () => {
+    const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
     updateOpportunityStage(opportunity.id, 'won', 'won');
     setOpportunity(getOpportunity(opportunity.id));
     toast({ title: '🎉 Opportunity Won!' });
+    saveNote({
+      content: `<p><strong>Opportunity won</strong><br/>${previousStageName} → Won (Stage)</p>`,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: user?.id || '1',
+      userName: 'System',
+      visibility: 'team',
+    } as any);
   };
 
   const handleLost = () => {
+    const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
     saveOpportunity({ ...opportunity, lostReason, stage: 'lost', stageId: 'lost', lostAt: new Date().toISOString(), probability: 0 });
     setShowLostDialog(false);
     setOpportunity(getOpportunity(opportunity.id));
     toast({ title: 'Opportunity marked as lost' });
+    saveNote({
+      content: `<p><strong>Opportunity lost</strong><br/>${previousStageName} → Lost (Won/Lost)</p>`,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: user?.id || '1',
+      userName: 'System',
+      visibility: 'team',
+    } as any);
   };
 
   const handleSave = () => {
@@ -251,6 +295,23 @@ export default function OpportunityDetail() {
               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEmailOpen(true)}>
                 <Mail className="h-3 w-3 mr-1" /> Email
               </Button>
+              {!isWon && !isLost && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-7 text-xs">
+                      Mark As ▾
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleWon} className="text-xs gap-2">
+                      <Trophy className="h-3.5 w-3.5 text-green-600" /> Won
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowLostDialog(true)} className="text-xs gap-2">
+                      <XCircle className="h-3.5 w-3.5 text-muted-foreground" /> Lost
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
 
 
@@ -279,52 +340,53 @@ export default function OpportunityDetail() {
         <div className="flex-1 overflow-hidden flex">
           {/* Left: Form */}
           <div className="flex-1 overflow-y-auto border-r border-border">
-            <div className="p-4 max-w-4xl">
-              {/* Won/Lost buttons + Chevron Stage Bar */}
-              <div className="flex items-center gap-2 mb-4">
-                {!isWon && !isLost && (
-                  <>
-                    <Button
-                      size="sm"
-                      className="h-8 text-xs font-semibold bg-[#00A09D] hover:bg-[#008f8c] text-white rounded"
-                      onClick={handleWon}
-                    >
-                      Won
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs font-semibold rounded"
-                      onClick={() => setShowLostDialog(true)}
-                    >
-                      Lost
-                    </Button>
-                  </>
-                )}
-                {(isWon || isLost) && (
-                  <Badge className={cn(
-                    'text-xs px-2.5 py-1',
-                    isWon ? 'bg-[#00A09D] text-white' : 'bg-destructive text-destructive-foreground'
-                  )}>
-                    {isWon ? '🏆 Won' : '❌ Lost'}
-                  </Badge>
-                )}
+            <div className="p-4 max-w-4xl relative overflow-hidden">
+              {/* Won/Lost Ribbon Overlay */}
+              {isWon && (
+                <div className="absolute top-5 -right-8 rotate-45 bg-green-600 text-white text-xs font-bold px-10 py-1 z-20 shadow-md">
+                  WON
+                </div>
+              )}
+              {isLost && (
+                <div className="absolute top-5 -right-8 rotate-45 bg-gray-500 text-white text-xs font-bold px-10 py-1 z-20 shadow-md">
+                  LOST
+                </div>
+              )}
 
-                {/* Chevron stage bar */}
+              {/* Chevron Stage Bar */}
+              <div className="flex items-center gap-2 mb-4">
                 {!isLost && (
-                  <div className="flex items-stretch flex-1 ml-2">
+                  <div className="flex items-stretch flex-1">
                     {activeStages.map((stage, index) => {
                       const isActive = stage.id === opportunity.stageId;
                       const isPast = index < currentStageIndex;
                       const isLast = index === activeStages.length - 1;
                       const isFirst = index === 0;
 
+                      // Time-in-stage calculation
+                      const history = opportunity.stageHistory || [];
+                      const stageEntry = history.find(h => h.stageId === stage.id);
+                      let timeLabel = '';
+                      if (stageEntry) {
+                        const enteredAt = new Date(stageEntry.enteredAt).getTime();
+                        if (isActive) {
+                          timeLabel = formatElapsed(Date.now() - enteredAt);
+                        } else if (isPast) {
+                          // Find the next stage entry after this one
+                          const entryIndex = history.indexOf(stageEntry);
+                          const nextEntry = history[entryIndex + 1];
+                          if (nextEntry) {
+                            timeLabel = formatElapsed(new Date(nextEntry.enteredAt).getTime() - enteredAt);
+                          }
+                        }
+                      }
+
                       return (
                         <button
                           key={stage.id}
                           onClick={() => handleStageClick(stage.id)}
                           className={cn(
-                            'relative flex-1 py-1.5 text-center text-xs font-semibold transition-all flex items-center justify-center gap-1',
+                            'relative flex-1 py-1.5 text-center text-xs font-semibold transition-all flex flex-col items-center justify-center',
                             isActive && 'bg-[#875A7B] text-white z-10',
                             isPast && 'bg-[#875A7B]/20 text-[#875A7B]',
                             !isActive && !isPast && 'bg-muted/60 text-muted-foreground hover:bg-muted',
@@ -338,9 +400,9 @@ export default function OpportunityDetail() {
                           }}
                         >
                           {stage.name}
-                          {isActive && opportunity.createdAt && (
-                            <span className="text-[10px] font-normal opacity-80">
-                              {Math.ceil((Date.now() - new Date(opportunity.createdAt).getTime()) / (1000 * 60 * 60 * 24))}d
+                          {timeLabel && (
+                            <span className="text-[10px] font-normal opacity-80 leading-none">
+                              {timeLabel}
                             </span>
                           )}
                         </button>
@@ -399,7 +461,16 @@ export default function OpportunityDetail() {
                   {isEditing ? (
                     <Input defaultValue={opportunity.contactName} className="h-8 text-sm" onChange={e => setEditData({ ...editData, contactName: e.target.value })} />
                   ) : (
-                    currentData.contactName || '—'
+                    currentData.contactId ? (
+                      <button
+                        onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        {currentData.contactName || '—'}
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground">{currentData.contactName || '—'}</span>
+                    )
                   )}
                 </OdooField>
 
@@ -428,7 +499,9 @@ export default function OpportunityDetail() {
                   {isEditing ? (
                     <Input type="date" defaultValue={opportunity.expectedCloseDate} className="h-8 text-sm" onChange={e => setEditData({ ...editData, expectedCloseDate: e.target.value })} />
                   ) : (
-                    currentData.expectedCloseDate ? format(parseISO(currentData.expectedCloseDate), 'MM/dd/yyyy') : 'No closing estimate'
+                    currentData.expectedCloseDate
+                      ? format(parseISO(currentData.expectedCloseDate), 'MM/dd/yyyy')
+                      : <span className="text-muted-foreground italic">No closing estimate</span>
                   )}
                   {!isEditing && (
                     <div className="ml-4">
