@@ -19,8 +19,7 @@ export interface Permission {
   canImport?: boolean;
   canExport?: boolean;
   canPrint?: boolean;
-  // Granular CRM action toggles (apply only when module='crm')
-  canConvertLeads?: boolean;
+  // Granular CRM action toggles
   canModifyPipeline?: boolean;
 }
 
@@ -406,7 +405,7 @@ export function hasPermission(userId: string, module: string, requiredLevel: Per
   return getPermissionWeight(modulePermission.level) >= getPermissionWeight(requiredLevel);
 }
 
-export function hasModulePermission(userId: string, module: string, permission: 'import' | 'export' | 'print' | 'convert_leads' | 'modify_pipeline'): boolean {
+export function hasModulePermission(userId: string, module: string, permission: 'import' | 'export' | 'print' | 'modify_pipeline'): boolean {
   if (isSuperAdminUser(userId)) return true;
 
   const permissions = getUserPermissions(userId);
@@ -417,7 +416,6 @@ export function hasModulePermission(userId: string, module: string, permission: 
     case 'import': return modulePermission.canImport ?? isAdmin;
     case 'export': return modulePermission.canExport ?? isAdmin;
     case 'print': return modulePermission.canPrint ?? isAdmin;
-    case 'convert_leads': return modulePermission.canConvertLeads ?? (modulePermission.level === 'edit' || modulePermission.level === 'delete' || isAdmin);
     case 'modify_pipeline': return modulePermission.canModifyPipeline ?? isAdmin;
     default: return false;
   }
