@@ -387,7 +387,6 @@ export function CRMImportDialog({ open, onOpenChange, onImportComplete, defaultR
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="opportunities">Opportunities</SelectItem>
-                  <SelectItem value="leads">Leads</SelectItem>
                   <SelectItem value="contacts">Contacts</SelectItem>
                 </SelectContent>
               </Select>
@@ -437,7 +436,6 @@ export function CRMImportDialog({ open, onOpenChange, onImportComplete, defaultR
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="opportunities">Opportunities</SelectItem>
-                  <SelectItem value="leads">Leads</SelectItem>
                   <SelectItem value="contacts">Contacts</SelectItem>
                 </SelectContent>
               </Select>
