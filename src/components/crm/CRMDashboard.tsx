@@ -38,10 +38,8 @@ import {
 } from 'lucide-react';
 import {
   getCRMStats,
-  getLeadsBySource,
   getOpportunitiesByStage,
   getOpportunities,
-  getLeads,
   getActivities,
   type CRMStats,
 } from '@/lib/data/crm';
