@@ -180,10 +180,6 @@ export function CRMDashboard() {
           <p className="text-muted-foreground">Overview of your customer relationships and sales pipeline</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('/crm/leads/new')}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            New Lead
-          </Button>
           <Button onClick={() => navigate('/crm')}>
             View Pipeline
           </Button>
