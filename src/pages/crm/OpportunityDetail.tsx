@@ -1,6 +1,5 @@
-// TODO: Replace localStorage with Supabase queries
-// Odoo-style Opportunity Detail Form — exact replica from reference screenshots
-import { useState, useMemo } from 'react';
+// Odoo-style Opportunity Detail Form — inline editing, live chatter, audit logging
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,6 @@ import {
   ChevronLeft,
   Trophy,
   XCircle,
-  
   MessageSquare,
   Clock,
   Send,
@@ -43,6 +41,8 @@ import {
   Package,
   User,
   Mail,
+  Pencil,
+  X,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -50,10 +50,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import {
   getOpportunity,
   getContact,
+  getContacts,
   getOpportunities,
   saveOpportunity,
   updateOpportunityStage,
@@ -74,7 +76,6 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
 import { useAuth } from '@/contexts/AuthContext';
-import { displayRevenue, canViewSensitive, maskEmail, maskPhone } from '@/lib/crm/fieldMask';
 
 // Format elapsed time: <1h → "Xm", <24h → "Xh", else → "Xd"
 function formatElapsed(ms: number): string {
@@ -97,6 +98,19 @@ function ChatterAvatar({ name }: { name: string }) {
   );
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Opportunity Name',
+  expectedRevenue: 'Expected Revenue',
+  probability: 'Probability',
+  expectedCloseDate: 'Expected Closing',
+  contactName: 'Contact',
+  assignedTo: 'Salesperson',
+  companyName: 'Company',
+  tags: 'Tags',
+};
+
+const INLINE_CSS = "border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent w-full text-sm outline-none transition-colors";
+
 export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -108,8 +122,6 @@ export default function OpportunityDetail() {
   const [opportunity, setOpportunity] = useState<Opportunity | undefined>(() =>
     id ? getOpportunity(id) : undefined
   );
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState<Partial<Opportunity>>({});
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
@@ -119,9 +131,60 @@ export default function OpportunityDetail() {
   const [showChatterSearch, setShowChatterSearch] = useState(false);
   const [activityForm, setActivityForm] = useState({ type: 'task' as 'call' | 'email' | 'meeting' | 'task' | 'follow_up', dueDate: '', assignedTo: '', summary: '' });
 
-  const activities = useMemo(() => id ? getActivities('opportunity', id) : [], [id]);
-  const linkedContact = useMemo(() => opportunity?.contactId ? getContact(opportunity.contactId) : undefined, [opportunity?.contactId]);
-  const notes = useMemo(() => id ? getNotes('opportunity', id) : [], [id]);
+  // --- Bug Fix 1: Inline editing state ---
+  const [editingData, setEditingData] = useState<Opportunity | undefined>(opportunity);
+  const [isDirty, setIsDirty] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
+
+  useEffect(() => {
+    if (!isDirty && opportunity) {
+      setEditingData(opportunity);
+    }
+  }, [opportunity, isDirty]);
+
+  const updateField = (field: keyof Opportunity, value: any) => {
+    setEditingData(prev => prev ? { ...prev, [field]: value } : prev);
+    setIsDirty(true);
+  };
+
+  // --- Bug Fix 2: Reactive chatter state ---
+  const [chatterNotes, setChatterNotes] = useState<Note[]>([]);
+  const [chatterActivities, setChatterActivities] = useState<Activity[]>([]);
+  const linkedContact = opportunity?.contactId ? getContact(opportunity.contactId) : undefined;
+
+  const refreshChatter = useCallback(() => {
+    if (!id) return;
+    setChatterNotes(getNotes('opportunity', id));
+    setChatterActivities(getActivities('opportunity', id));
+  }, [id]);
+
+  useEffect(() => { refreshChatter(); }, [refreshChatter]);
+
+  // --- Change 7: Audit logging snapshot ---
+  const originalSnapshot = useRef<Partial<Opportunity>>({});
+
+  const takeSnapshot = (opp: Opportunity) => {
+    const snap: any = {};
+    for (const key of Object.keys(FIELD_LABELS)) {
+      snap[key] = (opp as any)[key];
+    }
+    originalSnapshot.current = snap;
+  };
+
+  useEffect(() => {
+    if (opportunity) takeSnapshot(opportunity);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const formatAuditValue = (field: string, value: any): string => {
+    if (value == null || value === '' || (Array.isArray(value) && value.length === 0)) return '—';
+    if (field === 'expectedRevenue') return `₹${Number(value).toLocaleString('en-IN')}`;
+    if (field === 'probability') return `${value}%`;
+    if (field === 'tags') return [...(value as string[])].sort().join(', ');
+    return String(value);
+  };
 
   // Navigation between records
   const currentIndex = allOpportunities.findIndex(o => o.id === id);
@@ -142,6 +205,7 @@ export default function OpportunityDetail() {
 
   const activeStages = pipeline.stages.filter(s => s.id !== 'lost');
   const currentStageIndex = activeStages.findIndex(s => s.id === opportunity.stageId);
+  const currentData = editingData || opportunity;
 
   const handleStageClick = (stageId: string) => {
     const stageMap: Record<string, OpportunityStage> = {
@@ -154,7 +218,6 @@ export default function OpportunityDetail() {
       updateOpportunityStage(opportunity.id, stageId, stage);
       setOpportunity(getOpportunity(opportunity.id));
       toast({ title: `Stage updated to ${newStageName}` });
-      // Auto-log stage change in chatter
       saveNote({
         content: `<p><strong>Stage changed</strong><br/>${previousStageName} → ${newStageName} (Stage)</p>`,
         relatedTo: 'opportunity',
@@ -163,6 +226,7 @@ export default function OpportunityDetail() {
         userName: 'System',
         visibility: 'team',
       } as any);
+      refreshChatter();
     }
   };
 
@@ -179,6 +243,7 @@ export default function OpportunityDetail() {
       userName: 'System',
       visibility: 'team',
     } as any);
+    refreshChatter();
   };
 
   const handleLost = () => {
@@ -195,14 +260,54 @@ export default function OpportunityDetail() {
       userName: 'System',
       visibility: 'team',
     } as any);
+    refreshChatter();
   };
 
   const handleSave = () => {
-    saveOpportunity({ ...opportunity, ...editData });
-    setOpportunity(getOpportunity(opportunity.id));
-    setIsEditing(false);
-    setEditData({});
+    if (!editingData) return;
+    // Change 7: Audit diff before saving
+    const diffs: string[] = [];
+    for (const key of Object.keys(FIELD_LABELS)) {
+      const oldVal = (originalSnapshot.current as any)[key];
+      const newVal = (editingData as any)[key];
+      const oldStr = formatAuditValue(key, oldVal);
+      const newStr = formatAuditValue(key, newVal);
+      if (key === 'tags') {
+        const oldTags = [...(oldVal || [])].sort().join(', ');
+        const newTags = [...(newVal || [])].sort().join(', ');
+        if (oldTags !== newTags) diffs.push(`${FIELD_LABELS[key]}: ${oldStr} → ${newStr}`);
+      } else if (String(oldVal ?? '') !== String(newVal ?? '')) {
+        diffs.push(`${FIELD_LABELS[key]}: ${oldStr} → ${newStr}`);
+      }
+    }
+
+    saveOpportunity({ ...opportunity, ...editingData });
+    const refreshed = getOpportunity(opportunity.id);
+    setOpportunity(refreshed);
+    setIsDirty(false);
+    if (refreshed) {
+      setEditingData(refreshed);
+      takeSnapshot(refreshed);
+    }
+
+    if (diffs.length > 0) {
+      saveNote({
+        content: `<p><strong>Record updated</strong><br/>${diffs.join('<br/>')}</p>`,
+        relatedTo: 'opportunity',
+        relatedId: opportunity.id,
+        userId: user?.id || '1',
+        userName: 'System',
+        visibility: 'team',
+      } as any);
+    }
+
+    refreshChatter();
     toast({ title: 'Opportunity updated' });
+  };
+
+  const handleDiscard = () => {
+    setEditingData(opportunity);
+    setIsDirty(false);
   };
 
   const handleChatterSubmit = (value: RichComposerValue) => {
@@ -235,6 +340,7 @@ export default function OpportunityDetail() {
       } as any);
     }
     toast({ title: chatterTab === 'note' ? 'Note logged' : 'Message sent' });
+    refreshChatter();
   };
 
   const handleActivitySubmit = () => {
@@ -252,6 +358,7 @@ export default function OpportunityDetail() {
     } as any);
     setActivityForm({ type: 'task', dueDate: '', assignedTo: '', summary: '' });
     toast({ title: 'Activity scheduled' });
+    refreshChatter();
   };
 
   const navigateRecord = (dir: 'prev' | 'next') => {
@@ -263,7 +370,6 @@ export default function OpportunityDetail() {
 
   const isWon = opportunity.stage === 'won';
   const isLost = opportunity.stage === 'lost';
-  const currentData = { ...opportunity, ...editData };
 
   return (
     <>
@@ -314,7 +420,6 @@ export default function OpportunityDetail() {
               )}
             </div>
 
-
             {/* Right: record pager */}
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <span>{currentIndex + 1} / {totalRecords}</span>
@@ -363,7 +468,6 @@ export default function OpportunityDetail() {
                       const isLast = index === activeStages.length - 1;
                       const isFirst = index === 0;
 
-                      // Time-in-stage calculation
                       const history = opportunity.stageHistory || [];
                       const stageEntry = history.find(h => h.stageId === stage.id);
                       let timeLabel = '';
@@ -372,7 +476,6 @@ export default function OpportunityDetail() {
                         if (isActive) {
                           timeLabel = formatElapsed(Date.now() - enteredAt);
                         } else if (isPast) {
-                          // Find the next stage entry after this one
                           const entryIndex = history.indexOf(stageEntry);
                           const nextEntry = history[entryIndex + 1];
                           if (nextEntry) {
@@ -412,29 +515,24 @@ export default function OpportunityDetail() {
                 )}
               </div>
 
-              {/* Opportunity title */}
-              <h1 className="text-2xl font-normal text-foreground mb-4">
-                {isEditing ? (
-                  <Input
-                    defaultValue={opportunity.name}
-                    className="text-2xl font-normal h-auto py-1 border-0 border-b border-border rounded-none px-0 focus-visible:ring-0"
-                    onChange={e => setEditData({ ...editData, name: e.target.value })}
-                  />
-                ) : (
-                  opportunity.name
-                )}
-              </h1>
+              {/* Opportunity title — inline editable */}
+              <input
+                className="text-2xl font-normal text-foreground mb-4 w-full border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent outline-none transition-colors"
+                value={currentData.name}
+                onChange={e => updateField('name', e.target.value)}
+              />
 
-              {/* Expected Revenue + Probability row — exact Odoo layout */}
+              {/* Expected Revenue + Probability row */}
               <div className="flex items-start gap-16 mb-6">
                 <div>
                   <div className="text-sm font-bold text-foreground mb-1">Expected Revenue</div>
                   <div className="text-lg text-foreground">
-                    {isEditing ? (
-                      <Input type="number" defaultValue={opportunity.expectedRevenue} className="h-8 text-sm w-32" onChange={e => setEditData({ ...editData, expectedRevenue: parseFloat(e.target.value) || 0 })} />
-                    ) : (
-                      displayRevenue(currentData.expectedRevenue, user?.id, 'crm')
-                    )}
+                    <input
+                      type="number"
+                      className="border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent w-32 text-lg outline-none transition-colors"
+                      value={currentData.expectedRevenue}
+                      onChange={e => updateField('expectedRevenue', parseFloat(e.target.value) || 0)}
+                    />
                   </div>
                 </div>
                 <div>
@@ -443,100 +541,157 @@ export default function OpportunityDetail() {
                     <span className="text-[10px] text-muted-foreground bg-muted rounded px-1">AI</span>
                   </div>
                   <div className="text-lg text-foreground flex items-center gap-1">
-                    {isEditing ? (
-                      <Input type="number" defaultValue={opportunity.probability} className="h-8 text-sm w-20" onChange={e => setEditData({ ...editData, probability: parseInt(e.target.value) || 0 })} />
-                    ) : (
-                      <><span className="text-muted-foreground">at</span> {currentData.probability} <span className="text-muted-foreground">%</span></>
-                    )}
+                    <span className="text-muted-foreground">at</span>
+                    <input
+                      type="number"
+                      className="border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent w-16 text-lg outline-none transition-colors text-center"
+                      value={currentData.probability}
+                      onChange={e => updateField('probability', parseInt(e.target.value) || 0)}
+                    />
+                    <span className="text-muted-foreground">%</span>
                   </div>
                 </div>
               </div>
 
               <Separator className="mb-4" />
 
-              {/* Two-column form — exact Odoo layout from screenshot 4 */}
+              {/* Two-column form */}
               <div className="grid grid-cols-2 gap-x-12 gap-y-3 mb-6">
-                {/* Left column */}
+                {/* Contact — clickable name + pencil popover */}
                 <OdooField label="Contact" link>
-                  {isEditing ? (
-                    <Input defaultValue={opportunity.contactName} className="h-8 text-sm" onChange={e => setEditData({ ...editData, contactName: e.target.value })} />
-                  ) : (
-                    currentData.contactId ? (
-                      <button
-                        onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
-                        className="text-primary hover:underline text-sm"
-                      >
+                  <div className="flex items-center gap-1 group">
+                    {currentData.contactId ? (
+                      <button onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)} className="text-primary hover:underline text-sm">
                         {currentData.contactName || '—'}
                       </button>
                     ) : (
-                      <span className="text-muted-foreground">{currentData.contactName || '—'}</span>
-                    )
-                  )}
+                      <span className="text-sm">{currentData.contactName || '—'}</span>
+                    )}
+                    <Popover open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <button className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-0.5">
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-2" align="start">
+                        <Input
+                          autoFocus
+                          className="h-7 text-xs mb-1"
+                          value={contactSearch}
+                          onChange={e => setContactSearch(e.target.value)}
+                        />
+                        <div className="max-h-40 overflow-y-auto">
+                          {getContacts().filter(c => {
+                            const q = contactSearch.toLowerCase();
+                            return !q || `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
+                          }).slice(0, 20).map(c => (
+                            <button
+                              key={c.id}
+                              className="w-full text-left px-2 py-1.5 text-xs hover:bg-muted rounded flex items-center gap-2"
+                              onClick={() => {
+                                updateField('contactId', c.id);
+                                updateField('contactName', `${c.firstName} ${c.lastName}`);
+                                setContactPopoverOpen(false);
+                                setContactSearch('');
+                              }}
+                            >
+                              <span className="font-medium">{c.firstName} {c.lastName}</span>
+                              {c.email && <span className="text-muted-foreground truncate">{c.email}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </OdooField>
 
-                {/* Right column */}
+                {/* Salesperson */}
                 <OdooField label="Salesperson" avatar>
-                  {isEditing ? (
-                    <Input defaultValue={opportunity.assignedTo} className="h-8 text-sm" onChange={e => setEditData({ ...editData, assignedTo: e.target.value })} />
-                  ) : (
-                    currentData.assignedTo || '—'
-                  )}
+                  <input
+                    className={INLINE_CSS}
+                    value={currentData.assignedTo || ''}
+                    onChange={e => updateField('assignedTo', e.target.value)}
+                  />
                 </OdooField>
 
+                {/* Email */}
                 <OdooField label="Email">
-                  {isEditing ? (
-                    <Input defaultValue={opportunity.email} className="h-8 text-sm" onChange={e => setEditData({ ...editData, email: e.target.value })} />
-                  ) : (
-                    currentData.email ? (
-                      canViewSensitive(user?.id, 'crm', 'email')
-                        ? <a href={`mailto:${currentData.email}`} className="text-primary hover:underline">{currentData.email}</a>
-                        : <span className="text-muted-foreground">{maskEmail(currentData.email)}</span>
-                    ) : '—'
-                  )}
+                  <input
+                    type="email"
+                    className={INLINE_CSS}
+                    value={currentData.email || ''}
+                    onChange={e => updateField('email', e.target.value)}
+                  />
                 </OdooField>
 
+                {/* Expected Closing */}
                 <OdooField label="Expected Closing">
-                  {isEditing ? (
-                    <Input type="date" defaultValue={opportunity.expectedCloseDate} className="h-8 text-sm" onChange={e => setEditData({ ...editData, expectedCloseDate: e.target.value })} />
-                  ) : (
-                    currentData.expectedCloseDate
-                      ? format(parseISO(currentData.expectedCloseDate), 'MM/dd/yyyy')
-                      : <span className="text-muted-foreground italic">No closing estimate</span>
-                  )}
-                  {!isEditing && (
-                    <div className="ml-4">
-                      <StarRating
-                        value={opportunity.priority}
-                        onChange={(p) => {
-                          saveOpportunity({ ...opportunity, priority: p as 0 | 1 | 2 | 3 });
-                          setOpportunity(getOpportunity(opportunity.id));
-                        }}
-                      />
-                    </div>
-                  )}
+                  <input
+                    type="date"
+                    className={cn(
+                      INLINE_CSS,
+                      !currentData.expectedCloseDate && "text-muted-foreground italic"
+                    )}
+                    value={currentData.expectedCloseDate || ''}
+                    onChange={e => updateField('expectedCloseDate', e.target.value)}
+                  />
+                  <div className="ml-4">
+                    <StarRating
+                      value={opportunity.priority}
+                      onChange={(p) => {
+                        saveOpportunity({ ...opportunity, priority: p as 0 | 1 | 2 | 3 });
+                        setOpportunity(getOpportunity(opportunity.id));
+                      }}
+                    />
+                  </div>
                 </OdooField>
 
+                {/* Phone */}
                 <OdooField label="Phone">
-                  {isEditing ? (
-                    <Input defaultValue={opportunity.phone} className="h-8 text-sm" onChange={e => setEditData({ ...editData, phone: e.target.value })} />
-                  ) : (
-                    currentData.phone
-                      ? (canViewSensitive(user?.id, 'crm', 'phone') ? currentData.phone : maskPhone(currentData.phone))
-                      : '—'
-                  )}
+                  <input
+                    type="tel"
+                    className={INLINE_CSS}
+                    value={currentData.phone || ''}
+                    onChange={e => updateField('phone', e.target.value)}
+                  />
                 </OdooField>
 
+                {/* Tags — chip-style input */}
                 <OdooField label="Tags">
-                  <div className="flex gap-1">
-                    {opportunity.tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-[11px] font-medium">{tag}</Badge>
+                  <div
+                    className="flex flex-wrap items-center gap-1 flex-1 min-w-0 cursor-text"
+                    onClick={() => tagInputRef.current?.focus()}
+                  >
+                    {(currentData.tags || []).map(tag => (
+                      <Badge key={tag} variant="secondary" className="text-[11px] font-medium gap-0.5">
+                        {tag}
+                        <button
+                          onClick={e => { e.stopPropagation(); updateField('tags', (currentData.tags || []).filter(t => t !== tag)); }}
+                          className="ml-0.5 hover:text-destructive"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </Badge>
                     ))}
-                    {opportunity.tags.length === 0 && <span className="text-muted-foreground">—</span>}
+                    <input
+                      ref={tagInputRef}
+                      className="border-0 bg-transparent text-sm outline-none w-20 min-w-[50px]"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                          e.preventDefault();
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (!(currentData.tags || []).includes(val)) {
+                            updateField('tags', [...(currentData.tags || []), val]);
+                          }
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }}
+                    />
                   </div>
                 </OdooField>
               </div>
 
-              {/* Notebook Tabs — Notes + Contacts (exact Odoo from screenshot 7) */}
+              {/* Notebook Tabs — Notes + Contacts */}
               <Tabs value={formTab} onValueChange={setFormTab}>
                 <TabsList className="bg-transparent h-auto p-0 rounded-none border-b border-border w-full justify-start">
                   <TabsTrigger
@@ -554,24 +709,14 @@ export default function OpportunityDetail() {
                 </TabsList>
 
                 <TabsContent value="notes" className="mt-4">
-                  {isEditing ? (
-                    <Textarea
-                      placeholder=""
-                      defaultValue={opportunity.internalNotes}
-                      className="min-h-[120px] text-sm"
-                      onChange={e => setEditData({ ...editData, internalNotes: e.target.value })}
-                    />
-                  ) : (
-                    <div className="min-h-[80px] text-sm text-muted-foreground whitespace-pre-wrap">
-                      {opportunity.internalNotes || (
-                        <span className="text-muted-foreground/50 italic">Type "/" for commands</span>
-                      )}
-                    </div>
-                  )}
+                  <Textarea
+                    className="min-h-[120px] text-sm border-transparent hover:border-border focus:border-primary bg-transparent"
+                    value={currentData.internalNotes || ''}
+                    onChange={e => updateField('internalNotes', e.target.value)}
+                  />
                 </TabsContent>
 
                 <TabsContent value="contacts" className="mt-4">
-                  {/* Company Information + Contact Information — real data from linked contact */}
                   <div className="grid grid-cols-2 gap-x-12 gap-y-6">
                     <div>
                       <h3 className="text-sm font-bold text-[#875A7B] uppercase tracking-wide mb-3 border-b border-border pb-1">
@@ -670,7 +815,7 @@ export default function OpportunityDetail() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate(`/sales/quotations/new?contact=${encodeURIComponent(currentData.contactName)}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
+                    onClick={() => navigate(`/sales/quotations/new?contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
                   >
                     <FileText className="h-3.5 w-3.5" />
                     Create Quotation
@@ -679,7 +824,7 @@ export default function OpportunityDetail() {
                     size="sm"
                     variant="outline"
                     className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate(`/sales/orders/new?contact=${encodeURIComponent(currentData.contactName)}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
+                    onClick={() => navigate(`/sales/orders/new?contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
                   >
                     <ShoppingCart className="h-3.5 w-3.5" />
                     Create Sales Order
@@ -707,25 +852,18 @@ export default function OpportunityDetail() {
                 </div>
               </div>
 
-              {/* Edit/Save bar */}
-              {!isWon && !isLost && (
-                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
-                  {isEditing ? (
-                    <>
-                      <Button size="sm" className="h-8 text-xs bg-[#875A7B] hover:bg-[#6e4a64] text-white" onClick={handleSave}>Save</Button>
-                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setIsEditing(false); setEditData({}); }}>Discard</Button>
-                    </>
-                  ) : (
-                    <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIsEditing(true)}>
-                      Edit
-                    </Button>
-                  )}
+              {/* Unsaved changes bar */}
+              {isDirty && (
+                <div className="sticky bottom-0 bg-amber-50 border-t border-amber-200 px-4 py-2 flex items-center gap-3 mt-4">
+                  <span className="text-sm text-amber-700 font-medium">Unsaved changes</span>
+                  <Button size="sm" className="h-8 text-xs bg-[#875A7B] hover:bg-[#6e4a64] text-white" onClick={handleSave}>Save</Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleDiscard}>Discard</Button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right: Chatter panel — exact Odoo style from screenshot 5 */}
+          {/* Right: Chatter panel */}
           <div className="w-[380px] flex flex-col shrink-0 bg-card">
             {/* Chatter tabs */}
             <div className="flex items-center border-b border-border px-3 py-2 gap-1">
@@ -818,11 +956,11 @@ export default function OpportunityDetail() {
                 </div>
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase">Assigned To</label>
-                  <Input className="h-7 text-xs" placeholder="e.g. Sales Rep" value={activityForm.assignedTo} onChange={(e) => setActivityForm(f => ({ ...f, assignedTo: e.target.value }))} />
+                  <Input className="h-7 text-xs" value={activityForm.assignedTo} onChange={(e) => setActivityForm(f => ({ ...f, assignedTo: e.target.value }))} />
                 </div>
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase">Summary</label>
-                  <Textarea className="min-h-[60px] text-xs" placeholder="Describe the activity..." value={activityForm.summary} onChange={(e) => setActivityForm(f => ({ ...f, summary: e.target.value }))} />
+                  <Textarea className="min-h-[60px] text-xs" value={activityForm.summary} onChange={(e) => setActivityForm(f => ({ ...f, summary: e.target.value }))} />
                 </div>
                 <Button size="sm" className="h-7 text-xs" onClick={handleActivitySubmit}>Schedule</Button>
               </div>
@@ -833,7 +971,6 @@ export default function OpportunityDetail() {
               <div className="px-3 py-2 border-b border-border">
                 <Input
                   autoFocus
-                  placeholder="Search messages..."
                   className="h-7 text-xs"
                   value={chatterSearch}
                   onChange={(e) => setChatterSearch(e.target.value)}
@@ -843,14 +980,13 @@ export default function OpportunityDetail() {
 
             {/* Timeline */}
             <div className="flex-1 overflow-y-auto px-3 py-3">
-              {/* Date separator */}
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex-1 h-px bg-border" />
                 <span className="text-xs text-muted-foreground">Today</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
 
-              {[...notes, ...activities.filter(a => a.completed)]
+              {[...chatterNotes, ...chatterActivities.filter(a => a.completed)]
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .filter((item) => {
                   if (!chatterSearch.trim()) return true;
@@ -881,8 +1017,7 @@ export default function OpportunityDetail() {
                   );
                 })}
 
-              {/* Default creation message */}
-              {notes.length === 0 && activities.filter(a => a.completed).length === 0 && (
+              {chatterNotes.length === 0 && chatterActivities.filter(a => a.completed).length === 0 && (
                 <div className="flex gap-2.5">
                   <ChatterAvatar name="Management" />
                   <div className="flex-1">
