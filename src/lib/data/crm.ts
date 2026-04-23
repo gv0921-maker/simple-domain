@@ -8,9 +8,6 @@ import { logCRM } from '@/lib/crm/audit';
 
 export type ContactType = 'individual' | 'company';
 export type ContactStatus = 'active' | 'archived';
-export type LeadSource = 'website' | 'referral' | 'social_media' | 'trade_show' | 'cold_call' | 'email_campaign' | 'import' | 'manual' | 'other';
-export type LeadPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted' | 'lost';
 export type OpportunityStage = 'new' | 'qualified' | 'proposition' | 'won' | 'lost';
 export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note' | 'follow_up';
 export type NoteVisibility = 'private' | 'team' | 'public';
@@ -78,35 +75,6 @@ export interface Contact {
   paymentTerms?: string;
   priceList?: string;
   purchasePaymentTerms?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Lead {
-  id: string;
-  title: string;
-  contactId?: string;
-  contactName: string;
-  email: string;
-  phone?: string;
-  companyId?: string;
-  companyName?: string;
-  source: LeadSource;
-  sourceDetail?: string;
-  status: LeadStatus;
-  priority: LeadPriority;
-  score: number;
-  expectedRevenue: number;
-  probability: number;
-  assignedTo?: string;
-  teamId?: string;
-  tags: string[];
-  notes?: string;
-  qualifiedAt?: string;
-  convertedAt?: string;
-  convertedToOpportunityId?: string;
-  lostReason?: string;
-  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -185,14 +153,14 @@ export interface Activity {
   type: ActivityType;
   subject: string;
   description?: string;
-  relatedTo: 'contact' | 'company' | 'lead' | 'opportunity';
+  relatedTo: 'contact' | 'company' | 'opportunity';
   relatedId: string;
   userId: string;
   userName: string;
   dueDate?: string;
   completed: boolean;
   completedAt?: string;
-  priority?: LeadPriority;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   mentions?: string[];
   attachments?: RichAttachment[];
   createdAt: string;
@@ -202,7 +170,7 @@ export interface Activity {
 export interface Note {
   id: string;
   content: string;
-  relatedTo: 'contact' | 'company' | 'lead' | 'opportunity';
+  relatedTo: 'contact' | 'company' | 'opportunity';
   relatedId: string;
   userId: string;
   userName: string;
@@ -242,8 +210,6 @@ const DEFAULT_PIPELINES: Pipeline[] = [
 const DEFAULT_COMPANIES: Company[] = [];
 
 const DEFAULT_CONTACTS: Contact[] = [];
-
-const DEFAULT_LEADS: Lead[] = [];
 
 const DEFAULT_OPPORTUNITIES: Opportunity[] = [];
 
@@ -378,130 +344,6 @@ export function findDuplicateContacts(email: string, phone?: string, excludeId?:
   });
 }
 
-// Leads
-export function getLeads(): Lead[] {
-  return getItem<Lead[]>('crm_leads', DEFAULT_LEADS);
-}
-
-export function getLead(id: string): Lead | undefined {
-  return getLeads().find(l => l.id === id);
-}
-
-export function saveLead(lead: Partial<Lead> & { id?: string }): Lead {
-  const leads = getLeads();
-  const now = new Date().toISOString();
-  
-  if (lead.id) {
-    const index = leads.findIndex(l => l.id === lead.id);
-    if (index >= 0) {
-      leads[index] = { ...leads[index], ...lead, updatedAt: now };
-      setItem('crm_leads', leads);
-      logCRM('update', 'lead', lead.id!, `Updated lead "${leads[index].title}"`);
-      return leads[index];
-    }
-  }
-  
-  const newLead: Lead = {
-    id: crypto.randomUUID(),
-    title: lead.title || '',
-    contactName: lead.contactName || '',
-    email: lead.email || '',
-    source: 'manual',
-    status: 'new',
-    priority: 'medium',
-    score: 0,
-    expectedRevenue: 0,
-    probability: 10,
-    tags: [],
-    createdAt: now,
-    updatedAt: now,
-    ...lead,
-  };
-  leads.push(newLead);
-  setItem('crm_leads', leads);
-
-  // Auto-create a contact from the lead's details
-  if (newLead.contactName && newLead.email) {
-    const duplicates = findDuplicateContacts(newLead.email, newLead.phone);
-    if (duplicates.length === 0) {
-      const nameParts = newLead.contactName.trim().split(/\s+/);
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      const newContact = saveContact({
-        firstName,
-        lastName,
-        email: newLead.email,
-        phone: newLead.phone,
-        companyName: newLead.companyName,
-        companyId: newLead.companyId,
-        tags: [],
-        score: 0,
-      });
-      // Link the contact back to the lead
-      newLead.contactId = newContact.id;
-      const idx = leads.findIndex(l => l.id === newLead.id);
-      if (idx >= 0) {
-        leads[idx] = newLead;
-        setItem('crm_leads', leads);
-      }
-    }
-  }
-
-  return newLead;
-}
-
-export function updateLeadStatus(id: string, status: LeadStatus): Lead | undefined {
-  const lead = getLead(id);
-  if (lead) {
-    return saveLead({ ...lead, status });
-  }
-  return undefined;
-}
-
-export function deleteLead(id: string): void {
-  const target = getLead(id);
-  const leads = getLeads().filter(l => l.id !== id);
-  setItem('crm_leads', leads);
-  if (target) logCRM('delete', 'lead', id, `Deleted lead "${target.title}"`);
-}
-
-// Convert lead to opportunity
-export function convertLeadToOpportunity(leadId: string, opportunityData?: Partial<Opportunity>): Opportunity | undefined {
-  const lead = getLead(leadId);
-  if (!lead) return undefined;
-  
-  const priorityMap: Record<string, 0 | 1 | 2 | 3> = {
-    low: 0, medium: 1, high: 2, urgent: 3,
-  };
-
-  const opportunity = saveOpportunity({
-    name: lead.title,
-    contactId: lead.contactId,
-    contactName: lead.contactName,
-    companyId: lead.companyId,
-    companyName: lead.companyName,
-    email: lead.email,
-    phone: lead.phone,
-    expectedRevenue: lead.expectedRevenue,
-    probability: lead.probability,
-    priority: priorityMap[lead.priority] ?? 1,
-    assignedTo: lead.assignedTo,
-    teamId: lead.teamId,
-    tags: lead.tags,
-    notes: lead.notes,
-    ...opportunityData,
-  });
-  
-  saveLead({
-    ...lead,
-    status: 'converted',
-    convertedAt: new Date().toISOString(),
-    convertedToOpportunityId: opportunity.id,
-  });
-  
-  return opportunity;
-}
-
 // Pipelines
 export function getPipelines(): Pipeline[] {
   return getItem<Pipeline[]>('crm_pipelines', DEFAULT_PIPELINES);
@@ -554,7 +396,6 @@ function ensureCRMVersion() {
     // Clear all CRM data to use new empty defaults
     setItem('crm_opportunities', DEFAULT_OPPORTUNITIES);
     setItem('crm_pipelines', DEFAULT_PIPELINES);
-    setItem('crm_leads', DEFAULT_LEADS);
     setItem('crm_contacts', DEFAULT_CONTACTS);
     setItem('crm_companies', DEFAULT_COMPANIES);
     setItem('crm_activities', DEFAULT_ACTIVITIES);
@@ -796,8 +637,6 @@ export function saveTag(tag: Partial<CRMTag>): CRMTag {
 export interface CRMStats {
   totalContacts: number;
   totalCompanies: number;
-  totalLeads: number;
-  newLeadsThisMonth: number;
   totalOpportunities: number;
   activeOpportunities: number;
   pipelineValue: number;
@@ -813,7 +652,6 @@ export interface CRMStats {
 export function getCRMStats(): CRMStats {
   const contacts = getContacts();
   const companies = getCompanies();
-  const leads = getLeads();
   const opportunities = getOpportunities();
   const activities = getActivities();
   
@@ -828,8 +666,6 @@ export function getCRMStats(): CRMStats {
   return {
     totalContacts: contacts.filter(c => c.status === 'active').length,
     totalCompanies: companies.filter(c => c.status === 'active').length,
-    totalLeads: leads.length,
-    newLeadsThisMonth: leads.filter(l => new Date(l.createdAt) >= monthStart).length,
     totalOpportunities: opportunities.length,
     activeOpportunities: activeOpps.length,
     pipelineValue: activeOpps.reduce((sum, o) => sum + o.expectedRevenue, 0),
@@ -841,30 +677,6 @@ export function getCRMStats(): CRMStats {
     activitiesCompleted: activities.filter(a => a.completed).length,
     activitiesPending: activities.filter(a => !a.completed).length,
   };
-}
-
-export interface LeadsBySource {
-  source: string;
-  count: number;
-  value: number;
-}
-
-export function getLeadsBySource(): LeadsBySource[] {
-  const leads = getLeads();
-  const sourceMap = new Map<string, { count: number; value: number }>();
-  
-  leads.forEach(lead => {
-    const existing = sourceMap.get(lead.source) || { count: 0, value: 0 };
-    sourceMap.set(lead.source, {
-      count: existing.count + 1,
-      value: existing.value + lead.expectedRevenue,
-    });
-  });
-  
-  return Array.from(sourceMap.entries()).map(([source, data]) => ({
-    source,
-    ...data,
-  }));
 }
 
 export interface OpportunitiesByStage {
@@ -1107,39 +919,8 @@ export function importOpportunities(data: Partial<Opportunity>[]): ImportResult 
   return result;
 }
 
-export function importLeads(data: Partial<Lead>[]): ImportResult {
-  const result: ImportResult = { success: 0, failed: 0, duplicates: 0, errors: [] };
-  
-  data.forEach((row, index) => {
-    try {
-      if (!row.title && !row.contactName) {
-        result.failed++;
-        result.errors.push(`Row ${index + 1}: Lead title or contact name is required`);
-        return;
-      }
-      
-      saveLead({
-        ...row,
-        title: row.title || `${row.contactName}'s lead`,
-        contactName: row.contactName || '',
-        email: row.email || '',
-      });
-      result.success++;
-    } catch (e) {
-      result.failed++;
-      result.errors.push(`Row ${index + 1}: ${e instanceof Error ? e.message : 'Unknown error'}`);
-    }
-  });
-  
-  return result;
-}
-
 export function exportContacts(): Contact[] {
   return getContacts();
-}
-
-export function exportLeads(): Lead[] {
-  return getLeads();
 }
 
 export function exportOpportunities(): Opportunity[] {

@@ -301,7 +301,7 @@ export default function RolesManagement() {
   };
 
   // Update additional permissions (import/export/print)
-  const handleAdditionalPermChange = (module: string, field: 'canImport' | 'canExport' | 'canPrint' | 'canConvertLeads' | 'canModifyPipeline', value: boolean) => {
+  const handleAdditionalPermChange = (module: string, field: 'canImport' | 'canExport' | 'canPrint' | 'canModifyPipeline', value: boolean) => {
     setEditFormData((prev) => {
       const existing = prev.permissions.find((p) => p.module === module);
       if (existing) {
@@ -847,13 +847,6 @@ export default function RolesManagement() {
                             {module === 'crm' && (
                               <>
                                 <TableCell className="text-center border-l border-border">
-                                  <Checkbox
-                                    checked={perm?.canConvertLeads ?? (getEditPermissionLevel(module) === 'edit' || getEditPermissionLevel(module) === 'delete' || getEditPermissionLevel(module) === 'admin')}
-                                    onCheckedChange={(checked) => handleAdditionalPermChange(module, 'canConvertLeads', !!checked)}
-                                  />
-                                  <div className="text-[10px] text-muted-foreground mt-0.5">Convert Leads</div>
-                                </TableCell>
-                                <TableCell className="text-center">
                                   <Checkbox
                                     checked={perm?.canModifyPipeline ?? (getEditPermissionLevel(module) === 'admin')}
                                     onCheckedChange={(checked) => handleAdditionalPermChange(module, 'canModifyPipeline', !!checked)}

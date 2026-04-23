@@ -16,7 +16,7 @@ interface EmailComposerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTo?: string;
-  relatedTo: 'contact' | 'opportunity' | 'lead';
+  relatedTo: 'contact' | 'opportunity';
   relatedId: string;
 }
 

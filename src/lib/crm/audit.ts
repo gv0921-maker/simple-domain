@@ -3,7 +3,7 @@ import { addAuditLog, getAuditLogs } from '@/lib/data/rbac';
 import { getAuthState } from '@/lib/storage';
 
 export type CRMAuditAction = 'create' | 'update' | 'delete';
-export type CRMResource = 'contact' | 'company' | 'lead' | 'opportunity' | 'activity' | 'note' | 'pipeline';
+export type CRMResource = 'contact' | 'company' | 'opportunity' | 'activity' | 'note' | 'pipeline';
 
 function currentUser() {
   const auth = getAuthState();

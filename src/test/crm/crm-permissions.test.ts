@@ -32,34 +32,3 @@ describe("CRM Field Masking", () => {
     expect(canViewSensitive(undefined, "crm", "email")).toBe(false);
   });
 });
-
-describe("CRM Lead Scoring", () => {
-  it("calculates score based on rules", async () => {
-    const { calculateScore } = await import("@/lib/crm/leadScoring");
-    const lead = {
-      id: "t1", title: "Test", contactName: "C", email: "e@t.com",
-      source: "referral" as const, status: "new" as const, priority: "high" as const,
-      score: 0, expectedRevenue: 150000, probability: 50,
-      tags: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-      phone: "+91-1234567890", companyName: "TestCo",
-    };
-    const { score, breakdown } = calculateScore(lead);
-    // referral(20) + high(15) + revenue>=100k(20) + revenue>=50k(10) + hasPhone(5) + hasCompany(5) = 75
-    expect(score).toBe(75);
-    expect(breakdown.length).toBeGreaterThan(0);
-    expect(breakdown.filter(b => b.matched).length).toBeGreaterThan(3);
-  });
-
-  it("caps score at 100", async () => {
-    const { calculateScore } = await import("@/lib/crm/leadScoring");
-    const lead = {
-      id: "t2", title: "Max", contactName: "C", email: "e@t.com",
-      source: "referral" as const, status: "new" as const, priority: "urgent" as const,
-      score: 0, expectedRevenue: 200000, probability: 50,
-      tags: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-      phone: "+91-1234567890", companyName: "BigCo",
-    };
-    const { score } = calculateScore(lead);
-    expect(score).toBeLessThanOrEqual(100);
-  });
-});

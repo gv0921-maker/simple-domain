@@ -5,7 +5,6 @@ import { getItem, setItem } from '@/lib/storage';
 const CRM_KEYS = [
   'crm_companies',
   'crm_contacts',
-  'crm_leads',
   'crm_opportunities',
   'crm_pipelines',
   'crm_activities',

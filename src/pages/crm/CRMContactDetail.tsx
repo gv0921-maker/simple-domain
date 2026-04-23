@@ -21,7 +21,7 @@ import {
   FileText,
   MessageSquare,
 } from 'lucide-react';
-import { getContact, getContacts, getLeads, getOpportunities, getNotes, saveNote, type Contact, type Note } from '@/lib/data/crm';
+import { getContact, getContacts, getOpportunities, getNotes, saveNote, type Contact, type Note } from '@/lib/data/crm';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
@@ -52,11 +52,6 @@ export default function CRMContactDetail() {
 
   const showEmail = canViewSensitive(user?.id, 'crm', 'email');
   const showPhone = canViewSensitive(user?.id, 'crm', 'phone');
-
-  // Find linked leads for this contact
-  const linkedLeads = getLeads().filter(
-    (l) => l.contactId === id || l.email === contact?.email
-  );
 
   // Find linked opportunities
   const linkedOpportunities = getOpportunities().filter(
@@ -323,32 +318,6 @@ export default function CRMContactDetail() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Linked Leads */}
-            {linkedLeads.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Linked Leads</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {linkedLeads.map((lead) => (
-                      <div
-                        key={lead.id}
-                        className="flex items-center justify-between p-3 rounded-md border cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate(`/crm/leads/${lead.id}`)}
-                      >
-                        <div>
-                          <p className="font-medium text-sm">{lead.title}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{lead.status}</p>
-                        </div>
-                        <Badge variant="outline" className="text-xs capitalize">{lead.priority}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Sales History */}
             {(linkedQuotations.length > 0 || linkedOrders.length > 0) && (

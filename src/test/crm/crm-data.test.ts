@@ -62,31 +62,6 @@ describe("CRM Data — Contacts", () => {
   });
 });
 
-describe("CRM Data — Leads", () => {
-  beforeEach(() => clearCRM());
-
-  it("creates a lead", async () => {
-    const crm = await loadCRM();
-    const l = crm.saveLead({ title: "Test Lead", contactName: "C", email: "l@t.com" });
-    expect(l.status).toBe("new");
-    expect(l.source).toBe("manual");
-  });
-
-  it("updates lead status", async () => {
-    const crm = await loadCRM();
-    const l = crm.saveLead({ title: "L2", contactName: "C", email: "l2@t.com" });
-    const updated = crm.updateLeadStatus(l.id, "qualified");
-    expect(updated?.status).toBe("qualified");
-  });
-
-  it("deletes a lead", async () => {
-    const crm = await loadCRM();
-    const l = crm.saveLead({ title: "Del", contactName: "C", email: "d@t.com" });
-    crm.deleteLead(l.id);
-    expect(crm.getLead(l.id)).toBeUndefined();
-  });
-});
-
 describe("CRM Data — Opportunities", () => {
   beforeEach(() => clearCRM());
 
@@ -165,7 +140,7 @@ describe("CRM Data — Activities", () => {
   it("filters activities by related entity", async () => {
     const crm = await loadCRM();
     crm.saveActivity({ subject: "A1", type: "call", relatedTo: "contact", relatedId: "c1", userId: "1", userName: "U" });
-    crm.saveActivity({ subject: "A2", type: "email", relatedTo: "lead", relatedId: "l1", userId: "1", userName: "U" });
+    crm.saveActivity({ subject: "A2", type: "email", relatedTo: "opportunity", relatedId: "l1", userId: "1", userName: "U" });
     const filtered = crm.getActivities("contact", "c1");
     expect(filtered.length).toBe(1);
     expect(filtered[0].subject).toBe("A1");
@@ -184,12 +159,11 @@ describe("CRM Data — Notes", () => {
   it("filters notes by related entity", async () => {
     const crm = await loadCRM();
     crm.saveNote({ content: "N1", relatedTo: "contact", relatedId: "c1", userId: "1", userName: "U" });
-    crm.saveNote({ content: "N2", relatedTo: "lead", relatedId: "l1", userId: "1", userName: "U" });
+    crm.saveNote({ content: "N2", relatedTo: "opportunity", relatedId: "l1", userId: "1", userName: "U" });
     const contactNotes = crm.getNotes("contact", "c1");
-    const leadNotes = crm.getNotes("lead", "l1");
-    // Each filter should return fewer than the total
+    const oppNotes = crm.getNotes("opportunity", "l1");
     expect(contactNotes.length).toBeGreaterThanOrEqual(1);
-    expect(leadNotes.length).toBeGreaterThanOrEqual(1);
+    expect(oppNotes.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -234,14 +208,6 @@ describe("CRM Data — Analytics", () => {
     expect(stages.length).toBeGreaterThan(0);
   });
 
-  it("groups leads by source", async () => {
-    const crm = await loadCRM();
-    crm.saveLead({ title: "L1", contactName: "C", email: "a@t.com", source: "referral" });
-    crm.saveLead({ title: "L2", contactName: "C", email: "b@t.com", source: "referral" });
-    const bySrc = crm.getLeadsBySource();
-    const referral = bySrc.find(s => s.source === "referral");
-    expect(referral?.count).toBe(2);
-  });
 });
 
 describe("CRM Data — Import", () => {
