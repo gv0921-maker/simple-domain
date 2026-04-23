@@ -13,10 +13,6 @@ export type CRMAction =
   | 'create_contacts'
   | 'edit_contacts'
   | 'delete_contacts'
-  | 'create_leads'
-  | 'edit_leads'
-  | 'delete_leads'
-  | 'convert_leads'
   | 'create_opportunities'
   | 'edit_opportunities'
   | 'delete_opportunities'
@@ -30,10 +26,6 @@ interface CRMPermissions {
   canCreateContacts: boolean;
   canEditContacts: boolean;
   canDeleteContacts: boolean;
-  canCreateLeads: boolean;
-  canEditLeads: boolean;
-  canDeleteLeads: boolean;
-  canConvertLeads: boolean;
   canCreateOpportunities: boolean;
   canEditOpportunities: boolean;
   canDeleteOpportunities: boolean;
@@ -56,10 +48,6 @@ export function useCRMPermissions(): CRMPermissions {
         canCreateContacts: false,
         canEditContacts: false,
         canDeleteContacts: false,
-        canCreateLeads: false,
-        canEditLeads: false,
-        canDeleteLeads: false,
-        canConvertLeads: false,
         canCreateOpportunities: false,
         canEditOpportunities: false,
         canDeleteOpportunities: false,
@@ -80,8 +68,6 @@ export function useCRMPermissions(): CRMPermissions {
     const isAdmin = hasPermission(user.id, 'crm', 'admin');
     const canExport = hasModulePermission(user.id, 'crm', 'export');
     const canImport = hasModulePermission(user.id, 'crm', 'import');
-    // Granular toggles - default behaviour preserved if not explicitly set
-    const canConvertLeads = hasModulePermission(user.id, 'crm', 'convert_leads');
     const canModifyPipeline = hasModulePermission(user.id, 'crm', 'modify_pipeline');
     
     const recordScope = getModuleRecordScope(user.id, 'crm');
@@ -91,19 +77,14 @@ export function useCRMPermissions(): CRMPermissions {
         case 'view_crm':
           return canView;
         case 'create_contacts':
-        case 'create_leads':
         case 'create_opportunities':
           return canCreate;
         case 'edit_contacts':
-        case 'edit_leads':
         case 'edit_opportunities':
           return canEdit;
         case 'delete_contacts':
-        case 'delete_leads':
         case 'delete_opportunities':
           return canDelete;
-        case 'convert_leads':
-          return canConvertLeads;
         case 'modify_pipeline':
           return canModifyPipeline;
         case 'view_analytics':
@@ -145,10 +126,6 @@ export function useCRMPermissions(): CRMPermissions {
       canCreateContacts: canCreate,
       canEditContacts: canEdit,
       canDeleteContacts: canDelete,
-      canCreateLeads: canCreate,
-      canEditLeads: canEdit,
-      canDeleteLeads: canDelete,
-      canConvertLeads: canConvertLeads,
       canCreateOpportunities: canCreate,
       canEditOpportunities: canEdit,
       canDeleteOpportunities: canDelete,
