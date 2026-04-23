@@ -1,6 +1,6 @@
 // TODO: Replace localStorage with Supabase queries
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,13 @@ export default function ContactForm() {
   const { id } = useParams();
   const { toast } = useToast();
   const isEdit = !!id;
+
+  const [searchParams] = useSearchParams();
+  const parsedReturn = (() => {
+    const rc = searchParams.get('returnContext');
+    if (!rc) return null;
+    try { return JSON.parse(decodeURIComponent(rc)); } catch { return null; }
+  })();
 
   const [formData, setFormData] = useState({
     type: 'individual' as Contact['type'],
@@ -234,7 +241,17 @@ export default function ContactForm() {
       setSameAsBilling(true);
       setCustomFields([]);
     } else {
-      navigate('/crm/contacts');
+      if (parsedReturn?.returnTo) {
+        const savedContacts = getContacts();
+        const newest = savedContacts[savedContacts.length - 1];
+        const returnData = encodeURIComponent(JSON.stringify({
+          ...parsedReturn.opportunityData,
+          contactId: newest?.id || '',
+        }));
+        navigate(`${parsedReturn.returnTo}?restoredData=${returnData}`);
+      } else {
+        navigate('/crm/contacts');
+      }
     }
   };
 
@@ -669,7 +686,13 @@ export default function ContactForm() {
           <Button onClick={() => handleSubmit('new')} variant="secondary">
             Save & New
           </Button>
-          <Button variant="outline" onClick={() => navigate('/crm/contacts')}>
+          <Button variant="outline" onClick={() => {
+            if (parsedReturn?.returnTo) {
+              navigate(parsedReturn.returnTo);
+            } else {
+              navigate('/crm/contacts');
+            }
+          }}>
             Discard
           </Button>
         </div>

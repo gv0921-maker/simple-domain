@@ -1,6 +1,6 @@
 // TODO: Replace localStorage with Supabase queries
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { Button } from '@/components/ui/button';
@@ -16,15 +16,36 @@ import { useStudioConfig } from '@/hooks/useStudioConfig';
 export default function OpportunityForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [contacts] = useState(() => getContacts());
   const studio = useStudioConfig('crm', 'New Opportunity');
 
-  const [formData, setFormData] = useState({
-    name: '',
-    contactId: '',
-    expectedRevenue: 0,
-    expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  const [formData, setFormData] = useState(() => {
+    const restoredData = searchParams.get('restoredData');
+    if (restoredData) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(restoredData));
+        return {
+          name: parsed.name || '',
+          contactId: parsed.contactId || '',
+          expectedRevenue: parsed.expectedRevenue || 0,
+          expectedCloseDate: parsed.expectedCloseDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        };
+      } catch { /* fall through */ }
+    }
+    return {
+      name: '',
+      contactId: '',
+      expectedRevenue: 0,
+      expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    };
   });
+
+  useEffect(() => {
+    if (searchParams.get('restoredData')) {
+      window.history.replaceState({}, '', '/crm/opportunities/new');
+    }
+  }, []);
 
   const handleSubmit = () => {
     if (!formData.name) {
@@ -81,7 +102,11 @@ export default function OpportunityForm() {
                 <Label>{studio.getFieldLabel('contact', 'Contact')}</Label>
                 <Select value={formData.contactId} onValueChange={(v) => {
                   if (v === '__create_new__') {
-                    navigate('/crm/contacts/new');
+                    const returnData = encodeURIComponent(JSON.stringify({
+                      returnTo: '/crm/opportunities/new',
+                      opportunityData: formData,
+                    }));
+                    navigate(`/crm/contacts/new?returnContext=${returnData}`);
                     return;
                   }
                   setFormData({ ...formData, contactId: v });
