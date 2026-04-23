@@ -149,23 +149,52 @@ export default function OpportunityDetail() {
     };
     const stage = stageMap[stageId];
     if (stage) {
+      const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
+      const newStageName = activeStages.find(s => s.id === stageId)?.name || stageId;
       updateOpportunityStage(opportunity.id, stageId, stage);
       setOpportunity(getOpportunity(opportunity.id));
-      toast({ title: `Stage updated to ${activeStages.find(s => s.id === stageId)?.name}` });
+      toast({ title: `Stage updated to ${newStageName}` });
+      // Auto-log stage change in chatter
+      saveNote({
+        content: `<p><strong>Stage changed</strong><br/>${previousStageName} → ${newStageName} (Stage)</p>`,
+        relatedTo: 'opportunity',
+        relatedId: opportunity.id,
+        userId: user?.id || '1',
+        userName: 'System',
+        visibility: 'team',
+      } as any);
     }
   };
 
   const handleWon = () => {
+    const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
     updateOpportunityStage(opportunity.id, 'won', 'won');
     setOpportunity(getOpportunity(opportunity.id));
     toast({ title: '🎉 Opportunity Won!' });
+    saveNote({
+      content: `<p><strong>Opportunity won</strong><br/>${previousStageName} → Won (Stage)</p>`,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: user?.id || '1',
+      userName: 'System',
+      visibility: 'team',
+    } as any);
   };
 
   const handleLost = () => {
+    const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
     saveOpportunity({ ...opportunity, lostReason, stage: 'lost', stageId: 'lost', lostAt: new Date().toISOString(), probability: 0 });
     setShowLostDialog(false);
     setOpportunity(getOpportunity(opportunity.id));
     toast({ title: 'Opportunity marked as lost' });
+    saveNote({
+      content: `<p><strong>Opportunity lost</strong><br/>${previousStageName} → Lost (Won/Lost)</p>`,
+      relatedTo: 'opportunity',
+      relatedId: opportunity.id,
+      userId: user?.id || '1',
+      userName: 'System',
+      visibility: 'team',
+    } as any);
   };
 
   const handleSave = () => {
