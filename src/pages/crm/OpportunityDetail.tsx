@@ -445,7 +445,7 @@ export default function OpportunityDetail() {
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
           {/* Left: Form */}
           <div className="w-full lg:flex-1 overflow-y-auto border-b lg:border-b-0 lg:border-r border-border">
-            <div className="p-4 max-w-4xl relative overflow-hidden">
+            <div className="p-4 w-full relative overflow-hidden">
               {/* Won/Lost Ribbon Overlay */}
               {isWon && (
                 <div className="absolute top-5 -right-8 rotate-45 bg-green-600 text-white text-xs font-bold px-10 py-1 z-20 shadow-md">
@@ -866,14 +866,14 @@ export default function OpportunityDetail() {
           </div>
 
           {/* Right: Chatter panel */}
-          <div className="w-full lg:w-[380px] max-h-[500px] lg:max-h-none flex flex-col shrink-0 bg-card overflow-y-auto">
+          <div className="w-full lg:w-[380px] min-h-[480px] lg:min-h-0 max-h-[500px] lg:max-h-none flex flex-col shrink-0 bg-card overflow-y-auto">
             {/* Chatter tabs */}
-            <div className="flex items-center border-b border-border px-3 py-2 gap-1 overflow-x-auto flex-nowrap">
+            <div className="flex items-center border-b border-border px-3 py-2 gap-1 flex-wrap sm:flex-nowrap">
               <Button
                 variant={chatterTab === 'message' ? 'default' : 'outline'}
                 size="sm"
                 className={cn(
-                  'h-7 text-xs',
+                  'h-11 sm:h-7 px-4 sm:px-3 text-sm sm:text-xs font-medium',
                   chatterTab === 'message' && 'bg-[#875A7B] hover:bg-[#6e4a64] text-white'
                 )}
                 onClick={() => setChatterTab('message')}
@@ -884,7 +884,7 @@ export default function OpportunityDetail() {
                 variant={chatterTab === 'note' ? 'default' : 'outline'}
                 size="sm"
                 className={cn(
-                  'h-7 text-xs',
+                  'h-11 sm:h-7 px-4 sm:px-3 text-sm sm:text-xs font-medium',
                   chatterTab === 'note' && 'bg-foreground text-background hover:bg-foreground/90'
                 )}
                 onClick={() => setChatterTab('note')}
@@ -894,7 +894,7 @@ export default function OpportunityDetail() {
               <Button
                 variant={chatterTab === 'activity' ? 'default' : 'outline'}
                 size="sm"
-                className="h-7 text-xs"
+                className="h-11 sm:h-7 px-4 sm:px-3 text-sm sm:text-xs font-medium"
                 onClick={() => setChatterTab('activity')}
               >
                 Activity
