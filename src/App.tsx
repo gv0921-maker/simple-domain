@@ -67,9 +67,6 @@ import CRMContactDetail from "@/pages/crm/CRMContactDetail";
 import ContactForm from "@/pages/crm/ContactForm";
 import OpportunityForm from "@/pages/crm/OpportunityForm";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
-import CRMLeadsList from "@/pages/crm/CRMLeadsList";
-import LeadDetail from "@/pages/crm/LeadDetail";
-import LeadForm from "@/pages/crm/LeadForm";
 
 // Accounting pages
 import AccountingOverview from "@/pages/accounting/AccountingOverview";
@@ -178,12 +175,12 @@ const App = () => (
 
             {/* Placeholder routes */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/dashboards/crm" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
             <Route path="/discuss" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
             {/* CRM module */}
-            <Route path="/crm/dashboard" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
             <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
             <Route path="/crm/opportunities/new" element={<ProtectedRoute><OpportunityForm /></ProtectedRoute>} />
             <Route path="/crm/opportunities/:id" element={<ProtectedRoute><OpportunityDetail /></ProtectedRoute>} />
@@ -191,10 +188,6 @@ const App = () => (
             <Route path="/crm/contacts/new" element={<ProtectedRoute><ContactForm /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id" element={<ProtectedRoute><CRMContactDetail /></ProtectedRoute>} />
             <Route path="/crm/contacts/:id/edit" element={<ProtectedRoute><ContactForm /></ProtectedRoute>} />
-            <Route path="/crm/leads" element={<ProtectedRoute><CRMLeadsList /></ProtectedRoute>} />
-            <Route path="/crm/leads/new" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
-            <Route path="/crm/leads/:id/edit" element={<ProtectedRoute><LeadForm /></ProtectedRoute>} />
-            <Route path="/crm/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
 
             {/* Manufacturing module */}
             <Route path="/manufacturing" element={<ProtectedRoute><ManufacturingOverview /></ProtectedRoute>} />

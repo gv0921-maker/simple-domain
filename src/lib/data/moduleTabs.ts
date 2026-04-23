@@ -24,6 +24,13 @@ export const MODULE_TABS: ModuleTabsConfig[] = [
     ],
   },
   {
+    moduleId: 'dashboards',
+    moduleName: 'Dashboards',
+    tabs: [
+      { id: 'crm', label: 'CRM', href: '/dashboards/crm' },
+    ],
+  },
+  {
     moduleId: 'sales',
     moduleName: 'Sales',
     tabs: [
