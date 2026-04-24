@@ -1,6 +1,5 @@
-// TODO: Replace localStorage with Supabase queries
-// Odoo-style List View for Pipeline
-import { useState, useMemo, useEffect } from 'react';
+// Odoo-style List View for Pipeline — uses TanStack Query hooks (Supabase-ready)
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,11 +12,10 @@ import {
 } from '@/components/ui/tooltip';
 import {
   List, LayoutGrid, ChevronDown, ChevronUp,
-  Clock, Settings,
+  Clock, Settings, Loader2,
 } from 'lucide-react';
-import {
-  getOpportunities, getDefaultPipeline, type Opportunity,
-} from '@/lib/services/crm';
+import { type Opportunity, type Pipeline } from '@/lib/services/crm';
+import { useOpportunities, useDefaultPipeline } from '@/hooks/crm/useCRMQueries';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,18 +37,11 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
   const navigate = useNavigate();
   const { canCreateOpportunities, filterByScope } = useCRMPermissions();
   const { user } = useAuth();
-  const pipeline = getDefaultPipeline();
+  const { data: pipelineData } = useDefaultPipeline();
+  const pipeline: Pipeline = pipelineData ?? { id: '', name: '', description: '', stages: [], isDefault: false, createdAt: '', updatedAt: '' };
 
-  const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>(() => getOpportunities());
+  const { data: allOpportunities = [], isFetching } = useOpportunities();
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
-
-  // Refresh data when component mounts or window regains focus
-  useEffect(() => {
-    const refresh = () => setAllOpportunities(getOpportunities());
-    window.addEventListener('focus', refresh);
-    refresh();
-    return () => window.removeEventListener('focus', refresh);
-  }, []);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [sortField, setSortField] = useState<SortField>('expectedRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -110,6 +101,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             </Button>
             <span className="text-sm font-semibold text-foreground">Pipeline</span>
             <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer" />
+            {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
           <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
