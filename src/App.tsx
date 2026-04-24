@@ -68,15 +68,9 @@ import ContactForm from "@/pages/crm/ContactForm";
 import OpportunityForm from "@/pages/crm/OpportunityForm";
 import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 
-// Accounting pages
-import AccountingOverview from "@/pages/accounting/AccountingOverview";
-import ChartOfAccounts from "@/pages/accounting/ChartOfAccounts";
-import AccountForm from "@/pages/accounting/AccountForm";
-import JournalEntries from "@/pages/accounting/JournalEntries";
-import InvoicesList from "@/pages/accounting/InvoicesList";
-import InvoiceForm from "@/pages/accounting/InvoiceForm";
-import Payments from "@/pages/accounting/Payments";
-import FinancialReports from "@/pages/accounting/FinancialReports";
+// Invoicing pages
+import InvoicesList from "@/pages/invoicing/InvoicesList";
+import InvoiceForm from "@/pages/invoicing/InvoiceForm";
 
 // Settings pages
 import GeneralSettings from "@/pages/settings/GeneralSettings";
@@ -201,16 +195,7 @@ const App = () => (
             <Route path="/manufacturing/planning" element={<ProtectedRoute><ProductionPlanning /></ProtectedRoute>} />
             <Route path="/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
 
-            {/* Accounting module */}
-            <Route path="/accounting" element={<ProtectedRoute><AccountingOverview /></ProtectedRoute>} />
-            <Route path="/accounting/chart" element={<ProtectedRoute><ChartOfAccounts /></ProtectedRoute>} />
-            <Route path="/accounting/chart/new" element={<ProtectedRoute><AccountForm /></ProtectedRoute>} />
-            <Route path="/accounting/chart/:id/edit" element={<ProtectedRoute><AccountForm /></ProtectedRoute>} />
-            <Route path="/accounting/journal" element={<ProtectedRoute><JournalEntries /></ProtectedRoute>} />
-            <Route path="/accounting/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-            <Route path="/accounting/reports" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
-            <Route path="/accounting/bills" element={<ProtectedRoute><AccountingOverview /></ProtectedRoute>} />
-            <Route path="/accounting/invoices" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
+            {/* Invoices module */}
             <Route path="/invoicing" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
             <Route path="/invoicing/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
             <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />

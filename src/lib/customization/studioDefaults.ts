@@ -395,12 +395,12 @@ const DEFAULT_STUDIO_FORMS: Record<string, Omit<StudioFormConfig, 'id' | 'module
       { id: 'notes', label: 'Notes', technicalName: 'notes', widget: 'textarea', required: false, visible: true, readOnly: false, colSpan: 2 },
     ],
     smartButtons: [
-      { id: 'sb_payment', label: 'Payments', icon: 'DollarSign', targetModule: 'accounting', targetRoute: '/accounting/payments', visible: true },
+      { id: 'sb_payment', label: 'Payments', icon: 'DollarSign', targetModule: 'accounting', targetRoute: '/invoicing', visible: true },
       { id: 'sb_order', label: 'Sales Order', icon: 'ShoppingCart', targetModule: 'sales', targetRoute: '/sales/orders', visible: true },
     ],
     actionButtons: [
       { id: 'ab_confirm', label: 'Confirm', type: 'primary', action: 'status_change', targetStatus: 'posted', visible: true, position: 'header', order: 0 },
-      { id: 'ab_payment', label: 'Register Payment', type: 'secondary', action: 'navigate', targetRoute: '/accounting/payments', visible: true, position: 'header', order: 1 },
+      { id: 'ab_payment', label: 'Register Payment', type: 'secondary', action: 'navigate', targetRoute: '/invoicing', visible: true, position: 'header', order: 1 },
     ],
   },
   'accounting:Payment': {

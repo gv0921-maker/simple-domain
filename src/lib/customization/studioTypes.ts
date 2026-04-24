@@ -110,10 +110,9 @@ export const MODULE_REGISTRY = [
     { path: '/manufacturing/work-orders', label: 'Work Orders' },
     { path: '/manufacturing/bom', label: 'Bill of Materials' },
   ]},
-  { id: 'accounting', name: 'Accounting', routes: [
-    { path: '/accounting', label: 'Overview' },
-    { path: '/invoicing', label: 'Invoices' },
-    { path: '/accounting/payments', label: 'Payments' },
+  { id: 'accounting', name: 'Invoices', routes: [
+    { path: '/invoicing', label: 'All Invoices' },
+    { path: '/invoicing/new', label: 'New Invoice' },
   ]},
 ];
 

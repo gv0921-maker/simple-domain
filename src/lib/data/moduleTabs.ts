@@ -74,15 +74,9 @@ export const MODULE_TABS: ModuleTabsConfig[] = [
   },
   {
     moduleId: 'accounting',
-    moduleName: 'Accounting',
+    moduleName: 'Invoices',
     tabs: [
-      { id: 'overview', label: 'Overview', href: '/accounting' },
-      { id: 'journal', label: 'Journal Entries', href: '/accounting/journal' },
-      { id: 'chart', label: 'Chart of Accounts', href: '/accounting/chart' },
-      { id: 'invoices', label: 'Invoices', href: '/invoicing' },
-      { id: 'bills', label: 'Bills', href: '/accounting/bills' },
-      { id: 'payments', label: 'Payments', href: '/accounting/payments' },
-      { id: 'reports', label: 'Reports', href: '/accounting/reports' },
+      { id: 'invoices', label: 'All Invoices', href: '/invoicing' },
     ],
   },
   {
