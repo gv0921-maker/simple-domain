@@ -50,12 +50,10 @@ const FORM_REGISTRY = [
     ],
   },
   {
-    module: 'Accounting',
+    module: 'Invoices',
     moduleId: 'accounting',
     forms: [
       { name: 'Invoice', description: 'Invoice form' },
-      { name: 'Payment', description: 'Payment form' },
-      { name: 'Journal Entry', description: 'Journal entry form' },
     ],
   },
 ];

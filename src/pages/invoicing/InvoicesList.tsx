@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { ACCOUNTING_NAV } from '@/lib/navigation/accounting';
+import { INVOICING_NAV } from '@/lib/navigation/invoicing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,7 @@ export default function InvoicesList() {
   };
 
   return (
-    <AppLayout title="Accounting" subtitle="Invoices" moduleNav={ACCOUNTING_NAV}>
+    <AppLayout title="Invoices" moduleNav={INVOICING_NAV}>
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Invoices</h1>

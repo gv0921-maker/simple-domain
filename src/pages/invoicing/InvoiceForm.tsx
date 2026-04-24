@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { ACCOUNTING_NAV } from '@/lib/navigation/accounting';
+import { INVOICING_NAV } from '@/lib/navigation/invoicing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,7 +80,7 @@ export default function InvoiceForm() {
   };
 
   return (
-    <AppLayout title="Accounting" subtitle="New Invoice" moduleNav={ACCOUNTING_NAV}>
+    <AppLayout title="Invoices" subtitle="New Invoice" moduleNav={INVOICING_NAV}>
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/invoicing')}>

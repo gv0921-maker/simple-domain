@@ -72,7 +72,7 @@ export function GlobalSearch() {
       { name: 'Sales Quotations', href: '/sales/quotations', icon: FileText },
       { name: 'Sales Orders', href: '/sales/orders', icon: ShoppingCart },
       { name: 'Manufacturing', href: '/manufacturing', icon: Factory },
-      { name: 'Accounting', href: '/accounting', icon: FileText },
+      { name: 'Invoices', href: '/invoicing', icon: FileText },
       { name: 'Settings', href: '/settings', icon: Settings },
     ];
 
