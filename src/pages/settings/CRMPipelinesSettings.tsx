@@ -312,6 +312,7 @@ export default function CRMPipelinesSettings() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
