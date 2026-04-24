@@ -767,7 +767,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
       </div>
 
       {/* Kanban board */}
-      <div className="flex-1 overflow-x-auto px-3 pb-3 pt-2 bg-muted/20">
+      <div className="flex-1 overflow-x-scroll overflow-y-hidden px-3 pb-3 pt-2 bg-muted/20 crm-kanban-scroll">
         <div className="flex gap-1 h-full min-w-max">
           {groupedView ? groupedView.map((g) => (
             <div key={g.label} className="w-[280px] flex flex-col shrink-0">
