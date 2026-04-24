@@ -47,6 +47,7 @@ export default function CRMContactDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { canEditContacts } = useCRMPermissions();
   const { data: contact, isLoading: contactLoading, isFetching } = useContact(id);
   const { data: allContacts = [] } = useContacts();
   const { data: notes = [] } = useNotes('contact', id);
