@@ -10,4 +10,5 @@ export const SETTINGS_NAV = [
   { label: 'Accessibility', href: '/settings/accessibility' },
   { label: 'Audit Logs', href: '/settings/audit' },
   { label: 'Backups', href: '/settings/backups' },
+  { label: 'Data Migration', href: '/settings/data-migration' },
 ];

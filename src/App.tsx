@@ -90,6 +90,7 @@ import CRMPipelinesSettings from "@/pages/settings/CRMPipelinesSettings";
 import CRMBackupSettings from "@/pages/settings/CRMBackupSettings";
 import CRMDataSchema from "@/pages/settings/CRMDataSchema";
 import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
+import DataMigration from "@/pages/settings/DataMigration";
 
 import NotFound from "@/pages/NotFound";
 
@@ -172,6 +173,7 @@ const App = () => (
             <Route path="/settings/crm-backup" element={<ProtectedRoute><CRMBackupSettings /></ProtectedRoute>} />
             <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
+            <Route path="/settings/data-migration" element={<ProtectedRoute><DataMigration /></ProtectedRoute>} />
 
             {/* Placeholder routes */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
