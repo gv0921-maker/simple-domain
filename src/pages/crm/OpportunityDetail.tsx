@@ -533,8 +533,7 @@ export default function OpportunityDetail() {
 
               {/* Chevron Stage Bar */}
               <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide">
-                {!isLost && (
-                  <div className="flex items-stretch flex-1">
+                <div className="flex items-stretch flex-1">
                     {activeStages.map((stage, index) => {
                       const isActive = stage.id === opportunity.stageId;
                       const isPast = index < currentStageIndex;
@@ -584,8 +583,7 @@ export default function OpportunityDetail() {
                         </button>
                       );
                     })}
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* Opportunity title — inline editable */}
