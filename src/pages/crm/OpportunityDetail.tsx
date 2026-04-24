@@ -52,22 +52,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
-  getOpportunity,
-  getContact,
-  getContacts,
-  getOpportunities,
-  saveOpportunity,
-  updateOpportunityStage,
-  getDefaultPipeline,
-  getActivities,
-  saveActivity,
-  getNotes,
-  saveNote,
   type Opportunity,
   type OpportunityStage,
   type Activity,
   type Note,
 } from '@/lib/services/crm';
+import {
+  useOpportunity,
+  useOpportunities,
+  useContact,
+  useContacts,
+  useDefaultPipeline,
+  useSaveOpportunity,
+  useUpdateOpportunityStage,
+  useSaveActivity,
+  useSaveNote,
+  useActivities,
+  useNotes,
+  useActivitiesRealtime,
+  useNotesRealtime,
+  crmKeys,
+} from '@/hooks/crm/useCRMQueries';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { useToast } from '@/hooks/use-toast';
@@ -115,12 +122,25 @@ export default function OpportunityDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const pipeline = getDefaultPipeline();
-  const allOpportunities = getOpportunities();
+  const queryClient = useQueryClient();
 
-  const [opportunity, setOpportunity] = useState<Opportunity | undefined>(() =>
-    id ? getOpportunity(id) : undefined
-  );
+  // CRM data via TanStack Query hooks
+  const { data: pipelineData } = useDefaultPipeline();
+  const pipeline = pipelineData ?? { id: '', name: '', description: '', stages: [], isDefault: false, createdAt: '', updatedAt: '' };
+  const { data: allOpportunities = [], isFetching: isFetchingAll } = useOpportunities();
+  const { data: opportunityData, isLoading: isLoadingOpp, isFetching: isFetchingOpp } = useOpportunity(id);
+  const opportunity = opportunityData;
+
+  // Mutations
+  const saveOpportunityMutation = useSaveOpportunity();
+  const updateStageMutation = useUpdateOpportunityStage();
+  const saveActivityMutation = useSaveActivity();
+  const saveNoteMutation = useSaveNote();
+
+  // Local helpers wrapping mutations (fire-and-forget)
+  const saveOpportunity = (o: Partial<Opportunity> & { id?: string }) => saveOpportunityMutation.mutate(o);
+  const saveActivity = (a: Partial<Activity>) => saveActivityMutation.mutate(a as any);
+  const saveNote = (n: Partial<Note>) => saveNoteMutation.mutate(n as any);
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
@@ -147,18 +167,21 @@ export default function OpportunityDetail() {
     setIsDirty(true);
   };
 
-  // --- Bug Fix 2: Reactive chatter state ---
-  const [chatterNotes, setChatterNotes] = useState<Note[]>([]);
-  const [chatterActivities, setChatterActivities] = useState<Activity[]>([]);
-  const linkedContact = opportunity?.contactId ? getContact(opportunity.contactId) : undefined;
+  // --- Reactive chatter state via hooks ---
+  const { data: chatterNotes = [] } = useNotes('opportunity', id);
+  const { data: chatterActivities = [] } = useActivities('opportunity', id);
+  useNotesRealtime(id);
+  useActivitiesRealtime(id);
+  const { data: linkedContact } = useContact(opportunity?.contactId);
+  const { data: allContacts = [] } = useContacts();
 
+  // refreshChatter now invalidates the React Query cache instead of calling
+  // localStorage helpers directly. The hooks above re-render automatically.
   const refreshChatter = useCallback(() => {
     if (!id) return;
-    setChatterNotes(getNotes('opportunity', id));
-    setChatterActivities(getActivities('opportunity', id));
-  }, [id]);
-
-  useEffect(() => { refreshChatter(); }, [refreshChatter]);
+    queryClient.invalidateQueries({ queryKey: crmKeys.notes('opportunity', id) });
+    queryClient.invalidateQueries({ queryKey: crmKeys.activities('opportunity', id) });
+  }, [id, queryClient]);
 
   // --- Change 7: Audit logging snapshot ---
   const originalSnapshot = useRef<Partial<Opportunity>>({});
@@ -171,10 +194,16 @@ export default function OpportunityDetail() {
     originalSnapshot.current = snap;
   };
 
+  // Initialize the audit snapshot from hook data after first load
+  // (and whenever the navigated record id changes).
+  const snapshotInitFor = useRef<string | null>(null);
   useEffect(() => {
-    if (opportunity) takeSnapshot(opportunity);
+    if (opportunity && snapshotInitFor.current !== opportunity.id) {
+      takeSnapshot(opportunity);
+      snapshotInitFor.current = opportunity.id;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [opportunity?.id, !!opportunity]);
 
   const formatAuditValue = (field: string, value: any): string => {
     if (value == null || value === '' || (Array.isArray(value) && value.length === 0)) return '—';
@@ -187,6 +216,16 @@ export default function OpportunityDetail() {
   // Navigation between records
   const currentIndex = allOpportunities.findIndex(o => o.id === id);
   const totalRecords = allOpportunities.length;
+
+  if (isLoadingOpp) {
+    return (
+      <AppLayout title="CRM" moduleNav={CRM_NAV}>
+        <div className="p-6 flex items-center justify-center h-full">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (!opportunity) {
     return (
@@ -213,8 +252,7 @@ export default function OpportunityDetail() {
     if (stage) {
       const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
       const newStageName = activeStages.find(s => s.id === stageId)?.name || stageId;
-      updateOpportunityStage(opportunity.id, stageId, stage);
-      setOpportunity(getOpportunity(opportunity.id));
+      updateStageMutation.mutate({ id: opportunity.id, stageId, stage });
       toast({ title: `Stage updated to ${newStageName}` });
       saveNote({
         content: `<p><strong>Stage changed</strong><br/>${previousStageName} → ${newStageName} (Stage)</p>`,
@@ -230,8 +268,7 @@ export default function OpportunityDetail() {
 
   const handleWon = () => {
     const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
-    updateOpportunityStage(opportunity.id, 'won', 'won');
-    setOpportunity(getOpportunity(opportunity.id));
+    updateStageMutation.mutate({ id: opportunity.id, stageId: 'won', stage: 'won' });
     toast({ title: '🎉 Opportunity Won!' });
     saveNote({
       content: `<p><strong>Opportunity won</strong><br/>${previousStageName} → Won (Stage)</p>`,
@@ -248,7 +285,6 @@ export default function OpportunityDetail() {
     const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
     saveOpportunity({ ...opportunity, lostReason, stage: 'lost', stageId: 'lost', lostAt: new Date().toISOString(), probability: 0 });
     setShowLostDialog(false);
-    setOpportunity(getOpportunity(opportunity.id));
     toast({ title: 'Opportunity marked as lost' });
     saveNote({
       content: `<p><strong>Opportunity lost</strong><br/>${previousStageName} → Lost (Won/Lost)</p>`,
@@ -279,14 +315,18 @@ export default function OpportunityDetail() {
       }
     }
 
-    saveOpportunity({ ...opportunity, ...editingData });
-    const refreshed = getOpportunity(opportunity.id);
-    setOpportunity(refreshed);
+    // Optimistic update + mutation; the useOpportunity hook will refresh
+    // once the mutation completes (it invalidates the opportunity cache).
+    saveOpportunityMutation.mutate(
+      { ...opportunity, ...editingData },
+      {
+        onSuccess: (refreshed) => {
+          setEditingData(refreshed);
+          takeSnapshot(refreshed);
+        },
+      },
+    );
     setIsDirty(false);
-    if (refreshed) {
-      setEditingData(refreshed);
-      takeSnapshot(refreshed);
-    }
 
     if (diffs.length > 0) {
       saveNote({
@@ -394,6 +434,7 @@ export default function OpportunityDetail() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-foreground font-medium truncate max-w-[120px] sm:max-w-none">{opportunity.name}</span>
               <Settings className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-pointer" />
+              {(isFetchingOpp || isFetchingAll) && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-1" />}
             </div>
             <div className="flex items-center gap-1.5">
               {!isWon && !isLost && (
@@ -586,7 +627,7 @@ export default function OpportunityDetail() {
                           onChange={e => setContactSearch(e.target.value)}
                         />
                         <div className="max-h-40 overflow-y-auto">
-                          {getContacts().filter(c => {
+                          {allContacts.filter(c => {
                             const q = contactSearch.toLowerCase();
                             return !q || `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
                           }).slice(0, 20).map(c => (
@@ -645,7 +686,6 @@ export default function OpportunityDetail() {
                       value={opportunity.priority}
                       onChange={(p) => {
                         saveOpportunity({ ...opportunity, priority: p as 0 | 1 | 2 | 3 });
-                        setOpportunity(getOpportunity(opportunity.id));
                       }}
                     />
                   </div>

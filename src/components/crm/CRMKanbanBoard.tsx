@@ -698,6 +698,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             </Button>
             <span className="text-sm font-semibold text-foreground">Pipeline</span>
             <Settings className="h-3.5 w-3.5 text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => navigate('/settings/crm-pipelines')} />
+            {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
           <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />

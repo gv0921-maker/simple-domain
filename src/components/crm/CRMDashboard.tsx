@@ -1,5 +1,4 @@
-// TODO: Replace localStorage with Supabase queries
-// CRM Dashboard with Analytics
+// CRM Dashboard with Analytics — uses TanStack Query hooks (Supabase-ready)
 import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,14 +30,15 @@ import {
   Download,
   Filter,
   Activity as ActivityIcon,
+  Loader2,
 } from 'lucide-react';
+import { type CRMStats } from '@/lib/services/crm';
 import {
-  getCRMStats,
-  getOpportunitiesByStage,
-  getOpportunities,
-  getActivities,
-  type CRMStats,
-} from '@/lib/services/crm';
+  useCRMStats,
+  useOpportunitiesByStage,
+  useOpportunities,
+  useActivities,
+} from '@/hooks/crm/useCRMQueries';
 import { SimpleBarChart } from '@/components/dashboard/SimpleBarChart';
 import { cn } from '@/lib/utils';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns';
@@ -109,10 +109,21 @@ export function CRMDashboard() {
     return items.filter(i => i.assignedTo === userFilter);
   }, [userFilter]);
 
-  const stats = useMemo(() => getCRMStats(), []);
-  const opportunitiesByStage = useMemo(() => getOpportunitiesByStage(), []);
-  const allOpportunities = useMemo(() => getOpportunities(), []);
-  const activities = useMemo(() => getActivities(), []);
+  const { data: stats = {
+    totalContacts: 0,
+    totalCompanies: 0,
+    activeOpportunities: 0,
+    pipelineValue: 0,
+    weightedPipelineValue: 0,
+    winRate: 0,
+    avgDealSize: 0,
+    wonRevenue: 0,
+    activitiesPending: 0,
+    activitiesCompleted: 0,
+  } as CRMStats, isFetching: isFetchingStats } = useCRMStats();
+  const { data: opportunitiesByStage = [] } = useOpportunitiesByStage();
+  const { data: allOpportunities = [] } = useOpportunities();
+  const { data: activities = [] } = useActivities();
 
   // Apply filters
   const opportunities = useMemo(() => byUser(allOpportunities).filter(o => inRange(o.createdAt)), [allOpportunities, byUser, inRange]);
@@ -176,7 +187,10 @@ export function CRMDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">CRM Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            CRM Dashboard
+            {isFetchingStats && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </h1>
           <p className="text-muted-foreground">Overview of your customer relationships and sales pipeline</p>
         </div>
         <div className="flex gap-2">

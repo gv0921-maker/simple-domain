@@ -1,5 +1,4 @@
-// TODO: Replace localStorage with Supabase queries
-// CRM Contact/Company Form Dialog
+// CRM Contact/Company Form Dialog — uses TanStack Query hooks (Supabase-ready)
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,9 +26,8 @@ import { Plus, X, AlertTriangle } from 'lucide-react';
 import {
   type Contact,
   type ContactType,
-  saveContact,
-  findDuplicateContacts,
 } from '@/lib/services/crm';
+import { useSaveContact, useContacts } from '@/hooks/crm/useCRMQueries';
 import { useToast } from '@/hooks/use-toast';
 
 interface ContactFormDialogProps {
@@ -43,6 +41,8 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
   const { toast } = useToast();
   const isEdit = !!contact;
   const studio = useStudioConfig('crm', 'New Contact');
+  const saveContactMutation = useSaveContact();
+  const { data: allContacts = [] } = useContacts();
   
   const [formData, setFormData] = useState({
     type: 'individual' as ContactType,
@@ -92,7 +92,13 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
 
   const handleEmailBlur = () => {
     if (formData.email && !isEdit) {
-      const dups = findDuplicateContacts(formData.email, formData.phone);
+      const targetEmail = formData.email.toLowerCase().trim();
+      const targetPhone = (formData.phone || '').replace(/[^\d+]/g, '');
+      const dups = allContacts.filter((c) => {
+        if (targetEmail && c.email?.toLowerCase() === targetEmail) return true;
+        if (targetPhone && c.phone && c.phone.replace(/[^\d+]/g, '') === targetPhone) return true;
+        return false;
+      });
       setDuplicates(dups);
     }
   };
@@ -108,13 +114,13 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.firstName || !formData.email) {
       toast({ title: 'First name and email are required', variant: 'destructive' });
       return;
     }
 
-    const savedContact = saveContact({
+    const savedContact = await saveContactMutation.mutateAsync({
       ...(contact || {}),
       ...formData,
     });
