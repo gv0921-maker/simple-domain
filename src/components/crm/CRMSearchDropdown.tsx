@@ -65,7 +65,7 @@ export function useFilteredOpportunities(
       const q = activeFilters.search.toLowerCase();
       list = list.filter(o => {
         const revenueStr = String(o.expectedRevenue ?? '');
-        const phone = (o as { phone?: string }).phone ?? '';
+        const phone = o.phone ?? '';
         return (
           o.name.toLowerCase().includes(q) ||
           revenueStr.includes(q) ||
