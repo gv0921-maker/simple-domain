@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { X, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import glfLogo from '@/assets/glf-logo.png';
 
 export default function UserSelectPage() {
   const navigate = useNavigate();
@@ -21,6 +22,11 @@ export default function UserSelectPage() {
   return (
     <div className="min-h-screen bg-gradient-lavender flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 animate-scale-in">
+
+        {/* Logo */}
+        <div className="flex justify-center mb-4">
+          <img src={glfLogo} alt="GLF - Good Life Furnitures & Marketing" className="h-28 w-28 object-contain" />
+        </div>
 
         <div className="border-t border-border my-6" />
 
