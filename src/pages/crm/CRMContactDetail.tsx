@@ -21,6 +21,7 @@ import {
   FileText,
   MessageSquare,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 import { type Note } from '@/lib/services/crm';
 import {
@@ -36,6 +37,7 @@ import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
 import { getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
 import DOMPurify from 'dompurify';
@@ -45,6 +47,7 @@ export default function CRMContactDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { canEditContacts } = useCRMPermissions();
   const { data: contact, isLoading: contactLoading, isFetching } = useContact(id);
   const { data: allContacts = [] } = useContacts();
   const { data: notes = [] } = useNotes('contact', id);
@@ -123,6 +126,17 @@ export default function CRMContactDetail() {
           <div className="flex-1">
             <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
               {contact.firstName} {contact.lastName}
+              {canEditContacts && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => navigate(`/crm/contacts/${id}/edit`)}
+                  aria-label="Edit contact"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
               {isFetching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </h1>
             {contact.jobTitle && (
