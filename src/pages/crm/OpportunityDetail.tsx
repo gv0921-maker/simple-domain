@@ -1184,3 +1184,66 @@ function OdooField({ label, children, link, avatar, labelHint }: {
     </div>
   );
 }
+
+// Rounded "pill" action button used in the Related Records section
+function RoundedActionButton({
+  icon: Icon, label, onClick,
+}: { icon: React.ElementType; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-muted hover:border-primary/40 px-4 py-2 text-xs font-medium text-foreground shadow-sm transition-colors"
+    >
+      <Icon className="h-3.5 w-3.5 text-primary" />
+      {label}
+    </button>
+  );
+}
+
+// Card grouping for related-record lists
+function RelatedGroup({
+  title, icon: Icon, count, children,
+}: { title: string; icon: React.ElementType; count: number; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+          <Icon className="h-3.5 w-3.5 text-primary" />
+          {title}
+        </div>
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{count}</Badge>
+      </div>
+      {count === 0 ? (
+        <p className="text-xs text-muted-foreground italic">None yet</p>
+      ) : (
+        <div className="space-y-1">{children}</div>
+      )}
+    </div>
+  );
+}
+
+// Single row within a RelatedGroup
+function RelatedRow({
+  primary, secondary, status, onClick,
+}: { primary: string; secondary?: string; status?: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center justify-between gap-2 rounded-md border border-transparent hover:border-border hover:bg-muted px-2 py-1.5 text-left transition-colors"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="text-xs font-medium text-foreground truncate">{primary}</div>
+        {secondary && (
+          <div className="text-[10px] text-muted-foreground truncate">{secondary}</div>
+        )}
+      </div>
+      {status && (
+        <Badge variant="outline" className="text-[9px] capitalize shrink-0">
+          {status}
+        </Badge>
+      )}
+    </button>
+  );
+}
