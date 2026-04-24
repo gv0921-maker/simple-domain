@@ -484,7 +484,6 @@ export default function LeadDetail() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="call">Call</SelectItem>
-                            <SelectItem value="email">Email</SelectItem>
                             <SelectItem value="meeting">Meeting</SelectItem>
                             <SelectItem value="note">Note</SelectItem>
                             <SelectItem value="task">Task</SelectItem>
