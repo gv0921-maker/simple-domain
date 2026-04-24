@@ -112,7 +112,7 @@ const FIELD_LABELS: Record<string, string> = {
   probability: 'Probability',
   expectedCloseDate: 'Expected Closing',
   contactName: 'Contact',
-  assignedTo: 'Salesperson',
+  assignedTo: 'Staff',
   companyName: 'Company',
   tags: 'Tags',
 };
@@ -667,7 +667,7 @@ export default function OpportunityDetail() {
                 </OdooField>
 
                 {/* Salesperson */}
-                <OdooField label="Salesperson" avatar>
+                <OdooField label="Staff" avatar>
                   <input
                     className={INLINE_CSS}
                     value={currentData.assignedTo || ''}
