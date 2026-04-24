@@ -1,9 +1,7 @@
 // Odoo-style Search Dropdown — search + favorites only.
 // Filters and Group By have been removed per product decision.
-import { useState, useCallback, useMemo } from 'react';
-import {
-  Search, ChevronDown, Star,
-} from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { Search } from 'lucide-react';
 
 // === Types (kept for backward-compatible imports) ===
 
@@ -23,15 +21,6 @@ export const EMPTY_FILTERS: ActiveFilters = {
   search: '',
 };
 
-interface FavoriteDef {
-  id: FavoriteId;
-  label: string;
-}
-
-const FAVORITE_DEFS: FavoriteDef[] = [
-  { id: 'default_pipeline', label: 'Default Pipeline' },
-];
-
 // === Component ===
 
 interface CRMSearchDropdownProps {
@@ -40,8 +29,6 @@ interface CRMSearchDropdownProps {
 }
 
 export function CRMSearchDropdown({ activeFilters, onFiltersChange }: CRMSearchDropdownProps) {
-  const [open, setOpen] = useState(false);
-
   const setSearch = useCallback((search: string) => {
     onFiltersChange({ ...activeFilters, search });
   }, [activeFilters, onFiltersChange]);
@@ -55,42 +42,8 @@ export function CRMSearchDropdown({ activeFilters, onFiltersChange }: CRMSearchD
           className="h-8 w-full text-sm bg-transparent border-0 outline-none px-2 placeholder:text-muted-foreground"
           value={activeFilters.search}
           onChange={(e) => setSearch(e.target.value)}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 250)}
         />
-        <button
-          className="h-8 w-8 flex items-center justify-center border-l border-border text-muted-foreground hover:bg-muted transition-colors shrink-0"
-          onMouseDown={(e) => { e.preventDefault(); setOpen(!open); }}
-        >
-          <ChevronDown className="h-3.5 w-3.5" />
-        </button>
       </div>
-
-      {/* Dropdown — Favorites only */}
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50 p-4">
-          <div className="text-sm">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-              <span className="font-bold text-foreground">Favorites</span>
-            </div>
-            <div className="space-y-0.5">
-              {FAVORITE_DEFS.map((fav) => (
-                <button
-                  key={fav.id}
-                  className="block w-full text-left px-1.5 py-1 text-sm text-foreground hover:bg-muted/50 rounded transition-colors"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    onFiltersChange(EMPTY_FILTERS);
-                  }}
-                >
-                  {fav.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -107,14 +60,20 @@ export function useFilteredOpportunities(
   return useMemo(() => {
     let list = [...opportunities];
 
-    // Text search only
+    // Text search: name, expected revenue, contact name, phone, company name
     if (activeFilters.search) {
       const q = activeFilters.search.toLowerCase();
-      list = list.filter(o =>
-        o.name.toLowerCase().includes(q) ||
-        o.contactName.toLowerCase().includes(q) ||
-        (o.companyName?.toLowerCase().includes(q) ?? false)
-      );
+      list = list.filter(o => {
+        const revenueStr = String(o.expectedRevenue ?? '');
+        const phone = (o as { phone?: string }).phone ?? '';
+        return (
+          o.name.toLowerCase().includes(q) ||
+          revenueStr.includes(q) ||
+          (o.contactName?.toLowerCase().includes(q) ?? false) ||
+          phone.toLowerCase().includes(q) ||
+          (o.companyName?.toLowerCase().includes(q) ?? false)
+        );
+      });
     }
 
     return list;
