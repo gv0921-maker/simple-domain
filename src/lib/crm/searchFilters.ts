@@ -52,7 +52,7 @@ function evalCustom(opp: Opportunity, payload?: string): boolean {
   if (!payload) return true;
   try {
     const { field, op, value } = JSON.parse(payload) as { field: string; op: string; value?: string };
-    const raw = (opp as Record<string, unknown>)[field];
+    const raw = (opp as unknown as Record<string, unknown>)[field];
     const v = value ?? '';
     switch (op) {
       case 'isSet': return raw !== undefined && raw !== null && raw !== '';
