@@ -41,7 +41,7 @@ export interface Invoice {
   customerName: string;
   date: string;
   dueDate: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: 'draft' | 'paid' | 'overdue' | 'cancelled';
   lines: InvoiceLine[];
   subtotal: number;
   tax: number;
