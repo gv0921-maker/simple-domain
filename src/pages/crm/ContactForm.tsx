@@ -289,8 +289,9 @@ export default function ContactForm() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/crm/contacts')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-semibold text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             {isEdit ? 'Edit Contact' : 'New Contact'}
+            {isFetching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </h1>
         </div>
 
