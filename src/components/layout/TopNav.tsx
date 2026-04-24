@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { canAccessRoute } from '@/lib/services/settings';
+import { isSuperAdminUser } from '@/lib/data/rbac';
 
 interface TopNavProps {
   title?: string;
@@ -137,7 +138,7 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2 md:gap-3 shrink-0">
-        {user?.role === 'super_admin' && <GlobalSearch />}
+        {user && isSuperAdminUser(user.id) && <GlobalSearch />}
         <NotificationsBell />
 
         {/* User menu */}
