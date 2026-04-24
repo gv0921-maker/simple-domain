@@ -1,5 +1,4 @@
-// TODO: Replace localStorage with Supabase queries
-// Activity Timeline Component for CRM entities
+// Activity Timeline Component for CRM entities (TanStack Query backed)
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,17 +23,18 @@ import {
   Bell,
   FileText,
   Download,
+  Loader2,
 } from 'lucide-react';
+import type { Activity, ActivityType, Note } from '@/lib/services/crm';
 import {
-  getActivities,
-  saveActivity,
-  completeActivity,
-  type Activity,
-  type ActivityType,
-  type Note,
-  getNotes,
-  saveNote,
-} from '@/lib/services/crm';
+  useActivities,
+  useSaveActivity,
+  useCompleteActivity,
+  useNotes,
+  useSaveNote,
+  useActivitiesRealtime,
+  useNotesRealtime,
+} from '@/hooks/crm/useCRMQueries';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
@@ -165,9 +165,24 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
   const { user } = useAuth();
   const { toast } = useToast();
   const { canEditOpportunities, canEditContacts } = useCRMPermissions();
-  
-  const [activities, setActivities] = useState<Activity[]>(() => getActivities(relatedTo, relatedId));
-  const [notes, setNotes] = useState<Note[]>(() => getNotes(relatedTo, relatedId));
+
+  const { data: activitiesData, isLoading: activitiesLoading, isFetching: activitiesFetching } =
+    useActivities(relatedTo, relatedId);
+  const { data: notesData, isLoading: notesLoading, isFetching: notesFetching } =
+    useNotes(relatedTo, relatedId);
+  const activities: Activity[] = activitiesData ?? [];
+  const notes: Note[] = notesData ?? [];
+  const saveActivityMut = useSaveActivity();
+  const saveNoteMut = useSaveNote();
+  const completeActivityMut = useCompleteActivity();
+
+  // Realtime sync for this record
+  useActivitiesRealtime(relatedId);
+  useNotesRealtime(relatedId);
+
+  const isLoading = activitiesLoading || notesLoading;
+  const isFetching = activitiesFetching || notesFetching;
+
   const [isAddingActivity, setIsAddingActivity] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
   
@@ -187,18 +202,22 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
       return;
     }
 
-    saveActivity({
-      ...newActivity,
-      relatedTo,
-      relatedId,
-      userId: user?.id || '',
-      userName: user?.name || 'System',
-    });
-
-    setActivities(getActivities(relatedTo, relatedId));
-    setNewActivity({ type: 'call', subject: '', description: '' });
-    setIsAddingActivity(false);
-    toast({ title: 'Activity logged' });
+    saveActivityMut.mutate(
+      {
+        ...newActivity,
+        relatedTo,
+        relatedId,
+        userId: user?.id || '',
+        userName: user?.name || 'System',
+      },
+      {
+        onSuccess: () => {
+          setNewActivity({ type: 'call', subject: '', description: '' });
+          setIsAddingActivity(false);
+          toast({ title: 'Activity logged' });
+        },
+      },
+    );
   };
 
   const handleAddNote = () => {
@@ -207,25 +226,29 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
       return;
     }
 
-    saveNote({
-      content: newNote,
-      relatedTo,
-      relatedId,
-      userId: user?.id || '',
-      userName: user?.name || 'System',
-      visibility: 'team',
-    });
-
-    setNotes(getNotes(relatedTo, relatedId));
-    setNewNote('');
-    setIsAddingNote(false);
-    toast({ title: 'Note added' });
+    saveNoteMut.mutate(
+      {
+        content: newNote,
+        relatedTo,
+        relatedId,
+        userId: user?.id || '',
+        userName: user?.name || 'System',
+        visibility: 'team',
+      },
+      {
+        onSuccess: () => {
+          setNewNote('');
+          setIsAddingNote(false);
+          toast({ title: 'Note added' });
+        },
+      },
+    );
   };
 
   const handleCompleteActivity = (id: string) => {
-    completeActivity(id);
-    setActivities(getActivities(relatedTo, relatedId));
-    toast({ title: 'Activity completed' });
+    completeActivityMut.mutate(id, {
+      onSuccess: () => toast({ title: 'Activity completed' }),
+    });
   };
 
   // Combine and sort activities and notes by date
@@ -237,7 +260,10 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Activity Timeline</CardTitle>
+        <CardTitle className="text-base flex items-center gap-2">
+          Activity Timeline
+          {isFetching && !isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+        </CardTitle>
         {canEdit && (
           <div className="flex gap-2">
             <Button
@@ -260,6 +286,12 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
         )}
       </CardHeader>
       <CardContent className="space-y-4">
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
         {/* Add Activity Form */}
         {isAddingActivity && (
           <div className="p-4 border border-border rounded-lg space-y-3 animate-fade-in bg-muted/30">
@@ -328,6 +360,7 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
         )}
 
         {/* Timeline */}
+        {!isLoading && (
         <div className="space-y-4">
           {timeline.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">
@@ -347,6 +380,7 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
             )
           )}
         </div>
+        )}
       </CardContent>
     </Card>
   );

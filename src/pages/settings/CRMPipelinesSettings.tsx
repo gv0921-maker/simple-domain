@@ -1,5 +1,5 @@
-// TODO: Replace localStorage with Supabase queries
 // CRM Pipelines management (multi-pipeline + drag-and-drop stage editor)
+// Backed by TanStack Query hooks (Supabase).
 import { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus, Trash2, GripVertical, Star, Edit, Save, X, GitBranch,
-  ChevronDown, Zap,
+  ChevronDown, Zap, Loader2,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -24,11 +24,14 @@ const AUTOMATION_HOOKS = [
   { id: 'update_prob', label: 'Update probability' },
   { id: 'assign_team', label: 'Assign to team' },
 ];
+import type { Pipeline, PipelineStage } from '@/lib/services/crm';
 import {
-  getPipelines, savePipeline, getDefaultPipeline,
-  deletePipeline, setDefaultPipeline,
-  type Pipeline, type PipelineStage,
-} from '@/lib/services/crm';
+  usePipelines,
+  useDefaultPipeline,
+  useSavePipeline,
+  useDeletePipeline,
+  useSetDefaultPipeline,
+} from '@/hooks/crm/useCRMQueries';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { cn } from '@/lib/utils';
@@ -38,19 +41,28 @@ export default function CRMPipelinesSettings() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { canModifyPipeline } = useCRMPermissions();
-  const [pipelines, setPipelines] = useState<Pipeline[]>(() => getPipelines());
-  const [selectedId, setSelectedId] = useState<string>(() => getDefaultPipeline().id);
+  const { data: pipelinesData, isLoading, isFetching } = usePipelines();
+  const { data: defaultPipeline } = useDefaultPipeline();
+  const savePipelineMut = useSavePipeline();
+  const deletePipelineMut = useDeletePipeline();
+  const setDefaultPipelineMut = useSetDefaultPipeline();
+
+  const pipelines: Pipeline[] = pipelinesData ?? [];
+  const [selectedId, setSelectedId] = useState<string>('');
   const selected = useMemo(() => pipelines.find(p => p.id === selectedId), [pipelines, selectedId]);
   const [draggedStage, setDraggedStage] = useState<string | null>(null);
 
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [newName, setNewName] = useState('');
 
-  const refresh = () => setPipelines(getPipelines());
-
+  // Initialize selection once data loads
   useEffect(() => {
-    if (!selected && pipelines[0]) setSelectedId(pipelines[0].id);
-  }, [selected, pipelines]);
+    if (!selectedId && (defaultPipeline || pipelines[0])) {
+      setSelectedId((defaultPipeline ?? pipelines[0]).id);
+    } else if (selectedId && !selected && pipelines[0]) {
+      setSelectedId(pipelines[0].id);
+    }
+  }, [selectedId, selected, defaultPipeline, pipelines]);
 
   if (!canModifyPipeline) {
     return (
@@ -63,9 +75,9 @@ export default function CRMPipelinesSettings() {
     );
   }
 
-  const handleCreatePipeline = () => {
+  const handleCreatePipeline = async () => {
     if (!newName.trim()) return;
-    const p = savePipeline({
+    const p = await savePipelineMut.mutateAsync({
       name: newName,
       isDefault: false,
       stages: [
@@ -74,8 +86,7 @@ export default function CRMPipelinesSettings() {
       ],
     });
     // Patch stages with the actual pipelineId
-    savePipeline({ ...p, stages: p.stages.map(s => ({ ...s, pipelineId: p.id })) });
-    refresh();
+    await savePipelineMut.mutateAsync({ ...p, stages: p.stages.map(s => ({ ...s, pipelineId: p.id })) });
     setSelectedId(p.id);
     setNewDialogOpen(false);
     setNewName('');
@@ -83,26 +94,27 @@ export default function CRMPipelinesSettings() {
   };
 
   const handleDeletePipeline = (id: string) => {
-    const r = deletePipeline(id);
-    if (!r.success) {
-      toast({ title: 'Cannot delete pipeline', description: r.reason, variant: 'destructive' });
-      return;
-    }
-    refresh();
-    toast({ title: 'Pipeline deleted' });
+    deletePipelineMut.mutate(id, {
+      onSuccess: (r) => {
+        if (!r.success) {
+          toast({ title: 'Cannot delete pipeline', description: r.reason, variant: 'destructive' });
+          return;
+        }
+        toast({ title: 'Pipeline deleted' });
+      },
+    });
   };
 
   const handleMakeDefault = (id: string) => {
-    setDefaultPipeline(id);
-    refresh();
-    toast({ title: 'Default pipeline updated' });
+    setDefaultPipelineMut.mutate(id, {
+      onSuccess: () => toast({ title: 'Default pipeline updated' }),
+    });
   };
 
   // Stage operations on the selected pipeline
   const updateStages = (next: PipelineStage[]) => {
     if (!selected) return;
-    savePipeline({ ...selected, stages: next });
-    refresh();
+    savePipelineMut.mutate({ ...selected, stages: next });
   };
 
   const handleAddStage = () => {
@@ -150,7 +162,10 @@ export default function CRMPipelinesSettings() {
           <div className="flex items-center gap-3">
             <GitBranch className="h-6 w-6 text-primary" />
             <div>
-              <h1 className="text-lg font-medium">CRM Pipelines</h1>
+              <h1 className="text-lg font-medium flex items-center gap-2">
+                CRM Pipelines
+                {isFetching && !isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+              </h1>
               <p className="text-sm text-muted-foreground">Manage multiple sales pipelines and their stages</p>
             </div>
           </div>
@@ -159,6 +174,11 @@ export default function CRMPipelinesSettings() {
           </Button>
         </div>
 
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Pipelines list */}
           <div className="space-y-2">
@@ -292,6 +312,7 @@ export default function CRMPipelinesSettings() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>

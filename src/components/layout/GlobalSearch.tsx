@@ -1,5 +1,5 @@
-// TODO: Replace localStorage with Supabase queries
 // Global Search Component — searches across all CRM and app modules
+// CRM data via TanStack Query hooks; other modules still synchronous.
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
   Settings,
   X,
 } from 'lucide-react';
-import { getContacts, getOpportunities } from '@/lib/services/crm';
+import { useContacts, useOpportunities } from '@/hooks/crm/useCRMQueries';
 import { cn } from '@/lib/utils';
 
 interface SearchResult {
@@ -34,6 +34,10 @@ export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { data: contactsData } = useContacts();
+  const { data: opportunitiesData } = useOpportunities();
+  const contacts = contactsData ?? [];
+  const opportunities = opportunitiesData ?? [];
 
   const results = useMemo((): SearchResult[] => {
     if (!query.trim() || query.length < 2) return [];
@@ -42,25 +46,21 @@ export function GlobalSearch() {
 
 
     // CRM Contacts
-    try {
-      getContacts().filter(c =>
-        c.firstName.toLowerCase().includes(q) ||
-        c.lastName.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q)
-      ).slice(0, 3).forEach(c => {
-        items.push({ id: c.id, title: `${c.firstName} ${c.lastName}`, subtitle: c.email, module: 'Contact', icon: User, href: `/crm/contacts/${c.id}` });
-      });
-    } catch {}
+    contacts.filter(c =>
+      (c.firstName ?? '').toLowerCase().includes(q) ||
+      (c.lastName ?? '').toLowerCase().includes(q) ||
+      (c.email ?? '').toLowerCase().includes(q)
+    ).slice(0, 3).forEach(c => {
+      items.push({ id: c.id, title: `${c.firstName} ${c.lastName}`, subtitle: c.email, module: 'Contact', icon: User, href: `/crm/contacts/${c.id}` });
+    });
 
     // CRM Opportunities
-    try {
-      getOpportunities().filter(o =>
-        o.name.toLowerCase().includes(q) ||
-        o.contactName.toLowerCase().includes(q)
-      ).slice(0, 3).forEach(o => {
-        items.push({ id: o.id, title: o.name, subtitle: `₹${o.expectedRevenue.toLocaleString('en-IN')}`, module: 'Opportunity', icon: TrendingUp, href: `/crm/opportunities/${o.id}` });
-      });
-    } catch {}
+    opportunities.filter(o =>
+      o.name.toLowerCase().includes(q) ||
+      (o.contactName ?? '').toLowerCase().includes(q)
+    ).slice(0, 3).forEach(o => {
+      items.push({ id: o.id, title: o.name, subtitle: `₹${o.expectedRevenue.toLocaleString('en-IN')}`, module: 'Opportunity', icon: TrendingUp, href: `/crm/opportunities/${o.id}` });
+    });
 
     // Module navigation shortcuts
     const modules = [
@@ -81,7 +81,7 @@ export function GlobalSearch() {
     });
 
     return items.slice(0, 10);
-  }, [query]);
+  }, [query, contacts, opportunities]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

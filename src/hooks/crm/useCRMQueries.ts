@@ -302,3 +302,40 @@ export function useCRMStats() {
 export function useOpportunitiesByStage() {
   return useQuery({ queryKey: crmKeys.oppsByStage(), queryFn: () => crm.getOpportunitiesByStage() });
 }
+
+// ---------- import / export ----------
+
+export function useImportContacts() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (records: Partial<Contact>[]) => crm.importContacts(records),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: crmKeys.contacts() });
+      qc.invalidateQueries({ queryKey: crmKeys.stats() });
+    },
+  });
+}
+
+export function useImportOpportunities() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (records: Partial<Opportunity>[]) => crm.importOpportunities(records),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: crmKeys.opportunities() });
+      qc.invalidateQueries({ queryKey: crmKeys.stats() });
+      qc.invalidateQueries({ queryKey: crmKeys.oppsByStage() });
+    },
+  });
+}
+
+export function useExportContacts() {
+  return useMutation({
+    mutationFn: () => crm.exportContacts(),
+  });
+}
+
+export function useExportOpportunities() {
+  return useMutation({
+    mutationFn: () => crm.exportOpportunities(),
+  });
+}
