@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 
 const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary',
-  sent: 'outline',
   paid: 'default',
   overdue: 'destructive',
   cancelled: 'destructive',
@@ -92,7 +91,6 @@ export default function InvoicesList({ variant = 'bills', title }: InvoicesListP
                 <TabsList className="h-12">
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="draft">Draft</TabsTrigger>
-                  <TabsTrigger value="sent">Sent</TabsTrigger>
                   <TabsTrigger value="paid">Paid</TabsTrigger>
                   <TabsTrigger value="overdue">Overdue</TabsTrigger>
                 </TabsList>
