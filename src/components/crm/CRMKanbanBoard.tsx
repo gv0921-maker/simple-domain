@@ -620,8 +620,25 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
 
   const opportunitiesByStage = useMemo(() => {
     const grouped: Record<string, Opportunity[]> = {};
+    const claimed = new Set<string>();
+    // First pass: exact stageId match
     activeStages.forEach((stage) => {
-      grouped[stage.id] = filteredOpportunities.filter((o) => o.stageId === stage.id);
+      grouped[stage.id] = filteredOpportunities.filter((o) => {
+        if (o.stageId === stage.id) { claimed.add(o.id); return true; }
+        return false;
+      });
+    });
+    // Second pass: fall back to stage enum matching the stage name
+    // (handles legacy data where stage_id is a literal like 'lost' instead of the UUID).
+    activeStages.forEach((stage) => {
+      const stageKey = stage.name.toLowerCase();
+      filteredOpportunities.forEach((o) => {
+        if (claimed.has(o.id)) return;
+        if (o.stage && o.stage.toLowerCase() === stageKey) {
+          grouped[stage.id].push(o);
+          claimed.add(o.id);
+        }
+      });
     });
     return grouped;
   }, [filteredOpportunities, activeStages]);
