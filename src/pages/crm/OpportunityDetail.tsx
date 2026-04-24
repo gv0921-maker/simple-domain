@@ -84,6 +84,8 @@ import { RichComposer, RichContent, type RichComposerValue } from '@/components/
 import { useAuth } from '@/contexts/AuthContext';
 import { TiptapNotesEditor } from '@/components/ui/tiptap-notes-editor';
 import { getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
+import { getStockMoves } from '@/lib/services/inventory';
+import { useMemo } from 'react';
 
 // Format elapsed time: <1h → "Xm", <24h → "Xh", else → "Xd"
 function formatElapsed(ms: number): string {
