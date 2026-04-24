@@ -82,6 +82,8 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
 import { useAuth } from '@/contexts/AuthContext';
+import { TiptapNotesEditor } from '@/components/ui/tiptap-notes-editor';
+import { getQuotations, getSalesOrders } from '@/lib/services/sales';
 
 // Format elapsed time: <1h → "Xm", <24h → "Xh", else → "Xd"
 function formatElapsed(ms: number): string {
