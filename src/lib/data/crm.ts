@@ -478,15 +478,26 @@ export function updateOpportunityStage(id: string, stageId: string, stage: Oppor
   const history = opp.stageHistory || [];
   history.push({ stageId, enteredAt: new Date().toISOString() });
   const updates: Partial<Opportunity> = { stageId, stage, stageHistory: history };
-  
+
   if (stage === 'won') {
     updates.wonAt = new Date().toISOString();
+    updates.lostAt = undefined;
+    updates.lostReason = undefined;
     updates.probability = 100;
   } else if (stage === 'lost') {
     updates.lostAt = new Date().toISOString();
+    updates.wonAt = undefined;
     updates.probability = 0;
+  } else {
+    // Moving back to an active stage — clear won/lost markers so the
+    // ribbon disappears and the chevron bar reflects the new stage.
+    updates.wonAt = undefined;
+    updates.lostAt = undefined;
+    updates.lostReason = undefined;
+    const stageDef = getDefaultPipeline().stages.find(s => s.id === stageId);
+    if (stageDef) updates.probability = stageDef.probability;
   }
-  
+
   return saveOpportunity({ ...opp, ...updates });
 }
 
