@@ -122,12 +122,25 @@ export default function OpportunityDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const pipeline = getDefaultPipeline();
-  const allOpportunities = getOpportunities();
+  const queryClient = useQueryClient();
 
-  const [opportunity, setOpportunity] = useState<Opportunity | undefined>(() =>
-    id ? getOpportunity(id) : undefined
-  );
+  // CRM data via TanStack Query hooks
+  const { data: pipelineData } = useDefaultPipeline();
+  const pipeline = pipelineData ?? { id: '', name: '', description: '', stages: [], isDefault: false, createdAt: '', updatedAt: '' };
+  const { data: allOpportunities = [], isFetching: isFetchingAll } = useOpportunities();
+  const { data: opportunityData, isLoading: isLoadingOpp, isFetching: isFetchingOpp } = useOpportunity(id);
+  const opportunity = opportunityData;
+
+  // Mutations
+  const saveOpportunityMutation = useSaveOpportunity();
+  const updateStageMutation = useUpdateOpportunityStage();
+  const saveActivityMutation = useSaveActivity();
+  const saveNoteMutation = useSaveNote();
+
+  // Local helpers wrapping mutations (fire-and-forget)
+  const saveOpportunity = (o: Partial<Opportunity> & { id?: string }) => saveOpportunityMutation.mutate(o);
+  const saveActivity = (a: Partial<Activity>) => saveActivityMutation.mutate(a as any);
+  const saveNote = (n: Partial<Note>) => saveNoteMutation.mutate(n as any);
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
@@ -154,18 +167,21 @@ export default function OpportunityDetail() {
     setIsDirty(true);
   };
 
-  // --- Bug Fix 2: Reactive chatter state ---
-  const [chatterNotes, setChatterNotes] = useState<Note[]>([]);
-  const [chatterActivities, setChatterActivities] = useState<Activity[]>([]);
-  const linkedContact = opportunity?.contactId ? getContact(opportunity.contactId) : undefined;
+  // --- Reactive chatter state via hooks ---
+  const { data: chatterNotes = [] } = useNotes('opportunity', id);
+  const { data: chatterActivities = [] } = useActivities('opportunity', id);
+  useNotesRealtime(id);
+  useActivitiesRealtime(id);
+  const { data: linkedContact } = useContact(opportunity?.contactId);
+  const { data: allContacts = [] } = useContacts();
 
+  // refreshChatter now invalidates the React Query cache instead of calling
+  // localStorage helpers directly. The hooks above re-render automatically.
   const refreshChatter = useCallback(() => {
     if (!id) return;
-    setChatterNotes(getNotes('opportunity', id));
-    setChatterActivities(getActivities('opportunity', id));
-  }, [id]);
-
-  useEffect(() => { refreshChatter(); }, [refreshChatter]);
+    queryClient.invalidateQueries({ queryKey: crmKeys.notes('opportunity', id) });
+    queryClient.invalidateQueries({ queryKey: crmKeys.activities('opportunity', id) });
+  }, [id, queryClient]);
 
   // --- Change 7: Audit logging snapshot ---
   const originalSnapshot = useRef<Partial<Opportunity>>({});
@@ -178,10 +194,16 @@ export default function OpportunityDetail() {
     originalSnapshot.current = snap;
   };
 
+  // Initialize the audit snapshot from hook data after first load
+  // (and whenever the navigated record id changes).
+  const snapshotInitFor = useRef<string | null>(null);
   useEffect(() => {
-    if (opportunity) takeSnapshot(opportunity);
+    if (opportunity && snapshotInitFor.current !== opportunity.id) {
+      takeSnapshot(opportunity);
+      snapshotInitFor.current = opportunity.id;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [opportunity?.id, !!opportunity]);
 
   const formatAuditValue = (field: string, value: any): string => {
     if (value == null || value === '' || (Array.isArray(value) && value.length === 0)) return '—';
