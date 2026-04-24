@@ -360,6 +360,7 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
         )}
 
         {/* Timeline */}
+        {!isLoading && (
         <div className="space-y-4">
           {timeline.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">
@@ -379,6 +380,7 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
             )
           )}
         </div>
+        )}
       </CardContent>
     </Card>
   );
