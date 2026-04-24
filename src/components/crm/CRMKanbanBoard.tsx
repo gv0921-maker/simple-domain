@@ -153,10 +153,11 @@ function KanbanCard({
   const [callOpen, setCallOpen] = useState(false);
   const [activityData, setActivityData] = useState({ type: 'task' as 'call' | 'meeting' | 'task' | 'follow_up', dueDate: '', note: '' });
   const [callData, setCallData] = useState({ duration: '', notes: '', outcome: '' });
+  const saveActivityMutation = useSaveActivity();
 
   const handleSchedule = () => {
     if (!activityData.note.trim()) return;
-    saveActivity({
+    saveActivityMutation.mutate({
       type: activityData.type,
       subject: activityData.note.slice(0, 80),
       description: activityData.note,
@@ -172,7 +173,7 @@ function KanbanCard({
   };
 
   const handleLogCall = () => {
-    saveActivity({
+    saveActivityMutation.mutate({
       type: 'call',
       subject: `Call: ${callData.outcome || opportunity.name}`,
       description: `Duration: ${callData.duration || 'N/A'}\nNotes: ${callData.notes}\nOutcome: ${callData.outcome}`,
