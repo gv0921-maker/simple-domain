@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
-import { getQuotation, saveQuotation } from '@/lib/services/sales';
+import { getQuotation, saveQuotation } from '@/lib/services/sales/storage';
 import { getItem } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 

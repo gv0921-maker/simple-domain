@@ -28,7 +28,7 @@ import { RichComposer, RichContent, type RichComposerValue } from '@/components/
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
-import { getQuotations, getSalesOrders } from '@/lib/services/sales';
+import { getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
 import DOMPurify from 'dompurify';
 
 export default function CRMContactDetail() {

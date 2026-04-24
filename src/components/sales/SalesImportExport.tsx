@@ -4,7 +4,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Upload, Download, AlertTriangle } from 'lucide-react';
-import { saveQuotation, saveSalesOrder, getQuotations, getSalesOrders } from '@/lib/services/sales';
+import { saveQuotation, saveSalesOrder, getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
 import type { Quotation, SalesOrder } from '@/lib/services/sales/types';
 import { useToast } from '@/hooks/use-toast';
 

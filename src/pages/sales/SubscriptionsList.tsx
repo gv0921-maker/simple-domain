@@ -33,7 +33,7 @@ import {
   Eye,
   DollarSign,
 } from 'lucide-react';
-import { getSubscriptions, saveSubscription } from '@/lib/services/sales';
+import { getSubscriptions, saveSubscription } from '@/lib/services/sales/storage';
 import type { Subscription, SubscriptionStatus, BillingCycle } from '@/lib/services/sales/types';
 
 import { SALES_NAV } from '@/lib/navigation/sales';

@@ -47,7 +47,7 @@ import {
   Clock,
   Filter,
 } from 'lucide-react';
-import { getQuotations, deleteQuotation, saveQuotation, convertQuotationToOrder } from '@/lib/services/sales';
+import { getQuotations, deleteQuotation, saveQuotation, convertQuotationToOrder } from '@/lib/services/sales/storage';
 import type { Quotation, QuotationStatus } from '@/lib/services/sales/types';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';

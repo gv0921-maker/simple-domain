@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import { getContacts } from '@/lib/services/sales';
-import { getSubscriptions, saveSubscription } from '@/lib/services/sales';
+import { getSubscriptions, saveSubscription } from '@/lib/services/sales/storage';
 import type { Subscription, BillingCycle } from '@/lib/services/sales/types';
 import { getProducts } from '@/lib/services/inventory';
 import { useToast } from '@/hooks/use-toast';

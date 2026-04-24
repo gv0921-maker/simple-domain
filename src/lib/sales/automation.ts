@@ -1,4 +1,4 @@
-import { getQuotations, saveQuotation, convertQuotationToOrder } from '@/lib/services/sales';
+import { getQuotations, saveQuotation, convertQuotationToOrder } from '@/lib/services/sales/storage';
 import { logSales } from './audit';
 
 export function autoExpireQuotations(): number {

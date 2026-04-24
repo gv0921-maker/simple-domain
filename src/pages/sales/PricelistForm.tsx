@@ -23,7 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ArrowLeft, Plus, Trash2, Percent } from 'lucide-react';
-import { getPricelists, savePricelist } from '@/lib/services/sales';
+import { getPricelists, savePricelist } from '@/lib/services/sales/storage';
 import type { Pricelist, PricelistRule } from '@/lib/services/sales/types';
 import { getProducts } from '@/lib/services/inventory';
 import { SALES_NAV } from '@/lib/navigation/sales';

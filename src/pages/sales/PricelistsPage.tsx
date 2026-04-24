@@ -31,7 +31,7 @@ import {
   Pencil,
   Check,
 } from 'lucide-react';
-import { getPricelists, deletePricelist } from '@/lib/services/sales';
+import { getPricelists, deletePricelist } from '@/lib/services/sales/storage';
 import type { Pricelist } from '@/lib/services/sales/types';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';

@@ -1,5 +1,5 @@
 import type { Quotation } from '@/lib/services/sales/types';
-import { getTaxRules } from '@/lib/services/sales';
+import { getTaxRules } from '@/lib/services/sales/storage';
 
 export function downloadQuotationPdf(quotation: Quotation) {
   const taxRules = getTaxRules();

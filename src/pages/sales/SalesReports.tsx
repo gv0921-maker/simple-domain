@@ -35,7 +35,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
-import { getQuotations, getSalesOrders, getSubscriptions } from '@/lib/services/sales';
+import { getQuotations, getSalesOrders, getSubscriptions } from '@/lib/services/sales/storage';
 import { getContacts } from '@/lib/services/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
