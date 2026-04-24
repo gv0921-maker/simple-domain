@@ -40,7 +40,6 @@ import {
   FileText,
   Package,
   User,
-  Mail,
   Pencil,
   X,
 } from 'lucide-react';
@@ -155,7 +154,6 @@ export default function OpportunityDetail() {
   // --- Bug Fix 1: Inline editing state ---
   const [editingData, setEditingData] = useState<Opportunity | undefined>(opportunity);
   const [isDirty, setIsDirty] = useState(false);
-  const tagInputRef = useRef<HTMLInputElement>(null);
   const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
 
