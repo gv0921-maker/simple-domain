@@ -859,49 +859,99 @@ export default function OpportunityDetail() {
                 </TabsContent>
               </Tabs>
 
-              {/* Cross-module Links */}
-              <div className="mt-4 pt-3 border-t border-border">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">Linked Actions</h3>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate(`/sales/quotations/new?contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    Create Quotation
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate(`/sales/orders/new?contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
-                  >
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                    Create Sales Order
-                  </Button>
-                  {currentData.contactId && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs gap-1.5"
-                      onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
-                    >
-                      <User className="h-3.5 w-3.5" />
-                      View Contact
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate('/inventory/products')}
-                  >
-                    <Package className="h-3.5 w-3.5" />
-                    Browse Products
-                  </Button>
+              {/* Related Records — rounded cards linking to records of the same contact */}
+              <div className="mt-6 pt-4 border-t border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                    Related Records
+                    <span className="ml-2 normal-case font-normal text-muted-foreground/70">
+                      {currentData.contactName ? `for ${currentData.contactName}` : '(no contact selected)'}
+                    </span>
+                  </h3>
                 </div>
+
+                {/* Quick create buttons */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <RoundedActionButton
+                    icon={FileText}
+                    label="New Quotation"
+                    onClick={() => navigate(`/sales/quotations/new?customerId=${currentData.contactId || ''}&contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${encodeURIComponent(opportunity.name)}`)}
+                  />
+                  <RoundedActionButton
+                    icon={ShoppingCart}
+                    label="New Sales Order"
+                    onClick={() => navigate(`/sales/orders/new?customerId=${currentData.contactId || ''}&contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${encodeURIComponent(opportunity.name)}`)}
+                  />
+                  <RoundedActionButton
+                    icon={Package}
+                    label="New Stock Operation"
+                    onClick={() => navigate('/inventory/operations')}
+                  />
+                  {currentData.contactId && (
+                    <RoundedActionButton
+                      icon={User}
+                      label="View Contact"
+                      onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
+                    />
+                  )}
+                </div>
+
+                {/* Existing related records grouped by module */}
+                {(relatedRecords.quotations.length > 0 ||
+                  relatedRecords.salesOrders.length > 0 ||
+                  relatedRecords.stockMoves.length > 0) ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <RelatedGroup
+                      title="Quotations"
+                      icon={FileText}
+                      count={relatedRecords.quotations.length}
+                    >
+                      {relatedRecords.quotations.slice(0, 5).map(q => (
+                        <RelatedRow
+                          key={q.id}
+                          primary={q.reference}
+                          secondary={`₹${q.total.toLocaleString('en-IN')}`}
+                          status={q.status}
+                          onClick={() => navigate(`/sales/quotations/${q.id}`)}
+                        />
+                      ))}
+                    </RelatedGroup>
+                    <RelatedGroup
+                      title="Sales Orders"
+                      icon={ShoppingCart}
+                      count={relatedRecords.salesOrders.length}
+                    >
+                      {relatedRecords.salesOrders.slice(0, 5).map(o => (
+                        <RelatedRow
+                          key={o.id}
+                          primary={o.reference}
+                          secondary={`₹${o.total.toLocaleString('en-IN')}`}
+                          status={o.status}
+                          onClick={() => navigate(`/sales/orders/${o.id}`)}
+                        />
+                      ))}
+                    </RelatedGroup>
+                    <RelatedGroup
+                      title="Stock Moves"
+                      icon={Package}
+                      count={relatedRecords.stockMoves.length}
+                    >
+                      {relatedRecords.stockMoves.slice(0, 5).map(m => (
+                        <RelatedRow
+                          key={m.id}
+                          primary={m.reference}
+                          secondary={m.operationType}
+                          status={m.state}
+                          onClick={() => navigate(`/inventory/operations`)}
+                        />
+                      ))}
+                    </RelatedGroup>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">
+                    No quotations, sales orders, or stock moves found for this contact yet.
+                  </p>
+                )}
               </div>
 
             </div>
