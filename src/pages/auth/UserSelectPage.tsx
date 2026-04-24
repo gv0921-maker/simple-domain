@@ -64,7 +64,7 @@ export default function UserSelectPage() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Self-Hosted ERP System
+          Beautiful Homes Begin Here !!!
         </p>
       </Card>
     </div>
