@@ -95,7 +95,6 @@ export const DEFAULT_MODULES: ModuleConfig[] = [
   { id: 'settings', name: 'Settings', description: 'Configure your system', icon: 'Settings', iconBg: '#f5f5f5', iconColor: '#616161', href: '/settings', visible: true, order: 8 },
   { id: 'shop-floor', name: 'Shop Floor', description: 'Track shop floor operations', icon: 'Smartphone', iconBg: '#e0f2fe', iconColor: '#0ea5e9', href: '/shop-floor', visible: true, order: 9 },
   { id: 'barcode', name: 'Barcode', description: 'Scan and manage products', icon: 'Barcode', iconBg: '#fce7f3', iconColor: '#ec4899', href: '/barcode', visible: true, order: 10 },
-  { id: 'invoicing', name: 'Invoicing', description: 'Invoices & Payments', icon: 'FileText', iconBg: '#e0e7ff', iconColor: '#6366f1', href: '/invoicing', visible: true, order: 11 },
 ];
 
 // Default theme configuration
