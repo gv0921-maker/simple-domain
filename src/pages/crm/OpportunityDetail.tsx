@@ -757,7 +757,7 @@ export default function OpportunityDetail() {
                   <TiptapNotesEditor
                     value={currentData.internalNotes || ''}
                     onChange={(html) => updateField('internalNotes', html)}
-                    placeholder="Write notes — supports tables, headings, lists, links, and Word-like formatting…"
+                    placeholder="Write notes"
                     minHeight="240px"
                   />
                 </TabsContent>
