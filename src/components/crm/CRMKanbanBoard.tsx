@@ -64,7 +64,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { useFilteredOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
+import { CRMSearchDropdown, useFilteredOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
 import { displayRevenue } from '@/lib/crm/fieldMask';
 
 // Star rating (Odoo-style — golden stars)
@@ -691,7 +691,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
-          <div className="flex-1" />
+          <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
 
           {/* Right: View toggle icons */}
           <div className="flex items-center gap-1">

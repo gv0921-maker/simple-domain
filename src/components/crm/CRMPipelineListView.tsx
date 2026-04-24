@@ -21,7 +21,7 @@ import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
-import { useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
+import { CRMSearchDropdown, useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
 import { displayRevenue, canViewSensitive } from '@/lib/crm/fieldMask';
 
 interface CRMPipelineListViewProps {
@@ -104,7 +104,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
-          <div className="flex-1" />
+          <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
 
           <div className="flex items-center gap-1">
             {[
