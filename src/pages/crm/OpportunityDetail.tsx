@@ -678,9 +678,7 @@ export default function OpportunityDetail() {
                 {/* Email */}
                 <OdooField label="Email">
                   {linkedContact?.email ? (
-                    <a href={`mailto:${linkedContact.email}`} className="text-primary hover:underline text-sm truncate">
-                      {linkedContact.email}
-                    </a>
+                    <span className="text-sm text-foreground truncate">{linkedContact.email}</span>
                   ) : (
                     <span className="text-muted-foreground/60 text-sm italic">
                       {currentData.contactId ? 'No email on contact' : 'Select a contact'}
@@ -712,9 +710,7 @@ export default function OpportunityDetail() {
                 {/* Phone */}
                 <OdooField label="Phone">
                   {linkedContact?.phone ? (
-                    <a href={`tel:${linkedContact.phone}`} className="text-primary hover:underline text-sm">
-                      {linkedContact.phone}
-                    </a>
+                    <span className="text-sm text-foreground">{linkedContact.phone}</span>
                   ) : (
                     <span className="text-muted-foreground/60 text-sm italic">
                       {currentData.contactId ? 'No phone on contact' : 'Select a contact'}
