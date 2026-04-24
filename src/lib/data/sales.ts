@@ -96,7 +96,7 @@ export interface Activity {
   id: string;
   userId: string;
   userName: string;
-  type: 'call' | 'email' | 'meeting' | 'note' | 'task';
+  type: 'call' | 'meeting' | 'note' | 'task';
   subject: string;
   description?: string;
   dueDate?: string;

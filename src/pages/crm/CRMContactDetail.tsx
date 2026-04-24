@@ -28,7 +28,6 @@ import { RichComposer, RichContent, type RichComposerValue } from '@/components/
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
-import { EmailComposerDialog } from '@/components/crm/EmailComposerDialog';
 import { getQuotations, getSalesOrders } from '@/lib/data/sales/storage';
 import DOMPurify from 'dompurify';
 
@@ -44,7 +43,6 @@ export default function CRMContactDetail() {
 
   const [notesVersion, setNotesVersion] = useState(0);
   const notes = useMemo(() => (id ? getNotes('contact', id) : []), [id, notesVersion]);
-  const [emailOpen, setEmailOpen] = useState(false);
 
   // Sales history
   const linkedQuotations = useMemo(() => getQuotations().filter(q => q.customerId === id), [id]);
@@ -112,9 +110,6 @@ export default function CRMContactDetail() {
           <Badge variant={contact.status === 'active' ? 'default' : 'secondary'} className="capitalize">
             {contact.status}
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => setEmailOpen(true)}>
-            <Mail className="h-4 w-4 mr-1" /> Email
-          </Button>
           <Button variant="outline" size="sm" onClick={() => navigate(`/sales/quotations/new?customerId=${id}`)}>
             <FileText className="h-4 w-4 mr-1" /> New Quotation
           </Button>
@@ -374,14 +369,6 @@ export default function CRMContactDetail() {
                 <CardTitle className="text-base">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {contact.email && showEmail && (
-                  <Button variant="outline" className="w-full justify-start" asChild>
-                    <a href={`mailto:${contact.email}`}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Email
-                    </a>
-                  </Button>
-                )}
                 {contact.phone && showPhone && (
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <a href={`tel:${contact.phone}`}>
@@ -390,7 +377,7 @@ export default function CRMContactDetail() {
                     </a>
                   </Button>
                 )}
-                {(!showEmail || !showPhone) && (
+                {!showPhone && (
                   <p className="text-xs text-muted-foreground italic">
                     Some quick actions hidden — sensitive contact details masked.
                   </p>
@@ -451,13 +438,6 @@ export default function CRMContactDetail() {
         </div>
       </div>
     </AppLayout>
-    <EmailComposerDialog
-      open={emailOpen}
-      onOpenChange={setEmailOpen}
-      defaultTo={contact.email}
-      relatedTo="contact"
-      relatedId={contact.id}
-    />
     </>
   );
 }

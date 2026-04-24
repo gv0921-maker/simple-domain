@@ -140,7 +140,7 @@ describe("CRM Data — Activities", () => {
   it("filters activities by related entity", async () => {
     const crm = await loadCRM();
     crm.saveActivity({ subject: "A1", type: "call", relatedTo: "contact", relatedId: "c1", userId: "1", userName: "U" });
-    crm.saveActivity({ subject: "A2", type: "email", relatedTo: "opportunity", relatedId: "l1", userId: "1", userName: "U" });
+    crm.saveActivity({ subject: "A2", type: "meeting", relatedTo: "opportunity", relatedId: "l1", userId: "1", userName: "U" });
     const filtered = crm.getActivities("contact", "c1");
     expect(filtered.length).toBe(1);
     expect(filtered[0].subject).toBe("A1");

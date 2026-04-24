@@ -9,7 +9,7 @@ import { logCRM } from '@/lib/crm/audit';
 export type ContactType = 'individual' | 'company';
 export type ContactStatus = 'active' | 'archived';
 export type OpportunityStage = 'new' | 'qualified' | 'proposition' | 'won' | 'lost';
-export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note' | 'follow_up';
+export type ActivityType = 'call' | 'meeting' | 'task' | 'note' | 'follow_up';
 export type NoteVisibility = 'private' | 'team' | 'public';
 
 export interface Address {
