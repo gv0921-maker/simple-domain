@@ -10,7 +10,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, title, subtitle, moduleNav }: AppLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background">
       <TopNav title={title} subtitle={subtitle} moduleNav={moduleNav} />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>
