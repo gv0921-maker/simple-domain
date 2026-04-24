@@ -187,7 +187,10 @@ export function CRMDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">CRM Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            CRM Dashboard
+            {isFetchingStats && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </h1>
           <p className="text-muted-foreground">Overview of your customer relationships and sales pipeline</p>
         </div>
         <div className="flex gap-2">
