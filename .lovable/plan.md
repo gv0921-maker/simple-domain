@@ -1,72 +1,208 @@
+## Goal
 
+Build an Odoo-style search bar for the CRM Pipeline page (`CRMKanbanBoard` and `CRMPipelineListView`) as a NEW component `CRMSearchBar.tsx`, keeping the existing `CRMSearchDropdown` untouched until the new one is wired in. The component renders a single full-width input with chips and a 3-panel dropdown: **Filters | Group By | Favorites**.
 
-# Service Layer Introduction (Pre-Migration Refactor)
+---
 
-A pure structural refactor. No data sources change, no logic changes, no behavior changes. Every component will route through a thin service layer so a future Supabase swap touches only the service files.
+## 1. New file — `src/components/crm/CRMSearchBar.tsx`
 
-## What Will Be Built
+### Public API
+```ts
+interface ActiveFilter {
+  type: 'filter' | 'groupBy' | 'favorite' | 'search';
+  key: string;          // e.g. 'myPipeline', 'creationDate', 'salesperson'
+  label: string;        // chip label
+  value?: string;       // e.g. date range token, custom filter expression
+}
 
-### 1. New `src/lib/services/` directory
+interface CRMSearchBarProps {
+  activeFilters: ActiveFilter[];
+  onActiveFiltersChange: (filters: ActiveFilter[]) => void;
+  groupBy: string | null;
+  onGroupByChange: (key: string | null) => void;
+}
+```
 
-Thin re-export modules — one per data domain. Each file mirrors the public API of its corresponding `@/lib/data/*` module without adding logic.
+State held internally: `searchText`, `dropdownOpen`, `openSubmenu` (for date sub-menus), `customFilterDialogOpen`, `saveSearchOpen`, `savedSearches`.
 
-| File | Re-exports from | Notes |
-|---|---|---|
-| `services/crm.ts` | `@/lib/data/crm` | Excludes any leads exports; excludes email-send helpers (none currently exist there). Email *fields* on Contact/Opportunity stay as-is. |
-| `services/sales.ts` | `@/lib/data/sales`, `@/lib/data/sales/storage`, `@/lib/data/sales/types` | Covers quotations, orders, pricelists, subscriptions, customers. `LeadDetail.tsx`/`SalesPipeline.tsx` still import legacy `Lead` from `data/sales` — those exports are preserved here for compatibility (sales-side leads, not the deleted CRM leads module). |
-| `services/inventory.ts` | `@/lib/data/inventory`, `@/lib/data/inventory/storage`, `@/lib/data/inventory/types` | Products, warehouses, stock moves, transfers, locations, barcode lookups. |
-| `services/accounting.ts` | `@/lib/data/accounting` | Accounts, invoices, bills, payments, journal entries. |
-| `services/hr.ts` | `@/lib/data/hr` | Employees, departments, attendance, leaves, contracts. (No HR pages exist yet — file created for future use & registry symmetry.) |
-| `services/manufacturing.ts` | `@/lib/data/manufacturing` | Work orders, work centers, BOMs. |
-| `services/settings.ts` | `@/lib/data/rbac`, `@/lib/data/moduleTabs` | RBAC, audit logs, tab access, module tabs. Auth files NOT touched. |
-| `services/index.ts` | All of the above | Namespaced re-exports (`crmService`, `salesService`, …). |
-| `services/types.ts` | — | TypeScript interfaces describing each service contract (`CRMService`, `SalesService`, etc.) using `Promise<T> \| T` return shapes so a future async Supabase impl satisfies the same interface. |
-| `services/registry.ts` | All services | `DB_PROVIDER` flag (default `'localStorage'`) and a `services` map. Single switch point for future DB swap. |
+### Layout
+- Container: `relative flex-1 max-w-2xl`
+- Bar: `h-9 rounded-md border border-input bg-background flex items-center gap-1 px-2 flex-wrap` + a search icon at left and a `ChevronDown` button at right that toggles the dropdown.
+- Active filters appear inline as chips before the text input:
+  - Filter/Search/Favorite chip → `bg-primary/10 text-primary text-xs rounded px-2 py-0.5 flex items-center gap-1` + `X` icon.
+  - Group-By chip → same styling but trailing `ChevronDown` (clicking opens a small popover to switch grouping; clicking X clears).
+- Free-text input flexes to fill remaining space, no border, transparent.
 
-### 2. Component import rewrites
+### Dropdown panel
+- Anchored under the bar (`absolute top-full left-0 right-0 mt-1 z-50`).
+- `min-w-[720px] bg-popover rounded-lg shadow-lg border border-border`.
+- Three columns split by `divide-x divide-border`, each `flex-1 p-2`.
+- Column header row: icon + label + bottom border, e.g.:
+  - **Filters** — `Filter` (lucide), `text-sm font-semibold`
+  - **Group By** — `Layers`
+  - **Favorites** — `Star` filled amber
+- Item row: `text-sm px-3 py-1.5 rounded cursor-pointer hover:bg-muted/50 flex items-center justify-between`. Active item: `bg-primary/10 text-primary font-medium`. Sub-menu trigger: trailing `ChevronRight`.
+- Section dividers: `border-t border-border my-1`.
+- Outside-click + `Escape` close. Backed by Radix `Popover` (already in project) for a11y, anchored to the bar.
 
-Every component / page file currently importing from `@/lib/data/*` is updated to import the same symbols from `@/lib/services/*`. Function signatures are unchanged because services are pure re-exports — zero logic edits.
+### Filters column items
+Quick toggles:
+- **My Pipeline** → key `myPipeline`
+- **Unassigned** → key `unassigned`
+- **Open Opportunities** → key `open`
+- **Unread Messages** → key `unreadMessages`
 
-**89 files affected**, grouped by module:
+Date sub-menus (open inline as a nested list when hovered/clicked):
+- **Creation Date ▸** → key `creationDate`, value ∈ `today | thisWeek | thisMonth | thisQuarter | thisYear | custom`
+- **Closed Date ▸** → key `closeDate`, same options
 
-- **CRM** (8 files): `CRMKanbanBoard`, `CRMDashboard`, `CRMPipelineListView`, `CRMSearchDropdown`, `CRMActivityTimeline`, `CRMImportExport`, `CRMFormDialogs`, `ContactForm`, `CRMContactDetail`, `CRMContactsList`, `OpportunityForm`, `OpportunityDetail`, `CRMPipelinesSettings`.
-- **Sales** (18 files): all of `src/pages/sales/*` and `src/components/sales/*`.
-- **Inventory** (18 files): all of `src/pages/inventory/*` and `src/components/inventory/*`.
-- **Accounting** (8 files): all of `src/pages/accounting/*`.
-- **Manufacturing** (8 files): all of `src/pages/manufacturing/*` + `PLMOverview`.
-- **Settings/RBAC** (4 files): `AuditLogs`, `CRMPipelinesSettings`, `RolesManagement`, `UsersManagement`.
-- **Layout / shared** (6 files): `GlobalSearch`, `TopNav`, `ProtectedRoute`, `HomePage`, `NotFound`.
-- **Hooks** (4 files): `useCRMQueries`, `useCRMPermissions`, `useInventoryPermissions`, `useTabPermissions`.
-- **Internal libs** (7 files): `lib/crm/*`, `lib/sales/*` — these are sibling utility libs and will also be redirected to the service layer for consistency.
+Status filters: **Won**, **Ongoing**, **Rotting**, **Lost**.
 
-### 3. What stays untouched
+Footer item: **Custom Filter…** → opens dialog.
 
-- Every file under `src/lib/data/` (still the live implementation).
-- Auth: `src/contexts/AuthContext.tsx`, `src/pages/auth/*`, password flows.
-- Tests under `src/test/` (they test the data layer directly — left as-is).
-- The Supabase scaffolding from previous turns (`crm-supabase.ts`, `useCRMQueries.ts`) — kept dormant, not wired in by this change.
+Toggling an item adds/removes a chip in `activeFilters`. Multiple chips combine with **AND**.
 
-## Important Notes / Deviations From Spec
+### Group By column items
+Single-select (cycling). Setting one clears the previous.
+- Salesperson, Sales Team, Stage, City, Country, Lost Reason, Source.
+- Date sub-menus: **Creation Date ▸**, **Expected Closing ▸**, **Closed Date ▸** with `day | week | month | quarter | year` choices. Each selection sets `groupBy` to a composite key e.g. `creationDate:month`.
+- Properties ▸ and Custom Group ▸ open the same custom-field selector dialog.
 
-1. **No HR or Manufacturing component folders exist.** `services/hr.ts` and `services/manufacturing.ts` are still created (manufacturing has pages; HR has none yet but the service is created for registry symmetry).
-2. **`src/lib/data/sales` still exports `Lead`/`getLeads`/`updateLeadStatus`** consumed by `SalesPipeline.tsx` and `LeadDetail.tsx`. These are *sales pipeline* leads, distinct from the deleted CRM Leads module. Per the rule "do not change behavior", these exports are preserved through `services/sales.ts`. If you want them removed, that's a separate cleanup task.
-3. **No email-send functions exist in `@/lib/data/crm`** today, so nothing needs excluding there. Email *fields* on records pass through normally.
-4. **`src/lib/crm/*` and `src/lib/sales/*` helper libs** (audit, notifications, automation, pdf) also import from `@/lib/data/*`. They'll be redirected too so the rule "zero `@/lib/data/` imports outside the data and services folders" holds cleanly.
-5. **Registry shape**: matches the spec — `DB_PROVIDER` env-driven, `services` object pointing to local impls today, ready to point at Supabase impls later by changing one line.
+### Favorites column items
+Built-in saved searches (clicking applies a preset bundle of filters as chips):
+- **Follow-Up Report** → activities due ≤ today AND status = open.
+- **Monthly Report** → created this month OR closing this month.
+- **Weekly Report** → created this week OR closing this week.
+- **Default Pipeline** → clears all filters and grouping.
 
-## Verification Steps After Refactor
+Footer:
+- **★ Save current search ▸** — expands inline:
+  - `Input` for name (placeholder)
+  - Checkbox **Use by default**
+  - Checkbox **Share with team** (visual only; persistence local)
+  - **Save** button. Persists into `localStorage` key `crm_saved_searches` as `{ id, name, filters, groupBy, isDefault, shared, createdAt }[]`.
+- User-saved searches render above the built-in ones with a star icon and an X to delete.
+- On mount, if any saved search has `isDefault === true`, it is auto-applied (only if `activeFilters` is empty).
 
-1. `grep -r "from '@/lib/data/" src/components src/pages src/hooks src/lib/crm src/lib/sales` → must return zero matches.
-2. `grep -r "from '@/lib/data/" src/lib/services` → expected matches (services re-export from data).
-3. `grep -r "from '@/lib/data/" src/lib/data src/test` → expected matches (internal + tests).
-4. TypeScript build passes with zero errors.
-5. Manual smoke: open CRM Pipeline, Contacts, Opportunity Detail, Sales Orders, Inventory Overview, Accounting Chart of Accounts, Manufacturing Work Orders, Settings Users — all render and behave identically.
+### Custom Filter dialog
+Dialog with:
+- Field selector: enumerates Opportunity fields (`name`, `contactName`, `companyName`, `assignedTo`, `salesTeam`, `stage`, `expectedRevenue`, `expectedCloseDate`, `priority`, `tags`).
+- Operator selector: `equals | contains | greaterThan | lessThan | isSet | isNotSet`.
+- Value input (hidden for `isSet`/`isNotSet`; numeric for revenue/priority; date for date fields).
+- **Add** button → pushes a chip with `key='custom'`, `value` encoded as JSON `{ field, op, value }`, `label` like `Revenue > 50,000`.
 
-## Out of Scope (explicit)
+### Keyboard behaviour
+- Typing in the search input updates `searchText` and live-filters (managed via a separate `searchText` chip with `key='search'` updated on each keystroke; or kept as a separate transient piece of state added to filtered logic).
+- **Enter** commits current `searchText` as a permanent chip (`type:'search'`) and clears the input.
+- **Backspace** when input is empty removes the last chip.
+- **Escape** closes the dropdown.
+- **Arrow Up/Down** navigates dropdown items (basic roving focus).
+- Clicking outside closes the dropdown.
 
-- No data source changes.
-- No Supabase wiring.
-- No removal of `crm-supabase.ts` / `useCRMQueries.ts` (left in place for the next phase).
-- No edits to data-layer files.
-- No edits to auth, tests, or migrations.
+---
 
+## 2. New helper — `src/lib/crm/searchFilters.ts`
+
+Pure functions to keep the bar component lean:
+
+```ts
+export function applyActiveFilters(
+  opportunities: Opportunity[],
+  activeFilters: ActiveFilter[],
+  ctx: { userId?: string; userName?: string; activitiesByOpp: Record<string, Activity[]> }
+): Opportunity[];
+
+export function groupOpportunities(
+  opportunities: Opportunity[],
+  groupBy: string | null,
+  contactsById: Record<string, Contact>
+): { label: string; opps: Opportunity[] }[] | null;
+
+export function isInDateRange(iso: string, token: string): boolean;
+export function daysSince(iso: string): number;
+```
+
+Filter mapping (AND across chips):
+- `myPipeline` → `o.assignedTo === ctx.userName`.
+- `unassigned` → `!o.assignedTo`.
+- `open` → `o.stage !== 'won' && o.stage !== 'lost'`.
+- `unreadMessages` → activity entry with `createdAt > localStorage.getItem('crm_last_viewed_'+oppId)`.
+- `won` / `lost` → stage equals.
+- `rotting` → `daysSince(lastActivity ?? createdAt) > 30 && stage !== 'won' && stage !== 'lost'`.
+- `creationDate` / `closeDate` → `isInDateRange(field, value)`.
+- `search` → case-insensitive match across `name`, `contactName`, `companyName`, `phone`, `expectedRevenue` (string).
+- `custom` → operator-based evaluator on chosen field.
+
+Group key extractor handles composite date keys (`creationDate:month` → format `MMM yyyy`).
+
+---
+
+## 3. Wire-up — keep old component as fallback
+
+### `src/components/crm/CRMKanbanBoard.tsx`
+- Replace `CRMSearchDropdown` with `CRMSearchBar`.
+- State: `const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([])` and `const [groupBy, setGroupBy] = useState<string | null>(null)`.
+- Replace `useFilteredOpportunities` call with `applyActiveFilters(opportunities, activeFilters, ctx)`.
+- Compute `groupedOpportunities = groupOpportunities(filtered, groupBy, contactsById)`.
+- Add new prop path: when `groupedOpportunities` is non-null, render group columns instead of pipeline-stage columns. Each group gets a column with the group label as header (no quick-add, no revenue bar — drag/drop disabled because target stage is ambiguous). When null, keep current stage-based rendering untouched.
+- Pull contacts via `useContacts()` (already exists) for `city`/`country` group-bys.
+- Pull activities via `useActivities()` (no related filter) once and bucket by `relatedId` for the `unreadMessages` and `rotting` filters.
+
+### `src/components/crm/CRMPipelineListView.tsx`
+- Same swap: replace `CRMSearchDropdown` + `useFilteredOpportunities` with `CRMSearchBar` + `applyActiveFilters`.
+- When `groupBy` is set, render the table with group header rows (`<TableRow>` with single full-span cell, `bg-muted/40 font-semibold`) before each group's records, similar to the existing footer summary row.
+
+### Old component
+- Leave `src/components/crm/CRMSearchDropdown.tsx` and `useFilteredOpportunities` in place (not deleted) so existing imports elsewhere keep compiling. Removed only from the two pipeline files. This satisfies the "keep old as fallback" requirement.
+
+---
+
+## 4. Persistence
+
+`localStorage` keys (consistent with the project's localStorage-first policy in memory):
+- `crm_saved_searches` — user saved searches (array).
+- `crm_last_viewed_<oppId>` — set when an opportunity detail is opened (existing or to be added in `OpportunityDetail` mount effect — small one-liner addition needed for the **Unread Messages** filter to work meaningfully).
+
+---
+
+## 5. Styling specifics
+- Indian Rupee/locale untouched (chips display revenue ranges using `toLocaleString('en-IN')`).
+- Odoo purple `#875A7B` reused for the "Save" button in the save-search inline panel.
+- Chips use the existing `bg-primary/10 text-primary` palette so theming stays consistent.
+- Empty-placeholder policy respected for inputs (no defaults).
+
+---
+
+## 6. Files to be created / edited
+
+**Create**
+- `src/components/crm/CRMSearchBar.tsx`
+- `src/lib/crm/searchFilters.ts`
+
+**Edit**
+- `src/components/crm/CRMKanbanBoard.tsx` — swap search component, add group-by rendering branch, wire activities/contacts.
+- `src/components/crm/CRMPipelineListView.tsx` — swap search component, add grouped table rendering.
+- `src/pages/crm/OpportunityDetail.tsx` — write `crm_last_viewed_<id>` timestamp on mount (small effect) so **Unread Messages** filter is functional.
+
+**Untouched (kept as fallback)**
+- `src/components/crm/CRMSearchDropdown.tsx`
+
+---
+
+## 7. Completion checklist (mirrors your spec)
+
+- [ ] `CRMSearchBar.tsx` created with 3-column dropdown.
+- [ ] All Filters items create/remove chips with AND combination.
+- [ ] Date sub-menus work for Creation/Closed Date.
+- [ ] Group By options transform Kanban + List views; only one active at a time.
+- [ ] Favorites: 4 built-ins + user saved searches stored in `localStorage`; default-flag auto-applies.
+- [ ] Chips render in bar; X removes specific chip; Group-By chip cycles via popover.
+- [ ] Backspace removes last chip when input empty.
+- [ ] Escape closes dropdown; outside-click closes.
+- [ ] Custom Filter dialog (field/operator/value) adds a chip.
+- [ ] `useFilteredOpportunities` (old) untouched; new logic in `searchFilters.ts`.
+- [ ] Kanban renders group columns when `groupBy` active.
+- [ ] List view renders group header rows when `groupBy` active.
+- [ ] TypeScript compiles clean; no behavioral regression to existing search.
+
+Approve to switch to default mode and implement.

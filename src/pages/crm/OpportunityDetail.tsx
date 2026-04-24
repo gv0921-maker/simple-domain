@@ -163,6 +163,14 @@ export default function OpportunityDetail() {
     }
   }, [opportunity, isDirty]);
 
+  // Mark this opportunity as "viewed now" so the CRM search bar's
+  // "Unread Messages" filter knows where the read cursor is.
+  useEffect(() => {
+    if (id) {
+      try { localStorage.setItem(`crm_last_viewed_${id}`, new Date().toISOString()); } catch { /* noop */ }
+    }
+  }, [id]);
+
   const updateField = (field: keyof Opportunity, value: any) => {
     setEditingData(prev => prev ? { ...prev, [field]: value } : prev);
     setIsDirty(true);
