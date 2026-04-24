@@ -15,13 +15,14 @@ import {
   Clock, Settings, Loader2,
 } from 'lucide-react';
 import { type Opportunity, type Pipeline } from '@/lib/services/crm';
-import { useOpportunities, useDefaultPipeline } from '@/hooks/crm/useCRMQueries';
+import { useOpportunities, useDefaultPipeline, useActivities, useContacts } from '@/hooks/crm/useCRMQueries';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
-import { CRMSearchDropdown, useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
+import { CRMSearchBar } from '@/components/crm/CRMSearchBar';
+import { applyActiveFilters, groupOpportunities, type ActiveFilter } from '@/lib/crm/searchFilters';
 import { displayRevenue, canViewSensitive } from '@/lib/crm/fieldMask';
 
 interface CRMPipelineListViewProps {
@@ -42,16 +43,33 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
 
   const { data: allOpportunities = [], isFetching } = useOpportunities();
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
-  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [groupBy, setGroupBy] = useState<string | null>(null);
+  const [liveSearch, setLiveSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('expectedRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Apply text search only (filters/group-by removed)
-  const filteredByFilters = useFilteredOpportunities(
-    opportunities,
-    activeFilters,
-    user?.id,
+  const { data: allActivities = [] } = useActivities();
+  const { data: allContacts = [] } = useContacts();
+  const activitiesByOpp = useMemo(() => {
+    const m: Record<string, typeof allActivities> = {};
+    for (const a of allActivities) {
+      if (a.relatedTo === 'opportunity' && a.relatedId) (m[a.relatedId] ||= []).push(a);
+    }
+    return m;
+  }, [allActivities]);
+  const contactsById = useMemo(() => {
+    const m: Record<string, typeof allContacts[number]> = {};
+    for (const c of allContacts) m[c.id] = c;
+    return m;
+  }, [allContacts]);
+
+  const filteredByFilters = useMemo(
+    () => applyActiveFilters(opportunities, activeFilters, {
+      userId: user?.id, userName: user?.name, activitiesByOpp, contactsById,
+    }, liveSearch),
+    [opportunities, activeFilters, user, activitiesByOpp, contactsById, liveSearch],
   );
 
   const filtered = useMemo(() => {
@@ -71,6 +89,17 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
     });
     return list;
   }, [filteredByFilters, sortField, sortDir, pipeline.stages]);
+
+  const stageNames = useMemo(() => {
+    const m: Record<string, string> = {};
+    pipeline.stages.forEach(s => { m[s.id] = s.name; });
+    return m;
+  }, [pipeline.stages]);
+
+  const groupedView = useMemo(
+    () => groupOpportunities(filtered, groupBy, contactsById, stageNames),
+    [filtered, groupBy, contactsById, stageNames],
+  );
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -103,7 +132,14 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
-          <CRMSearchDropdown activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
+          <CRMSearchBar
+            activeFilters={activeFilters}
+            onActiveFiltersChange={setActiveFilters}
+            groupBy={groupBy}
+            onGroupByChange={setGroupBy}
+            liveSearch={liveSearch}
+            onLiveSearchChange={setLiveSearch}
+          />
 
           <div className="flex items-center gap-1">
             {[
