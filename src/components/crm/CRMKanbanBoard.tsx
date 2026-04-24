@@ -366,11 +366,12 @@ function KanbanColumn({
   const stageMap: Record<string, OpportunityStage> = {
     new: 'new', qualified: 'qualified', proposition: 'proposition', won: 'won',
   };
+  const saveOpportunityMutation = useSaveOpportunity();
 
   const handleQuickAdd = () => {
     if (quickData.name.trim() || quickData.company.trim()) {
       const oppStage = stageMap[stage.id] || 'new';
-      saveOpportunity({
+      saveOpportunityMutation.mutate({
         name: quickData.name || quickData.company,
         contactName: quickData.contact,
         companyName: quickData.company,
@@ -380,21 +381,23 @@ function KanbanColumn({
         priority: quickPriority as 0 | 1 | 2 | 3,
         stageId: stage.id,
         stage: oppStage,
+      }, {
+        onSuccess: () => {
+          toast({ title: 'Opportunity created' });
+          onQuickCreate(stage.id, oppStage);
+        },
       });
-      toast({ title: 'Opportunity created' });
-      // Trigger parent refresh
-      onQuickCreate(stage.id, oppStage);
       setShowQuickAdd(false);
       setQuickData({ company: '', contact: '', name: '', email: '', phone: '', revenue: '' });
       setQuickPriority(0);
     }
   };
 
-  const handleEditClick = () => {
+  const handleEditClick = async () => {
     // Save as draft then navigate to detail
     if (quickData.name.trim() || quickData.company.trim()) {
       const oppStage = stageMap[stage.id] || 'new';
-      const opp = saveOpportunity({
+      const opp = await saveOpportunityMutation.mutateAsync({
         name: quickData.name || quickData.company,
         contactName: quickData.contact,
         companyName: quickData.company,
@@ -556,18 +559,14 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const { canCreateOpportunities, canEditOpportunities, filterByScope } = useCRMPermissions();
   const { user } = useAuth();
 
-  const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>(() => getOpportunities());
+  const { data: allOpportunities = [], isFetching } = useOpportunities();
+  const { data: pipelineData } = useDefaultPipeline();
+  const updateStageMutation = useUpdateOpportunityStage();
+  const saveOpportunityMutation = useSaveOpportunity();
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
 
-  // Refresh data when component mounts or window regains focus (e.g., after navigating back from detail page)
-  useEffect(() => {
-    const refresh = () => setAllOpportunities(getOpportunities());
-    window.addEventListener('focus', refresh);
-    // Also refresh on mount in case data changed while navigated away
-    refresh();
-    return () => window.removeEventListener('focus', refresh);
-  }, []);
-  const [pipeline] = useState<Pipeline>(() => getDefaultPipeline());
+  // Fallback empty pipeline while loading so hooks below remain stable
+  const pipeline: Pipeline = pipelineData ?? { id: '', name: '', description: '', stages: [], isDefault: false, createdAt: '', updatedAt: '' };
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
 
   const activeStages = useMemo(() => {
@@ -601,29 +600,26 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const handleDrop = useCallback(
     (oppId: string, stageId: string, stage: OpportunityStage) => {
       if (!canEditOpportunities) return;
-      updateOpportunityStage(oppId, stageId, stage);
-      setAllOpportunities(getOpportunities());
+      updateStageMutation.mutate({ id: oppId, stageId, stage });
       const stageName = pipeline.stages.find((s) => s.id === stageId)?.name;
       toast({ title: `Moved to ${stageName}` });
     },
-    [canEditOpportunities, pipeline.stages, toast]
+    [canEditOpportunities, pipeline.stages, toast, updateStageMutation]
   );
 
   const handlePriorityChange = useCallback(
     (oppId: string, priority: 0 | 1 | 2 | 3) => {
       const opp = opportunities.find(o => o.id === oppId);
       if (opp) {
-        saveOpportunity({ ...opp, priority });
-        setAllOpportunities(getOpportunities());
+        saveOpportunityMutation.mutate({ ...opp, priority });
       }
     },
-    [opportunities]
+    [opportunities, saveOpportunityMutation]
   );
 
   const handleQuickCreate = useCallback(
     (_stageId: string, _stage: OpportunityStage) => {
-      // Refresh opportunities after quick-create saved in KanbanColumn
-      setAllOpportunities(getOpportunities());
+      // React Query invalidation in useSaveOpportunity handles refresh.
     },
     []
   );
@@ -677,13 +673,12 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
       const nextStage = activeStages[nextStageIdx];
       if (!nextStage) return;
       const nextStageType = stageMap[nextStage.id] || 'new';
-      updateOpportunityStage(oppId, nextStage.id, nextStageType);
-      setAllOpportunities(getOpportunities());
+      updateStageMutation.mutate({ id: oppId, stageId: nextStage.id, stage: nextStageType });
       toast({ title: `Moved to ${nextStage.name}` });
       // Re-focus the same card after re-render
       focusCard(oppId);
     },
-    [allOpportunities, activeStages, opportunitiesByStage, canEditOpportunities, focusCard, toast]
+    [allOpportunities, activeStages, opportunitiesByStage, canEditOpportunities, focusCard, toast, updateStageMutation]
   );
 
   return (
