@@ -125,10 +125,9 @@ export default function OpportunityDetail() {
   const [lostReason, setLostReason] = useState('');
   const [chatterTab, setChatterTab] = useState<'message' | 'note' | 'activity'>('note');
   const [formTab, setFormTab] = useState('notes');
-  const [emailOpen, setEmailOpen] = useState(false);
   const [chatterSearch, setChatterSearch] = useState('');
   const [showChatterSearch, setShowChatterSearch] = useState(false);
-  const [activityForm, setActivityForm] = useState({ type: 'task' as 'call' | 'email' | 'meeting' | 'task' | 'follow_up', dueDate: '', assignedTo: '', summary: '' });
+  const [activityForm, setActivityForm] = useState({ type: 'task' as 'call' | 'meeting' | 'task' | 'follow_up', dueDate: '', assignedTo: '', summary: '' });
 
   // --- Bug Fix 1: Inline editing state ---
   const [editingData, setEditingData] = useState<Opportunity | undefined>(opportunity);
@@ -397,9 +396,6 @@ export default function OpportunityDetail() {
               <Settings className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-pointer" />
             </div>
             <div className="flex items-center gap-1.5">
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEmailOpen(true)}>
-                <Mail className="h-3 w-3 mr-1" /> Email
-              </Button>
               {!isWon && !isLost && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -765,7 +761,7 @@ export default function OpportunityDetail() {
                           </OdooField>
                           <OdooField label="Email">
                             {linkedContact.email ? (
-                              <a href={`mailto:${linkedContact.email}`} className="text-primary hover:underline">{linkedContact.email}</a>
+                              <span>{linkedContact.email}</span>
                             ) : '—'}
                           </OdooField>
                           <OdooField label="Phone">
@@ -944,7 +940,6 @@ export default function OpportunityDetail() {
                       <SelectContent>
                         <SelectItem value="task">Task</SelectItem>
                         <SelectItem value="call">Call</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
                         <SelectItem value="meeting">Meeting</SelectItem>
                         <SelectItem value="follow_up">Follow Up</SelectItem>
                       </SelectContent>
@@ -1063,13 +1058,6 @@ export default function OpportunityDetail() {
         </DialogContent>
       </Dialog>
     </AppLayout>
-    <EmailComposerDialog
-      open={emailOpen}
-      onOpenChange={setEmailOpen}
-      defaultTo={opportunity.email || ''}
-      relatedTo="opportunity"
-      relatedId={opportunity.id}
-    />
     </>
   );
 }

@@ -149,7 +149,7 @@ function KanbanCard({
   const navigate = useNavigate();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
-  const [activityData, setActivityData] = useState({ type: 'task' as 'call' | 'email' | 'meeting' | 'task' | 'follow_up', dueDate: '', note: '' });
+  const [activityData, setActivityData] = useState({ type: 'task' as 'call' | 'meeting' | 'task' | 'follow_up', dueDate: '', note: '' });
   const [callData, setCallData] = useState({ duration: '', notes: '', outcome: '' });
 
   const handleSchedule = () => {
@@ -276,7 +276,6 @@ function KanbanCard({
               <SelectContent>
                 <SelectItem value="task">Task</SelectItem>
                 <SelectItem value="call">Call</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="meeting">Meeting</SelectItem>
                 <SelectItem value="follow_up">Follow Up</SelectItem>
               </SelectContent>

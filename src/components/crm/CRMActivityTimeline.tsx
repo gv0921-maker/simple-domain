@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/select';
 import {
   Phone,
-  Mail,
   Calendar,
   CheckCircle2,
   Clock,
@@ -45,7 +44,6 @@ import { format, parseISO, formatDistanceToNow } from 'date-fns';
 
 const ACTIVITY_ICONS: Record<ActivityType, React.ElementType> = {
   call: Phone,
-  email: Mail,
   meeting: Calendar,
   task: CheckCircle2,
   note: MessageSquare,
@@ -54,7 +52,6 @@ const ACTIVITY_ICONS: Record<ActivityType, React.ElementType> = {
 
 const ACTIVITY_COLORS: Record<ActivityType, string> = {
   call: 'bg-success/10 text-success',
-  email: 'bg-info/10 text-info',
   meeting: 'bg-warning/10 text-warning',
   task: 'bg-accent/10 text-accent',
   note: 'bg-muted text-muted-foreground',
@@ -276,7 +273,6 @@ export function CRMActivityTimeline({ relatedTo, relatedId }: CRMActivityTimelin
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="call">Call</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="meeting">Meeting</SelectItem>
                   <SelectItem value="task">Task</SelectItem>
                   <SelectItem value="follow_up">Follow-up</SelectItem>
