@@ -1,5 +1,5 @@
 // Odoo-style Opportunity Detail Form — inline editing, live chatter, audit logging
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,6 @@ import {
   FileText,
   Package,
   User,
-  Mail,
   Pencil,
   X,
 } from 'lucide-react';
@@ -82,6 +81,9 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
 import { useAuth } from '@/contexts/AuthContext';
+import { TiptapNotesEditor } from '@/components/ui/tiptap-notes-editor';
+import { getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
+import { getStockMoves } from '@/lib/services/inventory';
 
 // Format elapsed time: <1h → "Xm", <24h → "Xh", else → "Xd"
 function formatElapsed(ms: number): string {
@@ -152,7 +154,6 @@ export default function OpportunityDetail() {
   // --- Bug Fix 1: Inline editing state ---
   const [editingData, setEditingData] = useState<Opportunity | undefined>(opportunity);
   const [isDirty, setIsDirty] = useState(false);
-  const tagInputRef = useRef<HTMLInputElement>(null);
   const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
 
@@ -174,6 +175,36 @@ export default function OpportunityDetail() {
   useActivitiesRealtime(id);
   const { data: linkedContact } = useContact(opportunity?.contactId);
   const { data: allContacts = [] } = useContacts();
+
+  // Cross-module related records (same contact across Sales, Inventory, etc.)
+  const relatedRecords = useMemo(() => {
+    const cId = opportunity?.contactId;
+    const cName = opportunity?.contactName?.trim().toLowerCase();
+    if (!cId && !cName) {
+      return { quotations: [], salesOrders: [], stockMoves: [] };
+    }
+    const matchByContact = (rec: { customerId?: string; contactId?: string; customerName?: string; contactName?: string }) => {
+      if (cId && (rec.customerId === cId || rec.contactId === cId)) return true;
+      if (cName) {
+        const cn = (rec.customerName || rec.contactName || '').trim().toLowerCase();
+        if (cn && cn === cName) return true;
+      }
+      return false;
+    };
+    let quotations: ReturnType<typeof getQuotations> = [];
+    let salesOrders: ReturnType<typeof getSalesOrders> = [];
+    let stockMoves: ReturnType<typeof getStockMoves> = [];
+    try { quotations = getQuotations().filter(matchByContact); } catch { /* noop */ }
+    try { salesOrders = getSalesOrders().filter(matchByContact); } catch { /* noop */ }
+    try {
+      stockMoves = getStockMoves().filter(m => {
+        if (cId && m.partnerId === cId) return true;
+        if (cName && (m.partnerName || '').trim().toLowerCase() === cName) return true;
+        return false;
+      });
+    } catch { /* noop */ }
+    return { quotations, salesOrders, stockMoves };
+  }, [opportunity?.contactId, opportunity?.contactName]);
 
   // refreshChatter now invalidates the React Query cache instead of calling
   // localStorage helpers directly. The hooks above re-render automatically.
@@ -568,7 +599,7 @@ export default function OpportunityDetail() {
                 onChange={e => updateField('name', e.target.value)}
               />
 
-              {/* Expected Revenue + Probability row */}
+              {/* Expected Revenue */}
               <div className="flex items-start gap-16 mb-6">
                 <div>
                   <div className="text-sm font-bold text-foreground mb-1">Expected Revenue</div>
@@ -579,22 +610,6 @@ export default function OpportunityDetail() {
                       value={currentData.expectedRevenue}
                       onChange={e => updateField('expectedRevenue', parseFloat(e.target.value) || 0)}
                     />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-foreground mb-1 flex items-center gap-1">
-                    Probability
-                    <span className="text-[10px] text-muted-foreground bg-muted rounded px-1">AI</span>
-                  </div>
-                  <div className="text-lg text-foreground flex items-center gap-1">
-                    <span className="text-muted-foreground">at</span>
-                    <input
-                      type="number"
-                      className="border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent w-16 text-lg outline-none transition-colors text-center"
-                      value={currentData.probability}
-                      onChange={e => updateField('probability', parseInt(e.target.value) || 0)}
-                    />
-                    <span className="text-muted-foreground">%</span>
                   </div>
                 </div>
               </div>
@@ -662,12 +677,15 @@ export default function OpportunityDetail() {
 
                 {/* Email */}
                 <OdooField label="Email">
-                  <input
-                    type="email"
-                    className={INLINE_CSS}
-                    value={currentData.email || ''}
-                    onChange={e => updateField('email', e.target.value)}
-                  />
+                  {linkedContact?.email ? (
+                    <a href={`mailto:${linkedContact.email}`} className="text-primary hover:underline text-sm truncate">
+                      {linkedContact.email}
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground/60 text-sm italic">
+                      {currentData.contactId ? 'No email on contact' : 'Select a contact'}
+                    </span>
+                  )}
                 </OdooField>
 
                 {/* Expected Closing */}
@@ -693,46 +711,32 @@ export default function OpportunityDetail() {
 
                 {/* Phone */}
                 <OdooField label="Phone">
-                  <input
-                    type="tel"
-                    className={INLINE_CSS}
-                    value={currentData.phone || ''}
-                    onChange={e => updateField('phone', e.target.value)}
-                  />
+                  {linkedContact?.phone ? (
+                    <a href={`tel:${linkedContact.phone}`} className="text-primary hover:underline text-sm">
+                      {linkedContact.phone}
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground/60 text-sm italic">
+                      {currentData.contactId ? 'No phone on contact' : 'Select a contact'}
+                    </span>
+                  )}
                 </OdooField>
 
-                {/* Tags — chip-style input */}
+                {/* Tags — auto-fetched from linked contact */}
                 <OdooField label="Tags">
-                  <div
-                    className="flex flex-wrap items-center gap-1 flex-1 min-w-0 cursor-text"
-                    onClick={() => tagInputRef.current?.focus()}
-                  >
-                    {(currentData.tags || []).map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-[11px] font-medium gap-0.5">
-                        {tag}
-                        <button
-                          onClick={e => { e.stopPropagation(); updateField('tags', (currentData.tags || []).filter(t => t !== tag)); }}
-                          className="ml-0.5 hover:text-destructive"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </Badge>
-                    ))}
-                    <input
-                      ref={tagInputRef}
-                      className="border-0 bg-transparent text-sm outline-none w-20 min-w-[50px]"
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
-                          e.preventDefault();
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (!(currentData.tags || []).includes(val)) {
-                            updateField('tags', [...(currentData.tags || []), val]);
-                          }
-                          (e.target as HTMLInputElement).value = '';
-                        }
-                      }}
-                    />
-                  </div>
+                  {linkedContact?.tags && linkedContact.tags.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-1 flex-1 min-w-0">
+                      {linkedContact.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-[11px] font-medium">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground/60 text-sm italic">
+                      {currentData.contactId ? 'No tags on contact' : 'Select a contact'}
+                    </span>
+                  )}
                 </OdooField>
               </div>
 
@@ -754,10 +758,11 @@ export default function OpportunityDetail() {
                 </TabsList>
 
                 <TabsContent value="notes" className="mt-4">
-                  <Textarea
-                    className="min-h-[200px] text-sm border-transparent hover:border-border focus:border-primary bg-transparent"
+                  <TiptapNotesEditor
                     value={currentData.internalNotes || ''}
-                    onChange={e => updateField('internalNotes', e.target.value)}
+                    onChange={(html) => updateField('internalNotes', html)}
+                    placeholder="Write notes — supports tables, headings, lists, links, and Word-like formatting…"
+                    minHeight="240px"
                   />
                 </TabsContent>
 
@@ -852,49 +857,99 @@ export default function OpportunityDetail() {
                 </TabsContent>
               </Tabs>
 
-              {/* Cross-module Links */}
-              <div className="mt-4 pt-3 border-t border-border">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">Linked Actions</h3>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate(`/sales/quotations/new?contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    Create Quotation
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate(`/sales/orders/new?contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${opportunity.name}`)}
-                  >
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                    Create Sales Order
-                  </Button>
-                  {currentData.contactId && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs gap-1.5"
-                      onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
-                    >
-                      <User className="h-3.5 w-3.5" />
-                      View Contact
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => navigate('/inventory/products')}
-                  >
-                    <Package className="h-3.5 w-3.5" />
-                    Browse Products
-                  </Button>
+              {/* Related Records — rounded cards linking to records of the same contact */}
+              <div className="mt-6 pt-4 border-t border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                    Related Records
+                    <span className="ml-2 normal-case font-normal text-muted-foreground/70">
+                      {currentData.contactName ? `for ${currentData.contactName}` : '(no contact selected)'}
+                    </span>
+                  </h3>
                 </div>
+
+                {/* Quick create buttons */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <RoundedActionButton
+                    icon={FileText}
+                    label="New Quotation"
+                    onClick={() => navigate(`/sales/quotations/new?customerId=${currentData.contactId || ''}&contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${encodeURIComponent(opportunity.name)}`)}
+                  />
+                  <RoundedActionButton
+                    icon={ShoppingCart}
+                    label="New Sales Order"
+                    onClick={() => navigate(`/sales/orders/new?customerId=${currentData.contactId || ''}&contact=${encodeURIComponent(currentData.contactName || '')}&amount=${currentData.expectedRevenue}&ref=${encodeURIComponent(opportunity.name)}`)}
+                  />
+                  <RoundedActionButton
+                    icon={Package}
+                    label="New Stock Operation"
+                    onClick={() => navigate('/inventory/operations')}
+                  />
+                  {currentData.contactId && (
+                    <RoundedActionButton
+                      icon={User}
+                      label="View Contact"
+                      onClick={() => navigate(`/crm/contacts/${currentData.contactId}`)}
+                    />
+                  )}
+                </div>
+
+                {/* Existing related records grouped by module */}
+                {(relatedRecords.quotations.length > 0 ||
+                  relatedRecords.salesOrders.length > 0 ||
+                  relatedRecords.stockMoves.length > 0) ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <RelatedGroup
+                      title="Quotations"
+                      icon={FileText}
+                      count={relatedRecords.quotations.length}
+                    >
+                      {relatedRecords.quotations.slice(0, 5).map(q => (
+                        <RelatedRow
+                          key={q.id}
+                          primary={q.reference}
+                          secondary={`₹${q.total.toLocaleString('en-IN')}`}
+                          status={q.status}
+                          onClick={() => navigate(`/sales/quotations/${q.id}`)}
+                        />
+                      ))}
+                    </RelatedGroup>
+                    <RelatedGroup
+                      title="Sales Orders"
+                      icon={ShoppingCart}
+                      count={relatedRecords.salesOrders.length}
+                    >
+                      {relatedRecords.salesOrders.slice(0, 5).map(o => (
+                        <RelatedRow
+                          key={o.id}
+                          primary={o.reference}
+                          secondary={`₹${o.total.toLocaleString('en-IN')}`}
+                          status={o.status}
+                          onClick={() => navigate(`/sales/orders/${o.id}`)}
+                        />
+                      ))}
+                    </RelatedGroup>
+                    <RelatedGroup
+                      title="Stock Moves"
+                      icon={Package}
+                      count={relatedRecords.stockMoves.length}
+                    >
+                      {relatedRecords.stockMoves.slice(0, 5).map(m => (
+                        <RelatedRow
+                          key={m.id}
+                          primary={m.reference}
+                          secondary={m.operationType}
+                          status={m.state}
+                          onClick={() => navigate(`/inventory/operations`)}
+                        />
+                      ))}
+                    </RelatedGroup>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">
+                    No quotations, sales orders, or stock moves found for this contact yet.
+                  </p>
+                )}
               </div>
 
             </div>
@@ -1125,5 +1180,68 @@ function OdooField({ label, children, link, avatar, labelHint }: {
         {children}
       </div>
     </div>
+  );
+}
+
+// Rounded "pill" action button used in the Related Records section
+function RoundedActionButton({
+  icon: Icon, label, onClick,
+}: { icon: React.ElementType; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-muted hover:border-primary/40 px-4 py-2 text-xs font-medium text-foreground shadow-sm transition-colors"
+    >
+      <Icon className="h-3.5 w-3.5 text-primary" />
+      {label}
+    </button>
+  );
+}
+
+// Card grouping for related-record lists
+function RelatedGroup({
+  title, icon: Icon, count, children,
+}: { title: string; icon: React.ElementType; count: number; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+          <Icon className="h-3.5 w-3.5 text-primary" />
+          {title}
+        </div>
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{count}</Badge>
+      </div>
+      {count === 0 ? (
+        <p className="text-xs text-muted-foreground italic">None yet</p>
+      ) : (
+        <div className="space-y-1">{children}</div>
+      )}
+    </div>
+  );
+}
+
+// Single row within a RelatedGroup
+function RelatedRow({
+  primary, secondary, status, onClick,
+}: { primary: string; secondary?: string; status?: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center justify-between gap-2 rounded-md border border-transparent hover:border-border hover:bg-muted px-2 py-1.5 text-left transition-colors"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="text-xs font-medium text-foreground truncate">{primary}</div>
+        {secondary && (
+          <div className="text-[10px] text-muted-foreground truncate">{secondary}</div>
+        )}
+      </div>
+      {status && (
+        <Badge variant="outline" className="text-[9px] capitalize shrink-0">
+          {status}
+        </Badge>
+      )}
+    </button>
   );
 }
