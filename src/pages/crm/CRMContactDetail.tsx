@@ -1,5 +1,5 @@
-// TODO: Replace localStorage with Supabase queries
-import { useMemo, useState } from 'react';
+// CRM Contact Detail — uses TanStack Query hooks for CRM data.
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,17 @@ import {
   ShoppingCart,
   FileText,
   MessageSquare,
+  Loader2,
 } from 'lucide-react';
-import { getContact, getContacts, getOpportunities, getNotes, saveNote, type Contact, type Note } from '@/lib/services/crm';
+import { type Note } from '@/lib/services/crm';
+import {
+  useContact,
+  useContacts,
+  useOpportunities,
+  useNotes,
+  useSaveNote,
+  useNotesRealtime,
+} from '@/hooks/crm/useCRMQueries';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
@@ -36,13 +45,15 @@ export default function CRMContactDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const contact = id ? getContact(id) : undefined;
-  const allContacts = getContacts();
+  const { data: contact, isLoading: contactLoading, isFetching } = useContact(id);
+  const { data: allContacts = [] } = useContacts();
+  const { data: notes = [] } = useNotes('contact', id);
+  const { data: opportunities = [] } = useOpportunities();
+  const saveNoteMutation = useSaveNote();
+  useNotesRealtime(id);
+
   const parentContact = contact?.parentContactId ? allContacts.find(c => c.id === contact.parentContactId) : undefined;
   const childContacts = id ? allContacts.filter(c => c.parentContactId === id) : [];
-
-  const [notesVersion, setNotesVersion] = useState(0);
-  const notes = useMemo(() => (id ? getNotes('contact', id) : []), [id, notesVersion]);
 
   // Sales history
   const linkedQuotations = useMemo(() => getQuotations().filter(q => q.customerId === id), [id]);
@@ -52,9 +63,19 @@ export default function CRMContactDetail() {
   const showPhone = canViewSensitive(user?.id, 'crm', 'phone');
 
   // Find linked opportunities
-  const linkedOpportunities = getOpportunities().filter(
+  const linkedOpportunities = opportunities.filter(
     (o) => o.contactId === id || o.contactName === `${contact?.firstName} ${contact?.lastName}`
   );
+
+  if (contactLoading) {
+    return (
+      <AppLayout title="CRM" moduleNav={CRM_NAV}>
+        <div className="p-6 flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (!contact) {
     return (
@@ -73,7 +94,7 @@ export default function CRMContactDetail() {
   const handleAddNote = (value: RichComposerValue) => {
     const text = value.html.replace(/<[^>]+>/g, '').trim();
     if (!text && value.attachments.length === 0) return;
-    saveNote({
+    saveNoteMutation.mutate({
       content: value.html,
       relatedTo: 'contact',
       relatedId: contact.id,
@@ -82,9 +103,9 @@ export default function CRMContactDetail() {
       visibility: 'team',
       mentions: value.mentions,
       attachments: value.attachments,
+    }, {
+      onSuccess: () => toast({ title: 'Note added' }),
     });
-    setNotesVersion(v => v + 1);
-    toast({ title: 'Note added' });
   };
 
   const displayEmail = (e?: string) => !e ? '—' : (showEmail ? e : maskEmail(e));
