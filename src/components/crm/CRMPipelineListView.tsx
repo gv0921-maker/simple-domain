@@ -30,7 +30,7 @@ interface CRMPipelineListViewProps {
   onViewChange: (view: 'kanban' | 'list') => void;
 }
 
-type SortField = 'name' | 'contactName' | 'expectedRevenue' | 'probability' | 'expectedCloseDate' | 'stage' | 'salesTeam';
+type SortField = 'name' | 'contactName' | 'expectedRevenue' | 'expectedCloseDate' | 'stage' | 'salesTeam';
 type SortDir = 'asc' | 'desc';
 
 export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CRMPipelineListViewProps) {
@@ -61,7 +61,6 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
       if (sortField === 'name') cmp = a.name.localeCompare(b.name);
       else if (sortField === 'contactName') cmp = (a.contactName || '').localeCompare(b.contactName || '');
       else if (sortField === 'expectedRevenue') cmp = a.expectedRevenue - b.expectedRevenue;
-      else if (sortField === 'probability') cmp = a.probability - b.probability;
       else if (sortField === 'expectedCloseDate') cmp = a.expectedCloseDate.localeCompare(b.expectedCloseDate);
       else if (sortField === 'salesTeam') cmp = (a.salesTeam || '').localeCompare(b.salesTeam || '');
       else if (sortField === 'stage') {
@@ -151,9 +150,6 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
               <TableHead className="cursor-pointer select-none text-xs font-semibold text-right" onClick={() => toggleSort('expectedRevenue')}>
                 <div className="flex items-center justify-end gap-1">Expected Revenue <SortIcon field="expectedRevenue" /></div>
               </TableHead>
-              <TableHead className="cursor-pointer select-none text-xs font-semibold text-right" onClick={() => toggleSort('probability')}>
-                <div className="flex items-center justify-end gap-1">Probability <SortIcon field="probability" /></div>
-              </TableHead>
               <TableHead className="cursor-pointer select-none text-xs font-semibold" onClick={() => toggleSort('stage')}>
                 <div className="flex items-center gap-1">Stage <SortIcon field="stage" /></div>
               </TableHead>
@@ -166,7 +162,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-16 text-muted-foreground text-sm">
+                <TableCell colSpan={8} className="text-center py-16 text-muted-foreground text-sm">
                   No opportunity found. Let's create one!
                 </TableCell>
               </TableRow>
@@ -195,7 +191,6 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                       <TableCell className="text-muted-foreground">{opp.contactName || '—'}</TableCell>
                       <TableCell className="text-muted-foreground">{opp.salesTeam || '—'}</TableCell>
                       <TableCell className="text-right font-medium">{displayRevenue(opp.expectedRevenue, user?.id, 'crm')}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{opp.probability}%</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-[11px] capitalize font-medium border-0 px-2 py-0.5"
                           style={{ backgroundColor: stageColor ? `${stageColor}20` : undefined, color: stageColor || undefined }}>
@@ -216,7 +211,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                     {filtered.length} record{filtered.length !== 1 ? 's' : ''}
                   </TableCell>
                   <TableCell className="text-right text-xs">{canViewSensitive(user?.id, 'crm', 'revenue') ? `₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}</TableCell>
-                  <TableCell colSpan={4} />
+                  <TableCell colSpan={3} />
                 </TableRow>
               </>
             )}
