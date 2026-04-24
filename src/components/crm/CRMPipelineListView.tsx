@@ -21,7 +21,7 @@ import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
-import { CRMSearchDropdown, useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
+import { useFilteredOpportunities, useGroupedOpportunities, type ActiveFilters, EMPTY_FILTERS } from '@/components/crm/CRMSearchDropdown';
 import { displayRevenue, canViewSensitive } from '@/lib/crm/fieldMask';
 
 interface CRMPipelineListViewProps {
