@@ -1,6 +1,5 @@
-// TODO: Replace localStorage with Supabase queries
-// Odoo-style CRM Kanban Board — pixel-perfect replica from reference screenshots
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+// Odoo-style CRM Kanban Board — uses TanStack Query hooks (Supabase-ready)
+import { useState, useMemo, useCallback, useRef } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -46,18 +45,21 @@ import {
   Map,
   Building2,
   User,
+  Loader2,
 } from 'lucide-react';
 import {
-  getOpportunities,
-  getDefaultPipeline,
-  updateOpportunityStage,
-  saveOpportunity,
   type Opportunity,
   type Pipeline,
   type PipelineStage,
   type OpportunityStage,
-  saveActivity,
 } from '@/lib/services/crm';
+import {
+  useOpportunities,
+  useDefaultPipeline,
+  useUpdateOpportunityStage,
+  useSaveOpportunity,
+  useSaveActivity,
+} from '@/hooks/crm/useCRMQueries';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
