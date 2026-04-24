@@ -434,6 +434,7 @@ export default function OpportunityDetail() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-foreground font-medium truncate max-w-[120px] sm:max-w-none">{opportunity.name}</span>
               <Settings className="h-3.5 w-3.5 text-muted-foreground ml-1 cursor-pointer" />
+              {(isFetchingOpp || isFetchingAll) && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-1" />}
             </div>
             <div className="flex items-center gap-1.5">
               {!isWon && !isLost && (
