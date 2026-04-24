@@ -242,8 +242,7 @@ export default function OpportunityDetail() {
     if (stage) {
       const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
       const newStageName = activeStages.find(s => s.id === stageId)?.name || stageId;
-      updateOpportunityStage(opportunity.id, stageId, stage);
-      setOpportunity(getOpportunity(opportunity.id));
+      updateStageMutation.mutate({ id: opportunity.id, stageId, stage });
       toast({ title: `Stage updated to ${newStageName}` });
       saveNote({
         content: `<p><strong>Stage changed</strong><br/>${previousStageName} → ${newStageName} (Stage)</p>`,
@@ -259,8 +258,7 @@ export default function OpportunityDetail() {
 
   const handleWon = () => {
     const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
-    updateOpportunityStage(opportunity.id, 'won', 'won');
-    setOpportunity(getOpportunity(opportunity.id));
+    updateStageMutation.mutate({ id: opportunity.id, stageId: 'won', stage: 'won' });
     toast({ title: '🎉 Opportunity Won!' });
     saveNote({
       content: `<p><strong>Opportunity won</strong><br/>${previousStageName} → Won (Stage)</p>`,
@@ -277,7 +275,6 @@ export default function OpportunityDetail() {
     const previousStageName = activeStages.find(s => s.id === opportunity.stageId)?.name || opportunity.stageId;
     saveOpportunity({ ...opportunity, lostReason, stage: 'lost', stageId: 'lost', lostAt: new Date().toISOString(), probability: 0 });
     setShowLostDialog(false);
-    setOpportunity(getOpportunity(opportunity.id));
     toast({ title: 'Opportunity marked as lost' });
     saveNote({
       content: `<p><strong>Opportunity lost</strong><br/>${previousStageName} → Lost (Won/Lost)</p>`,
@@ -308,14 +305,18 @@ export default function OpportunityDetail() {
       }
     }
 
-    saveOpportunity({ ...opportunity, ...editingData });
-    const refreshed = getOpportunity(opportunity.id);
-    setOpportunity(refreshed);
+    // Optimistic update + mutation; the useOpportunity hook will refresh
+    // once the mutation completes (it invalidates the opportunity cache).
+    saveOpportunityMutation.mutate(
+      { ...opportunity, ...editingData },
+      {
+        onSuccess: (refreshed) => {
+          setEditingData(refreshed);
+          takeSnapshot(refreshed);
+        },
+      },
+    );
     setIsDirty(false);
-    if (refreshed) {
-      setEditingData(refreshed);
-      takeSnapshot(refreshed);
-    }
 
     if (diffs.length > 0) {
       saveNote({
