@@ -121,8 +121,9 @@ export default function CRMContactDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-foreground">
+            <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
               {contact.firstName} {contact.lastName}
+              {isFetching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </h1>
             {contact.jobTitle && (
               <p className="text-muted-foreground">{contact.jobTitle}{contact.department ? ` · ${contact.department}` : ''}</p>
