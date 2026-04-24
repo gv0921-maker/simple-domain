@@ -52,22 +52,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
-  getOpportunity,
-  getContact,
-  getContacts,
-  getOpportunities,
-  saveOpportunity,
-  updateOpportunityStage,
-  getDefaultPipeline,
-  getActivities,
-  saveActivity,
-  getNotes,
-  saveNote,
   type Opportunity,
   type OpportunityStage,
   type Activity,
   type Note,
 } from '@/lib/services/crm';
+import {
+  useOpportunity,
+  useOpportunities,
+  useContact,
+  useContacts,
+  useDefaultPipeline,
+  useSaveOpportunity,
+  useUpdateOpportunityStage,
+  useSaveActivity,
+  useSaveNote,
+  useActivities,
+  useNotes,
+  useActivitiesRealtime,
+  useNotesRealtime,
+  crmKeys,
+} from '@/hooks/crm/useCRMQueries';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { useToast } from '@/hooks/use-toast';
