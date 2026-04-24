@@ -71,6 +71,10 @@ import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 // Invoicing pages
 import InvoicesList from "@/pages/invoicing/InvoicesList";
 import InvoiceForm from "@/pages/invoicing/InvoiceForm";
+import BillsList from "@/pages/invoicing/BillsList";
+import MinimumBillsList from "@/pages/invoicing/MinimumBillsList";
+import KHBillsList from "@/pages/invoicing/KHBillsList";
+import PaymentsList from "@/pages/invoicing/PaymentsList";
 
 // Settings pages
 import GeneralSettings from "@/pages/settings/GeneralSettings";
@@ -196,7 +200,11 @@ const App = () => (
             <Route path="/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
 
             {/* Invoices module */}
-            <Route path="/invoicing" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
+            <Route path="/invoicing" element={<ProtectedRoute><BillsList /></ProtectedRoute>} />
+            <Route path="/invoicing/bills" element={<ProtectedRoute><BillsList /></ProtectedRoute>} />
+            <Route path="/invoicing/minimum-bills" element={<ProtectedRoute><MinimumBillsList /></ProtectedRoute>} />
+            <Route path="/invoicing/kh-bills" element={<ProtectedRoute><KHBillsList /></ProtectedRoute>} />
+            <Route path="/invoicing/payments" element={<ProtectedRoute><PaymentsList /></ProtectedRoute>} />
             <Route path="/invoicing/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
             <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
 

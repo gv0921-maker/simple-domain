@@ -20,11 +20,23 @@ const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
   cancelled: 'destructive',
 };
 
-export default function InvoicesList() {
+interface InvoicesListProps {
+  variant?: 'bills' | 'minimum' | 'kh';
+  title?: string;
+}
+
+const variantLabels: Record<string, string> = {
+  bills: 'Bills',
+  minimum: 'Minimum Bills',
+  kh: 'KH Bills',
+};
+
+export default function InvoicesList({ variant = 'bills', title }: InvoicesListProps = {}) {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState(getInvoices());
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const heading = title ?? variantLabels[variant] ?? 'Bills';
 
   const filteredInvoices = invoices.filter(inv => {
     const matchesSearch = inv.number.toLowerCase().includes(search.toLowerCase()) ||
@@ -56,10 +68,10 @@ export default function InvoicesList() {
     <AppLayout title="Invoices" moduleNav={INVOICING_NAV}>
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Invoices</h1>
+          <h1 className="text-2xl font-bold">{heading}</h1>
           <Button onClick={() => navigate('/invoicing/new')}>
             <Plus className="h-4 w-4 mr-2" />
-            New Invoice
+            New {heading.replace(/s$/, '')}
           </Button>
         </div>
 

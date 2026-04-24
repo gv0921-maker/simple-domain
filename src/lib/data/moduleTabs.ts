@@ -76,7 +76,10 @@ export const MODULE_TABS: ModuleTabsConfig[] = [
     moduleId: 'accounting',
     moduleName: 'Invoices',
     tabs: [
-      { id: 'invoices', label: 'All Invoices', href: '/invoicing' },
+      { id: 'bills', label: 'Bills', href: '/invoicing/bills' },
+      { id: 'minimum-bills', label: 'Minimum Bills', href: '/invoicing/minimum-bills' },
+      { id: 'kh-bills', label: 'KH Bills', href: '/invoicing/kh-bills' },
+      { id: 'payments', label: 'Payments', href: '/invoicing/payments' },
     ],
   },
   {
