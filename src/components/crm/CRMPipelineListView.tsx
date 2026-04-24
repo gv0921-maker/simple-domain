@@ -205,8 +205,8 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             ) : groupedView ? (
               <>
                 {groupedView.map((g) => (
-                  <>
-                    <TableRow key={`g-${g.label}`} className="bg-muted/40 hover:bg-muted/40">
+                  <React.Fragment key={`grp-${g.label}`}>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableCell colSpan={8} className="pl-4 py-2 text-xs font-semibold">
                         {g.label} <span className="text-muted-foreground font-normal">({g.opps.length})</span>
                       </TableCell>
@@ -249,7 +249,7 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                         </TableRow>
                       );
                     })}
-                  </>
+                  </React.Fragment>
                 ))}
               </>
             ) : (
