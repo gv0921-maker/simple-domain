@@ -1,5 +1,5 @@
 // Odoo-style List View for Pipeline — uses TanStack Query hooks (Supabase-ready)
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
