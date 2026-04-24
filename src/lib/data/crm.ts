@@ -202,6 +202,7 @@ const DEFAULT_PIPELINES: Pipeline[] = [
       { id: 'qualified', pipelineId: 'default', name: 'Qualified', order: 2, probability: 30, color: 'hsl(174, 60%, 45%)' },
       { id: 'proposition', pipelineId: 'default', name: 'Proposition', order: 3, probability: 60, color: 'hsl(38, 90%, 55%)' },
       { id: 'won', pipelineId: 'default', name: 'Won', order: 4, probability: 100, color: 'hsl(142, 60%, 45%)' },
+      { id: 'lost', pipelineId: 'default', name: 'Lost', order: 5, probability: 0, color: 'hsl(0, 70%, 55%)' },
     ],
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-01T00:00:00Z',
