@@ -570,7 +570,7 @@ export default function OpportunityDetail() {
                 onChange={e => updateField('name', e.target.value)}
               />
 
-              {/* Expected Revenue + Probability row */}
+              {/* Expected Revenue */}
               <div className="flex items-start gap-16 mb-6">
                 <div>
                   <div className="text-sm font-bold text-foreground mb-1">Expected Revenue</div>
@@ -581,22 +581,6 @@ export default function OpportunityDetail() {
                       value={currentData.expectedRevenue}
                       onChange={e => updateField('expectedRevenue', parseFloat(e.target.value) || 0)}
                     />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-foreground mb-1 flex items-center gap-1">
-                    Probability
-                    <span className="text-[10px] text-muted-foreground bg-muted rounded px-1">AI</span>
-                  </div>
-                  <div className="text-lg text-foreground flex items-center gap-1">
-                    <span className="text-muted-foreground">at</span>
-                    <input
-                      type="number"
-                      className="border-0 border-b border-transparent hover:border-border focus:border-primary bg-transparent w-16 text-lg outline-none transition-colors text-center"
-                      value={currentData.probability}
-                      onChange={e => updateField('probability', parseInt(e.target.value) || 0)}
-                    />
-                    <span className="text-muted-foreground">%</span>
                   </div>
                 </div>
               </div>
