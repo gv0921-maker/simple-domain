@@ -81,7 +81,7 @@ const OPERATION_COLORS = {
   return: 'text-orange-500 bg-orange-500/10',
 };
 
-export default function StockMovesEnhanced() {
+export default function StockMoves() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
