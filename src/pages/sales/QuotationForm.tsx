@@ -68,6 +68,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStudioConfig } from '@/hooks/useStudioConfig';
 import { format, parseISO, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { BillingSection } from '@/components/sales/BillingSection';
+import { DeliverySection } from '@/components/sales/DeliverySection';
+import { OrderLinesTable } from '@/components/sales/OrderLinesTable';
+import { determineGSTType } from '@/lib/services/sales';
+import type { GSTType, OrderDiscountType } from '@/lib/services/sales/types';
 
 const PAYMENT_TERMS = [
   { value: 'immediate', label: 'Immediate Payment' },
@@ -132,6 +137,18 @@ export default function QuotationForm() {
     discountType: 'percentage' as DiscountType,
     taxId: 'tax_18',
   });
+
+  // Derived GST type from billing state vs company state
+  const gstType: GSTType = useMemo(
+    () => determineGSTType(formData.billingCity || '', formData.billingState || ''),
+    [formData.billingCity, formData.billingState],
+  );
+
+  const userRole = (user as any)?.role as string | undefined;
+  const canApplyOrderDiscount = userRole === 'admin' || userRole === 'manager' || userRole === 'super_admin';
+  const allowedLineTypes = canApplyOrderDiscount
+    ? (['flat_order', 'item', 'loyalty', 'seasonal'] as const)
+    : (['item', 'loyalty', 'seasonal'] as const);
   
   // Load existing quotation
   useEffect(() => {
