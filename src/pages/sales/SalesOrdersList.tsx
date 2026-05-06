@@ -56,7 +56,11 @@ import { SalesImportExport } from '@/components/sales/SalesImportExport';
 
 const STATUS_CONFIG: Record<SalesOrderStatus, { label: string; className: string; icon: typeof ShoppingCart }> = {
   draft: { label: 'Draft', className: 'bg-muted text-muted-foreground', icon: FileText },
+  estimate: { label: 'Estimate', className: 'bg-muted text-muted-foreground', icon: FileText },
   confirmed: { label: 'Confirmed', className: 'bg-success/20 text-success border-success', icon: CheckCircle },
+  ready_to_pick: { label: 'Ready to Pick', className: 'bg-info/20 text-info border-info', icon: ShoppingCart },
+  dispatched: { label: 'Dispatched', className: 'bg-primary/20 text-primary border-primary', icon: ShoppingCart },
+  delivered: { label: 'Delivered', className: 'bg-success/20 text-success border-success', icon: CheckCircle },
   locked: { label: 'Locked', className: 'bg-primary/20 text-primary border-primary', icon: Lock },
   cancelled: { label: 'Cancelled', className: 'bg-destructive/20 text-destructive border-destructive', icon: XCircle },
 };
