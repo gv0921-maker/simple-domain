@@ -6,5 +6,6 @@ export const SALES_NAV = [
   { label: 'Subscriptions', href: '/sales/subscriptions' },
   { label: 'Customers', href: '/sales/customers' },
   { label: 'Pricelists', href: '/sales/pricelists' },
+  { label: 'Promotions', href: '/sales/promotions' },
   { label: 'Reports', href: '/sales/reports' },
 ];
