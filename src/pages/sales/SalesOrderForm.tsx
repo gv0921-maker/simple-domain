@@ -160,9 +160,9 @@ export default function SalesOrderForm() {
   const validate = useCallback((): { ok: boolean; error?: string } => {
     if (!formData.customerId) return { ok: false, error: 'Please select a customer' };
     if (lines.length === 0) return { ok: false, error: 'Please add at least one product' };
-    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1).valid)
+    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1))
       return { ok: false, error: 'Please enter a valid primary phone' };
-    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2).valid)
+    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2))
       return { ok: false, error: 'Please enter a valid secondary phone' };
     if (!formData.billingLocationType)
       return { ok: false, error: 'Please select a billing location type' };
@@ -213,10 +213,10 @@ export default function SalesOrderForm() {
       createdAt: formData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...formData,
-      // overrides last so totals/status from above win
-      status: newStatus,
-      lines,
     } as SalesOrder;
+    // Force computed totals & status to win over any stale spread copies.
+    data.status = newStatus;
+    data.lines = lines;
     saveSalesOrder(data);
     return data;
   }, [formData, lines, isNew, id, user]);
