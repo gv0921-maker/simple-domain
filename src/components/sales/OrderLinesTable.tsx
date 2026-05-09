@@ -19,6 +19,8 @@ import type {
   SalesOrderLine,
 } from '@/lib/services/sales/types';
 import { getProducts } from '@/lib/services/inventory';
+import { getSeasonalDiscountPct } from '@/lib/sales/seasonalPricing';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export type AnyLine = QuotationLine | SalesOrderLine;
 
@@ -181,6 +183,13 @@ export function OrderLinesTable<L extends AnyLine>({
     } as Partial<L>);
   };
 
+  /** When the user picks "seasonal" for a line, auto-resolve the best active promo. */
+  const applySeasonalForLine = (line: L) => {
+    if (!line.productId) return { discountValue: 0, name: undefined as string | undefined };
+    const { pct, promotion } = getSeasonalDiscountPct(line.productId, line.unitPrice);
+    return { discountValue: pct, name: promotion?.name };
+  };
+
   const onBarcodeChange = (line: L, barcode: string) => {
     const matched = barcodeMap.get(barcode.trim());
     if (matched) {
@@ -317,10 +326,17 @@ export function OrderLinesTable<L extends AnyLine>({
                     <Select
                       value={line.perLineDiscountType ?? 'none'}
                       onValueChange={(v) =>
-                        updateLine(line.id, {
-                          perLineDiscountType: v === 'none' ? null : (v as LinePerLineDiscountType),
-                          discountValue: v === 'none' ? 0 : line.discountValue ?? 0,
-                        } as Partial<L>)
+                        {
+                          const next = v === 'none' ? null : (v as LinePerLineDiscountType);
+                          let discountValue = v === 'none' ? 0 : line.discountValue ?? 0;
+                          if (next === 'seasonal') {
+                            discountValue = applySeasonalForLine(line).discountValue;
+                          }
+                          updateLine(line.id, {
+                            perLineDiscountType: next,
+                            discountValue,
+                          } as Partial<L>);
+                        }
                       }
                       disabled={disabled}
                     >
@@ -335,14 +351,33 @@ export function OrderLinesTable<L extends AnyLine>({
                       </SelectContent>
                     </Select>
                     {line.perLineDiscountType && (
-                      <Input
-                        type="number" min={0}
-                        value={line.discountValue ?? 0}
-                        onChange={(e) => updateLine(line.id, { discountValue: Number(e.target.value) } as Partial<L>)}
-                        className="h-8 text-xs"
-                        disabled={disabled || line.perLineDiscountType === 'seasonal'}
-                        placeholder=""
-                      />
+                      line.perLineDiscountType === 'seasonal' ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Input
+                                type="number" min={0}
+                                value={line.discountValue ?? 0}
+                                readOnly
+                                className="h-8 text-xs cursor-help"
+                                placeholder=""
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {applySeasonalForLine(line).name ?? 'No active promotion'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Input
+                          type="number" min={0}
+                          value={line.discountValue ?? 0}
+                          onChange={(e) => updateLine(line.id, { discountValue: Number(e.target.value) } as Partial<L>)}
+                          className="h-8 text-xs"
+                          disabled={disabled}
+                          placeholder=""
+                        />
+                      )
                     )}
                   </div>
                 </TableCell>
