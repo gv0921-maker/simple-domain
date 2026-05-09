@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Save, XCircle, ShoppingCart } from 'lucide-react';
 import {
-  getSalesOrder, saveSalesOrder, generateOrderReference, getPricelists,
+  getSalesOrder, saveSalesOrder, generateOrderReference, getPricelists, getFiscalPositions,
 } from '@/lib/services/sales/storage';
 import type {
   SalesOrder, SalesOrderLine, SalesOrderStatus,
@@ -69,6 +69,7 @@ export default function SalesOrderForm() {
 
   const [contacts] = useState(() => getContacts());
   const [pricelists] = useState(() => getPricelists());
+  const [fiscalPositions] = useState(() => getFiscalPositions().filter((f) => f.isActive));
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -413,6 +414,26 @@ export default function SalesOrderForm() {
                     </Select>
                   </div>
                 </div>
+                {fiscalPositions.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Fiscal Position</Label>
+                      <Select
+                        value={formData.fiscalPositionId || '__none__'}
+                        onValueChange={(v) => setFormData({ ...formData, fiscalPositionId: v === '__none__' ? undefined : v })}
+                        disabled={!isEditable}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Default (no remapping)" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Default (no remapping)</SelectItem>
+                          {fiscalPositions.map((f) => (
+                            <SelectItem key={f.id} value={f.id}>{f.name} ({f.code})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
