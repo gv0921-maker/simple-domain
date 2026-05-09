@@ -305,6 +305,19 @@ export function getFiscalPosition(id: string): FiscalPosition | undefined {
   return getFiscalPositions().find((f) => f.id === id);
 }
 
+export function saveFiscalPosition(fp: FiscalPosition): FiscalPosition {
+  const list = getFiscalPositions();
+  const idx = list.findIndex((f) => f.id === fp.id);
+  if (idx >= 0) list[idx] = fp;
+  else list.push({ ...fp, id: fp.id || crypto.randomUUID() });
+  setItem('sales_fiscal_positions', list);
+  return list[idx >= 0 ? idx : list.length - 1];
+}
+
+export function deleteFiscalPosition(id: string): void {
+  setItem('sales_fiscal_positions', getFiscalPositions().filter((f) => f.id !== id));
+}
+
 // Subscriptions CRUD
 export function getSubscriptions(): Subscription[] {
   return getItem<Subscription[]>('sales_subscriptions', DEFAULT_SUBSCRIPTIONS);
