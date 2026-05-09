@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -9,62 +9,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter,
-} from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ArrowLeft, Save, XCircle, ShoppingCart } from 'lucide-react';
 import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Save,
-  CheckCircle,
-  Lock,
-  XCircle,
-  Package,
-  AlertTriangle,
-  ShoppingCart,
-} from 'lucide-react';
-import {
-  getSalesOrder,
-  saveSalesOrder,
-  generateOrderReference,
-  getPricelists,
-  getTaxRules,
-  calculateLineTotal,
-  applyPricelistPrice,
-  checkStockAvailability,
+  getSalesOrder, saveSalesOrder, generateOrderReference, getPricelists,
 } from '@/lib/services/sales/storage';
-import type { SalesOrder, SalesOrderLine, SalesOrderStatus, DiscountType } from '@/lib/services/sales/types';
-import { getContacts } from '@/lib/services/sales';
-import { getProducts } from '@/lib/services/inventory';
+import type {
+  SalesOrder, SalesOrderLine, SalesOrderStatus,
+  GSTType, OrderDiscountType,
+} from '@/lib/services/sales/types';
+import { getContacts, determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudioConfig } from '@/hooks/useStudioConfig';
 import { format, parseISO, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { BillingSection } from '@/components/sales/BillingSection';
+import { DeliverySection } from '@/components/sales/DeliverySection';
+import { OrderLinesTable, type OrderSummaryValue } from '@/components/sales/OrderLinesTable';
+import { OrderStatusChevrons, canTransition } from '@/components/sales/OrderStatusChevrons';
 
 const PAYMENT_TERMS = [
   { value: 'immediate', label: 'Immediate Payment' },
@@ -85,6 +54,9 @@ const STATUS_CONFIG: Record<SalesOrderStatus, { label: string; className: string
   cancelled: { label: 'Cancelled', className: 'bg-destructive/20 text-destructive border-destructive' },
 };
 
+const formatINR = (n: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(n || 0);
+
 export default function SalesOrderForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -92,17 +64,16 @@ export default function SalesOrderForm() {
   const { user } = useAuth();
   const isNew = id === 'new' || !id;
   const studio = useStudioConfig('sales', 'Sales Order');
-  
+
   const [contacts] = useState(() => getContacts());
-  const [products] = useState(() => getProducts());
   const [pricelists] = useState(() => getPricelists());
-  const [taxRules] = useState(() => getTaxRules());
-  
+
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'confirm' | 'lock' | 'cancel' | null>(null);
-  
+  const [confirmAction, setConfirmAction] = useState<'cancel' | null>(null);
+  const billingRef = useRef<HTMLDivElement | null>(null);
+
   const [formData, setFormData] = useState<Partial<SalesOrder>>({
     customerId: '',
     customerName: '',
@@ -111,29 +82,31 @@ export default function SalesOrderForm() {
     currency: 'INR',
     pricelistId: 'pl_standard',
     paymentTerms: 'net30',
-    deliveryAddress: '',
-    billingAddress: '',
     notes: '',
-    status: 'draft',
+    status: 'estimate',
     deliveryStatus: 'pending',
+    deliverySameAsBilling: true,
+    orderDiscountType: null,
+    orderDiscountValue: 0,
   });
-  
+
   const [lines, setLines] = useState<SalesOrderLine[]>([]);
-  const [newLine, setNewLine] = useState({
-    productId: '',
-    quantity: 1,
-    discount: 0,
-    discountType: 'percentage' as DiscountType,
-    taxId: 'tax_18',
-  });
-  
+
+  const gstType: GSTType = useMemo(
+    () => determineGSTType(formData.billingCity || '', formData.billingState || ''),
+    [formData.billingCity, formData.billingState],
+  );
+
+  const userRole = (user as any)?.role as string | undefined;
+  const canApplyOrderDiscount = userRole === 'admin' || userRole === 'manager' || userRole === 'super_admin';
+
   // Load existing order
   useEffect(() => {
     if (!isNew && id) {
-      const order = getSalesOrder(id);
-      if (order) {
-        setFormData(order);
-        setLines(order.lines);
+      const o = getSalesOrder(id);
+      if (o) {
+        setFormData(o);
+        setLines(o.lines);
       } else {
         toast({ title: 'Order not found', variant: 'destructive' });
         navigate('/sales/orders');
@@ -141,191 +114,163 @@ export default function SalesOrderForm() {
       setLoading(false);
     }
   }, [id, isNew, navigate, toast]);
-  
-  // Calculate totals
-  const totals = useMemo(() => {
-    const subtotal = lines.reduce((sum, line) => sum + line.subtotal, 0);
-    const taxAmount = lines.reduce((sum, line) => sum + line.taxAmount, 0);
-    
-    return {
-      subtotal: Math.round(subtotal * 100) / 100,
-      taxAmount: Math.round(taxAmount * 100) / 100,
-      total: Math.round((subtotal + taxAmount) * 100) / 100,
-    };
-  }, [lines]);
-  
+
   const handleCustomerChange = useCallback((customerId: string) => {
-    const contact = contacts.find((c) => c.id === customerId);
-    if (contact) {
-      setFormData((prev) => ({
-        ...prev,
-        customerId,
-        customerName: contact.company ? `${contact.name} - ${contact.company}` : contact.name,
-        deliveryAddress: contact.address || '',
-        billingAddress: contact.address || '',
-      }));
-    }
-  }, [contacts]);
-  
-  const handleAddLine = useCallback(() => {
-    if (!newLine.productId) {
-      toast({ title: 'Please select a product', variant: 'destructive' });
-      return;
-    }
-    
-    const product = products.find((p) => p.id === newLine.productId);
-    if (!product) return;
-    
-    const unitPrice = applyPricelistPrice(product.id, newLine.quantity, formData.pricelistId);
-    const { subtotal, taxAmount, total } = calculateLineTotal(
-      unitPrice,
-      newLine.quantity,
-      newLine.discount,
-      newLine.discountType,
-      [newLine.taxId]
-    );
-    
-    const stockInfo = checkStockAvailability(product.id, newLine.quantity);
-    
-    const line: SalesOrderLine = {
-      id: crypto.randomUUID(),
-      productId: product.id,
-      productName: product.name,
-      quantity: newLine.quantity,
-      deliveredQuantity: 0,
-      invoicedQuantity: 0,
-      unitPrice,
-      discount: newLine.discount,
-      discountType: newLine.discountType,
-      taxIds: [newLine.taxId],
-      subtotal,
-      taxAmount,
-      total,
-      reservedStock: false,
-    };
-    
-    setLines((prev) => [...prev, line]);
-    setNewLine({ productId: '', quantity: 1, discount: 0, discountType: 'percentage', taxId: 'tax_18' });
-  }, [newLine, products, formData.pricelistId, toast]);
-  
-  const handleUpdateLine = useCallback((lineId: string, updates: Partial<SalesOrderLine>) => {
-    setLines((prev) => prev.map((line) => {
-      if (line.id !== lineId) return line;
-      
-      const updatedLine = { ...line, ...updates };
-      const { subtotal, taxAmount, total } = calculateLineTotal(
-        updatedLine.unitPrice,
-        updatedLine.quantity,
-        updatedLine.discount,
-        updatedLine.discountType,
-        updatedLine.taxIds
-      );
-      
-      return { ...updatedLine, subtotal, taxAmount, total };
+    const c: any = contacts.find((x) => x.id === customerId);
+    if (!c) return;
+    const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '';
+    const phone1 = c.phones?.[0]?.phone || c.phone || '';
+    const addr = c.addresses?.[0] || {};
+    setFormData((prev) => ({
+      ...prev,
+      customerId,
+      customerName: c.company ? `${fullName || c.name} - ${c.company}` : (fullName || c.name || ''),
+      billingCustomerName: fullName,
+      billingName: fullName,
+      billingPhone1: phone1,
+      billingAddressLine1: addr.street || '',
+      billingAddressLine2: addr.street2 || '',
+      billingCity: addr.city || '',
+      billingState: addr.state || '',
+      billingZip: addr.postalCode || '',
     }));
-  }, []);
-  
-  const handleRemoveLine = useCallback((lineId: string) => {
-    setLines((prev) => prev.filter((line) => line.id !== lineId));
-  }, []);
-  
-  const handleSave = useCallback(async (newStatus?: SalesOrderStatus) => {
-    if (!formData.customerId) {
-      toast({ title: 'Please select a customer', variant: 'destructive' });
-      return;
-    }
-    if (lines.length === 0) {
-      toast({ title: 'Please add at least one product', variant: 'destructive' });
-      return;
-    }
-    
-    setSaving(true);
-    
-    try {
-      const orderData: SalesOrder = {
-        id: isNew ? crypto.randomUUID() : id!,
-        reference: formData.reference || generateOrderReference(),
-        customerId: formData.customerId!,
-        customerName: formData.customerName!,
-        contactId: formData.contactId,
-        quotationId: formData.quotationId,
-        orderDate: formData.orderDate!,
-        deliveryDate: formData.deliveryDate,
-        salespersonId: user?.id,
-        salespersonName: user?.name,
-        currency: formData.currency || 'USD',
-        pricelistId: formData.pricelistId,
-        paymentTerms: formData.paymentTerms,
-        deliveryAddress: formData.deliveryAddress,
-        billingAddress: formData.billingAddress,
-        lines,
-        subtotal: totals.subtotal,
-        discountAmount: 0,
-        taxAmount: totals.taxAmount,
-        total: totals.total,
-        notes: formData.notes,
-        status: newStatus || formData.status || 'draft',
-        deliveryStatus: formData.deliveryStatus || 'pending',
-        confirmedAt: newStatus === 'confirmed' ? new Date().toISOString() : formData.confirmedAt,
-        confirmedBy: newStatus === 'confirmed' ? user?.name : formData.confirmedBy,
-        lockedAt: newStatus === 'locked' ? new Date().toISOString() : formData.lockedAt,
-        lockedBy: newStatus === 'locked' ? user?.name : formData.lockedBy,
-        activities: formData.activities || [{
-          id: crypto.randomUUID(),
-          userId: user?.id || '1',
-          userName: user?.name || 'System',
-          action: isNew ? 'Order created' : 'Order updated',
-          timestamp: new Date().toISOString(),
-        }],
-        createdBy: formData.createdBy || user?.name || 'System',
-        createdAt: formData.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+  }, [contacts]);
+
+  const handleTotalsChange = useCallback((t: OrderSummaryValue) => {
+    setFormData((prev) => {
+      if (
+        prev.totalUntaxed === t.totalUntaxed && prev.totalCGST === t.totalCGST &&
+        prev.totalSGST === t.totalSGST && prev.totalIGST === t.totalIGST &&
+        prev.totalGST === t.totalGST && prev.grandTotal === t.grandTotal &&
+        prev.orderDiscountAmount === t.orderDiscountAmount
+      ) return prev;
+      return {
+        ...prev,
+        totalUntaxed: t.totalUntaxed, totalCGST: t.totalCGST, totalSGST: t.totalSGST,
+        totalIGST: t.totalIGST, totalGST: t.totalGST, grandTotal: t.grandTotal,
+        orderDiscountAmount: t.orderDiscountAmount, gstType,
       };
-      
-      // Add status change activity
-      if (newStatus && newStatus !== formData.status) {
-        orderData.activities = [
-          ...orderData.activities,
-          {
-            id: crypto.randomUUID(),
-            userId: user?.id || '1',
-            userName: user?.name || 'System',
-            action: `Order ${newStatus}`,
-            timestamp: new Date().toISOString(),
-          },
-        ];
-      }
-      
-      saveSalesOrder(orderData);
-      toast({
-        title: isNew ? 'Order Created' : 'Order Updated',
-        description: `${orderData.reference} has been saved.`,
-      });
+    });
+  }, [gstType]);
+
+  const handleOrderDiscountChange = useCallback((type: OrderDiscountType, value: number) => {
+    setFormData((prev) => ({ ...prev, orderDiscountType: type, orderDiscountValue: value }));
+  }, []);
+
+  const validate = useCallback((): { ok: boolean; error?: string } => {
+    if (!formData.customerId) return { ok: false, error: 'Please select a customer' };
+    if (lines.length === 0) return { ok: false, error: 'Please add at least one product' };
+    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1).valid)
+      return { ok: false, error: 'Please enter a valid primary phone' };
+    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2).valid)
+      return { ok: false, error: 'Please enter a valid secondary phone' };
+    if (!formData.billingLocationType)
+      return { ok: false, error: 'Please select a billing location type' };
+    if (formData.billingLocationType === 'office' && formData.billingGSTIN && !validateGSTIN(formData.billingGSTIN))
+      return { ok: false, error: 'Invalid billing GSTIN format' };
+    return { ok: true };
+  }, [formData, lines.length]);
+
+  const persist = useCallback((statusOverride?: SalesOrderStatus, extraActivityNote?: string) => {
+    const newStatus = statusOverride || formData.status || 'estimate';
+    const data: SalesOrder = {
+      id: isNew ? crypto.randomUUID() : id!,
+      reference: formData.reference || generateOrderReference(),
+      customerId: formData.customerId!,
+      customerName: formData.customerName!,
+      contactId: formData.contactId,
+      quotationId: formData.quotationId,
+      orderDate: formData.orderDate!,
+      deliveryDate: formData.deliveryDate,
+      salespersonId: user?.id,
+      salespersonName: user?.name,
+      currency: formData.currency || 'INR',
+      pricelistId: formData.pricelistId,
+      paymentTerms: formData.paymentTerms,
+      lines,
+      subtotal: formData.totalUntaxed || 0,
+      discountAmount: formData.orderDiscountAmount || 0,
+      taxAmount: formData.totalGST || 0,
+      total: formData.grandTotal || 0,
+      notes: formData.notes,
+      status: newStatus,
+      deliveryStatus: formData.deliveryStatus || 'pending',
+      confirmedAt: newStatus === 'confirmed' ? new Date().toISOString() : formData.confirmedAt,
+      confirmedBy: newStatus === 'confirmed' ? user?.name : formData.confirmedBy,
+      activities: [
+        ...(formData.activities || []),
+        ...(extraActivityNote
+          ? [{
+              id: crypto.randomUUID(),
+              userId: user?.id || '1',
+              userName: user?.name || 'System',
+              action: extraActivityNote,
+              timestamp: new Date().toISOString(),
+            }]
+          : []),
+      ],
+      createdBy: formData.createdBy || user?.name || 'System',
+      createdAt: formData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...formData,
+      // overrides last so totals/status from above win
+      status: newStatus,
+      lines,
+    } as SalesOrder;
+    saveSalesOrder(data);
+    return data;
+  }, [formData, lines, isNew, id, user]);
+
+  const handleSave = useCallback(async (newStatus?: SalesOrderStatus) => {
+    const v = validate();
+    if (!v.ok) {
+      toast({ title: v.error!, variant: 'destructive' });
+      billingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const data = persist(newStatus);
+      toast({ title: isNew ? 'Order Created' : 'Order Updated', description: `${data.reference} saved.` });
       navigate('/sales/orders');
     } catch (error) {
       toast({ title: 'Error saving order', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
-  }, [formData, lines, totals, isNew, id, user, toast, navigate]);
-  
-  const handleConfirmAction = useCallback(() => {
-    switch (confirmAction) {
-      case 'confirm':
-        handleSave('confirmed');
-        break;
-      case 'lock':
-        handleSave('locked');
-        break;
-      case 'cancel':
-        handleSave('cancelled');
-        break;
+  }, [validate, persist, isNew, toast, navigate]);
+
+  const handleStatusStepClick = useCallback((next: SalesOrderStatus) => {
+    const current = (formData.status || 'estimate') as SalesOrderStatus;
+    if (current === next) return;
+    if (!canTransition(current, next, userRole)) {
+      toast({
+        title: 'Status change not allowed',
+        description: `You don't have permission to advance to "${next}".`,
+        variant: 'destructive',
+      });
+      return;
     }
+    const v = validate();
+    if (!v.ok) {
+      toast({ title: v.error!, variant: 'destructive' });
+      return;
+    }
+    const note = `Status changed: ${STATUS_CONFIG[current].label} → ${STATUS_CONFIG[next].label}`;
+    persist(next, note);
+    setFormData((prev) => ({ ...prev, status: next }));
+    toast({ title: 'Status updated', description: note });
+    // Phase 3: stock reservation on confirmed, loyalty on delivered — wired in next phase.
+  }, [formData.status, userRole, validate, persist, toast]);
+
+  const handleConfirmAction = useCallback(() => {
+    if (confirmAction === 'cancel') handleSave('cancelled');
     setConfirmDialogOpen(false);
   }, [confirmAction, handleSave]);
-  
-  const isEditable = formData.status === 'draft';
-  
+
+  const status = (formData.status || 'estimate') as SalesOrderStatus;
+  const isEditable = status === 'estimate' || status === 'draft';
+
   if (loading) {
     return (
       <AppLayout title="Sales" moduleNav={SALES_NAV}>
@@ -335,7 +280,7 @@ export default function SalesOrderForm() {
       </AppLayout>
     );
   }
-  
+
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
       <div className="p-6 space-y-6">
@@ -351,8 +296,8 @@ export default function SalesOrderForm() {
                   {isNew ? 'New Sales Order' : formData.reference}
                 </h1>
                 {!isNew && (
-                  <Badge className={cn('font-normal', STATUS_CONFIG[formData.status!].className)}>
-                    {STATUS_CONFIG[formData.status!].label}
+                  <Badge className={cn('font-normal', STATUS_CONFIG[status].className)}>
+                    {STATUS_CONFIG[status].label}
                   </Badge>
                 )}
               </div>
@@ -363,415 +308,180 @@ export default function SalesOrderForm() {
           </div>
           <div className="flex gap-2">
             {isEditable && (
-              <>
-                <Button variant="outline" onClick={() => handleSave()} disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Draft
-                </Button>
-                <Button onClick={() => { setConfirmAction('confirm'); setConfirmDialogOpen(true); }} disabled={saving}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm
-                </Button>
-              </>
+              <Button variant="outline" onClick={() => handleSave()} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" /> Save
+              </Button>
             )}
-            {formData.status === 'confirmed' && (
-              <>
-                <Button variant="outline" onClick={() => { setConfirmAction('cancel'); setConfirmDialogOpen(true); }}>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button onClick={() => { setConfirmAction('lock'); setConfirmDialogOpen(true); }}>
-                  <Lock className="h-4 w-4 mr-2" />
-                  Lock Order
-                </Button>
-              </>
+            {status !== 'cancelled' && status !== 'delivered' && !isNew && (
+              <Button variant="outline" onClick={() => { setConfirmAction('cancel'); setConfirmDialogOpen(true); }}>
+                <XCircle className="h-4 w-4 mr-2" /> Cancel Order
+              </Button>
             )}
           </div>
         </div>
-        
+
+        {/* Status chevrons */}
+        {!isNew && (
+          <Card>
+            <CardContent className="pt-6">
+              <OrderStatusChevrons status={status} onStepClick={handleStatusStepClick} />
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Customer & Details */}
             <Card>
-              <CardHeader>
-                <CardTitle>Customer Details</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {studio.isFieldVisible('customer') && (
                     <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('customer', 'Customer')} {studio.isFieldRequired('customer', true) && '*'}</Label>
-                      <Select
-                        value={formData.customerId}
-                        onValueChange={handleCustomerChange}
-                        disabled={!isEditable}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select customer" />
-                        </SelectTrigger>
+                      <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
+                      <Select value={formData.customerId} onValueChange={handleCustomerChange} disabled={!isEditable}>
+                        <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
                         <SelectContent>
-                          {contacts.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name} {c.company && `- ${c.company}`}
-                            </SelectItem>
-                          ))}
+                          {contacts.map((c: any) => {
+                            const display = [c.firstName, c.lastName].filter(Boolean).join(' ') || c.name || '';
+                            return (
+                              <SelectItem key={c.id} value={c.id}>
+                                {display}{c.company ? ` - ${c.company}` : ''}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
                   )}
                   <div className="space-y-2">
                     <Label>Pricelist</Label>
-                    <Select
-                      value={formData.pricelistId}
-                      onValueChange={(v) => setFormData({ ...formData, pricelistId: v })}
-                      disabled={!isEditable}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select pricelist" />
-                      </SelectTrigger>
+                    <Select value={formData.pricelistId} onValueChange={(v) => setFormData({ ...formData, pricelistId: v })} disabled={!isEditable}>
+                      <SelectTrigger><SelectValue placeholder="Select pricelist" /></SelectTrigger>
                       <SelectContent>
                         {pricelists.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name} ({p.currency})
-                          </SelectItem>
+                          <SelectItem key={p.id} value={p.id}>{p.name} ({p.currency})</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {studio.isFieldVisible('orderDate') && (
-                    <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('orderDate', 'Order Date')}</Label>
-                      <Input
-                        type="date"
-                        value={formData.orderDate}
-                        onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
-                        disabled={!isEditable}
-                      />
-                    </div>
-                  )}
-                  {studio.isFieldVisible('deliveryDate') && (
-                    <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('deliveryDate', 'Delivery Date')}</Label>
-                      <Input
-                        type="date"
-                        value={formData.deliveryDate}
-                        onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                        disabled={!isEditable}
-                      />
-                    </div>
-                  )}
-                  {studio.isFieldVisible('paymentTerms') && (
-                    <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('paymentTerms', 'Payment Terms')}</Label>
-                      <Select
-                        value={formData.paymentTerms}
-                        onValueChange={(v) => setFormData({ ...formData, paymentTerms: v })}
-                        disabled={!isEditable}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select terms" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PAYMENT_TERMS.map((term) => (
-                            <SelectItem key={term.value} value={term.value}>
-                              {term.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Delivery Address</Label>
-                    <Textarea
-                      value={formData.deliveryAddress}
-                      onChange={(e) => setFormData({ ...formData, deliveryAddress: e.target.value })}
-                      disabled={!isEditable}
-                      rows={3}
-                    />
+                    <Label>Order Date</Label>
+                    <Input type="date" value={formData.orderDate}
+                      onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
+                      disabled={!isEditable} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Billing Address</Label>
-                    <Textarea
-                      value={formData.billingAddress}
-                      onChange={(e) => setFormData({ ...formData, billingAddress: e.target.value })}
-                      disabled={!isEditable}
-                      rows={3}
-                    />
+                    <Label>Delivery Date</Label>
+                    <Input type="date" value={formData.deliveryDate}
+                      onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
+                      disabled={!isEditable} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Payment Terms</Label>
+                    <Select value={formData.paymentTerms} onValueChange={(v) => setFormData({ ...formData, paymentTerms: v })} disabled={!isEditable}>
+                      <SelectTrigger><SelectValue placeholder="Select terms" /></SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_TERMS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Order Lines */}
+
+            <div ref={billingRef}>
+              <BillingSection value={formData as any} onChange={(v) => setFormData(v as any)} disabled={!isEditable} />
+            </div>
+
+            <DeliverySection value={formData as any} onChange={(v) => setFormData(v as any)} disabled={!isEditable} />
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5" />
-                  Order Lines
+                  <ShoppingCart className="h-5 w-5" /> Order Lines
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {isEditable && (
-                  <div className="grid grid-cols-12 gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
-                    <div className="col-span-4">
-                      <Select
-                        value={newLine.productId}
-                        onValueChange={(v) => setNewLine({ ...newLine, productId: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-2">
-                      <Input
-                        type="number"
-                        min={1}
-                        value={newLine.quantity}
-                        onChange={(e) => setNewLine({ ...newLine, quantity: Number(e.target.value) })}
-                        placeholder=""
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={newLine.discount}
-                        onChange={(e) => setNewLine({ ...newLine, discount: Number(e.target.value) })}
-                        placeholder=""
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Select
-                        value={newLine.taxId}
-                        onValueChange={(v) => setNewLine({ ...newLine, taxId: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {taxRules.map((t) => (
-                            <SelectItem key={t.id} value={t.id}>
-                              {t.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-2">
-                      <Button onClick={handleAddLine} className="w-full">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Unit Price</TableHead>
-                      <TableHead className="text-right">Discount</TableHead>
-                      <TableHead className="text-right">Tax</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      {isEditable && <TableHead className="w-[50px]"></TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lines.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          No items added yet
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      lines.map((line) => (
-                        <TableRow key={line.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Package className="h-4 w-4 text-muted-foreground" />
-                              {line.productName}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {isEditable ? (
-                              <Input
-                                type="number"
-                                min={1}
-                                value={line.quantity}
-                                onChange={(e) => handleUpdateLine(line.id, { quantity: Number(e.target.value) })}
-                                className="w-20 ml-auto"
-                              />
-                            ) : (
-                              line.quantity
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">₹{line.unitPrice.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">
-                            {line.discount > 0 && (
-                              <span className="text-destructive">
-                                -{line.discountType === 'percentage' ? `${line.discount}%` : `₹${line.discount}`}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">₹{line.taxAmount.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">₹{line.total.toFixed(2)}</TableCell>
-                          {isEditable && (
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleRemoveLine(line.id)}
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                  {lines.length > 0 && (
-                    <TableFooter>
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-right font-medium">Subtotal</TableCell>
-                        <TableCell className="text-right font-medium">{`₹${totals.subtotal.toFixed(2)}`}</TableCell>
-                        {isEditable && <TableCell />}
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-right font-medium">Tax</TableCell>
-                        <TableCell className="text-right font-medium">{`₹${totals.taxAmount.toFixed(2)}`}</TableCell>
-                        {isEditable && <TableCell />}
-                      </TableRow>
-                      <TableRow className="bg-muted/50">
-                        <TableCell colSpan={5} className="text-right font-bold text-lg">Total</TableCell>
-                        <TableCell className="text-right font-bold text-lg">{`₹${totals.total.toFixed(2)}`}</TableCell>
-                        {isEditable && <TableCell />}
-                      </TableRow>
-                    </TableFooter>
-                  )}
-                </Table>
-              </CardContent>
-            </Card>
-            
-            {/* Notes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                <OrderLinesTable<SalesOrderLine>
+                  lines={lines}
+                  onChange={setLines}
+                  gstType={gstType}
+                  orderDiscountType={(formData.orderDiscountType ?? null) as OrderDiscountType}
+                  orderDiscountValue={formData.orderDiscountValue || 0}
+                  onOrderDiscountChange={handleOrderDiscountChange}
+                  canApplyOrderDiscount={canApplyOrderDiscount}
                   disabled={!isEditable}
-                  placeholder=""
-                  rows={4}
+                  onTotalsChange={handleTotalsChange}
+                  newLine={(id) => ({
+                    id, productId: '', productName: '',
+                    quantity: 1, units: 1, deliveredQuantity: 0, invoicedQuantity: 0,
+                    unitPrice: 0, discount: 0, discountType: 'percentage',
+                    taxIds: [], subtotal: 0, taxAmount: 0, total: 0,
+                    reservedStock: false, gstRate: 18,
+                  } as SalesOrderLine)}
                 />
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+              <CardContent>
+                <Textarea value={formData.notes || ''}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  disabled={!isEditable} placeholder="" rows={4} />
+              </CardContent>
+            </Card>
           </div>
-          
+
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Order Summary */}
             <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Items</span>
-                    <span>{lines.length}</span>
+              <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Items</span>
+                  <span>{lines.length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatINR(formData.totalUntaxed || 0)}</span>
+                </div>
+                {(formData.orderDiscountAmount || 0) > 0 && (
+                  <div className="flex justify-between text-sm text-success">
+                    <span>Discount</span>
+                    <span>-{formatINR(formData.orderDiscountAmount || 0)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>₹{totals.subtotal.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span>₹{totals.taxAmount.toLocaleString('en-IN')}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span className="text-primary">{`₹${totals.total.toLocaleString('en-IN')}`}</span>
-                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{gstType === 'igst' ? 'IGST' : 'CGST + SGST'}</span>
+                  <span>{formatINR(formData.totalGST || 0)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total</span>
+                  <span className="text-primary">{formatINR(formData.grandTotal || 0)}</span>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Status Info */}
-            {!isNew && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Current Status</span>
-                    <Badge className={cn('font-normal', STATUS_CONFIG[formData.status!].className)}>
-                      {STATUS_CONFIG[formData.status!].label}
-                    </Badge>
-                  </div>
-                  {formData.confirmedAt && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Confirmed</span>
-                      <span className="text-sm">{format(parseISO(formData.confirmedAt), 'MMM d, yyyy')}</span>
-                    </div>
-                  )}
-                  {formData.lockedAt && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Locked</span>
-                      <span className="text-sm">{format(parseISO(formData.lockedAt), 'MMM d, yyyy')}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>
-      
-      {/* Confirmation Dialog */}
+
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmAction === 'confirm' && 'Confirm Order?'}
-              {confirmAction === 'lock' && 'Lock Order?'}
-              {confirmAction === 'cancel' && 'Cancel Order?'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction === 'confirm' && 'This will confirm the order and reserve stock for the items.'}
-              {confirmAction === 'lock' && 'This will lock the order and prevent any further changes.'}
-              {confirmAction === 'cancel' && 'This will cancel the order. This action cannot be undone.'}
-            </AlertDialogDescription>
+            <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+            <AlertDialogDescription>This will cancel the order. This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Back</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmAction}
-              className={confirmAction === 'cancel' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
-            >
-              {confirmAction === 'confirm' && 'Confirm Order'}
-              {confirmAction === 'lock' && 'Lock Order'}
-              {confirmAction === 'cancel' && 'Cancel Order'}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Cancel Order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
