@@ -46,6 +46,7 @@ import SubscriptionForm from "@/pages/sales/SubscriptionForm";
 import PricelistsPage from "@/pages/sales/PricelistsPage";
 import PricelistForm from "@/pages/sales/PricelistForm";
 import SalesReports from "@/pages/sales/SalesReports";
+import PromotionsPage from "@/pages/sales/PromotionsPage";
 import CustomerPortal from "@/pages/sales/CustomerPortal";
 import CustomerPortalQuotation from "@/pages/sales/CustomerPortalQuotation";
 
@@ -150,6 +151,7 @@ const App = () => (
             <Route path="/sales/pricelists/new" element={<ProtectedRoute><PricelistForm /></ProtectedRoute>} />
             <Route path="/sales/pricelists/:id/edit" element={<ProtectedRoute><PricelistForm /></ProtectedRoute>} />
             <Route path="/sales/reports" element={<ProtectedRoute><SalesReports /></ProtectedRoute>} />
+            <Route path="/sales/promotions" element={<ProtectedRoute><PromotionsPage /></ProtectedRoute>} />
             <Route path="/sales/customers" element={<ProtectedRoute><CustomersList /></ProtectedRoute>} />
             <Route path="/sales/customers/new" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
             <Route path="/sales/customers/:id/edit" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />

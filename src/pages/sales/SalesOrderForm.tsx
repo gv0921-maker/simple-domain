@@ -34,6 +34,8 @@ import { BillingSection } from '@/components/sales/BillingSection';
 import { DeliverySection } from '@/components/sales/DeliverySection';
 import { OrderLinesTable, type OrderSummaryValue } from '@/components/sales/OrderLinesTable';
 import { OrderStatusChevrons, canTransition } from '@/components/sales/OrderStatusChevrons';
+import { getContact, saveContact } from '@/lib/services/crm';
+import { processOrderDelivery, tierLabel } from '@/lib/sales/loyaltyService';
 
 const PAYMENT_TERMS = [
   { value: 'immediate', label: 'Immediate Payment' },
@@ -160,9 +162,9 @@ export default function SalesOrderForm() {
   const validate = useCallback((): { ok: boolean; error?: string } => {
     if (!formData.customerId) return { ok: false, error: 'Please select a customer' };
     if (lines.length === 0) return { ok: false, error: 'Please add at least one product' };
-    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1).valid)
+    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1))
       return { ok: false, error: 'Please enter a valid primary phone' };
-    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2).valid)
+    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2))
       return { ok: false, error: 'Please enter a valid secondary phone' };
     if (!formData.billingLocationType)
       return { ok: false, error: 'Please select a billing location type' };
@@ -213,10 +215,10 @@ export default function SalesOrderForm() {
       createdAt: formData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...formData,
-      // overrides last so totals/status from above win
-      status: newStatus,
-      lines,
     } as SalesOrder;
+    // Force computed totals & status to win over any stale spread copies.
+    data.status = newStatus;
+    data.lines = lines;
     saveSalesOrder(data);
     return data;
   }, [formData, lines, isNew, id, user]);
@@ -256,11 +258,33 @@ export default function SalesOrderForm() {
       toast({ title: v.error!, variant: 'destructive' });
       return;
     }
-    const note = `Status changed: ${STATUS_CONFIG[current].label} → ${STATUS_CONFIG[next].label}`;
+    let note = `Status changed: ${STATUS_CONFIG[current].label} → ${STATUS_CONFIG[next].label}`;
+
+    if (next === 'delivered' && formData.customerId) {
+      const contact = getContact(formData.customerId);
+      if (contact) {
+        const orderForLoyalty = {
+          ...formData,
+          lines,
+          status: 'delivered',
+          grandTotal: formData.grandTotal || 0,
+          pointsRedeemed: formData.pointsRedeemed || 0,
+        } as any;
+        const result = processOrderDelivery(orderForLoyalty, contact);
+        saveContact(result.updatedContact);
+        const fmt = (n: number) =>
+          new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
+        const tierBit = result.tierChanged
+          ? ` Tier upgraded: ${tierLabel(result.oldTier)} → ${tierLabel(result.newTier)}.`
+          : '';
+        note += ` | Loyalty: earned ${result.pointsEarned} pts.${tierBit} Total spend: ${fmt(result.newLifetimeSpend)}`;
+      }
+    }
+
     persist(next, note);
     setFormData((prev) => ({ ...prev, status: next }));
     toast({ title: 'Status updated', description: note });
-    // Phase 3: stock reservation on confirmed, loyalty on delivered — wired in next phase.
+    // Phase 4: stock reservation on confirmed wired next.
   }, [formData.status, userRole, validate, persist, toast]);
 
   const handleConfirmAction = useCallback(() => {

@@ -75,6 +75,11 @@ export interface Contact {
   paymentTerms?: string;
   priceList?: string;
   purchasePaymentTerms?: string;
+  // Loyalty (B2C). Optional for back-compat with existing records.
+  loyaltyTier?: 'bronze' | 'silver' | 'gold';
+  loyaltyPoints?: number;
+  totalLifetimeSpend?: number;
+  loyaltyTierUpdatedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
