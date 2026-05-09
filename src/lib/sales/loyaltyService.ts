@@ -6,6 +6,7 @@ import {
   getTierFromSpend,
   calculatePointsEarned,
 } from './loyaltyEngine';
+import { logLoyaltyTransaction } from './supabaseSync';
 
 export interface DeliveryProcessingResult {
   updatedContact: Contact;
@@ -36,6 +37,35 @@ export function processOrderDelivery(order: SalesOrder, contact: Contact): Deliv
     loyaltyPoints: Math.max(0, newPoints),
     loyaltyTierUpdatedAt: tierChanged ? new Date().toISOString() : contact.loyaltyTierUpdatedAt,
   };
+
+  // Mirror to Supabase (best-effort, non-blocking)
+  if (pointsEarned > 0) {
+    logLoyaltyTransaction({
+      contactId: contact.id,
+      orderId: order.id,
+      txnType: 'earn',
+      points: pointsEarned,
+      amount: grandTotal,
+      notes: `Order ${order.reference || order.id}`,
+    });
+  }
+  if (pointsRedeemed > 0) {
+    logLoyaltyTransaction({
+      contactId: contact.id,
+      orderId: order.id,
+      txnType: 'redeem',
+      points: pointsRedeemed,
+      notes: `Redeemed on ${order.reference || order.id}`,
+    });
+  }
+  if (tierChanged) {
+    logLoyaltyTransaction({
+      contactId: contact.id,
+      orderId: order.id,
+      txnType: 'tier_upgrade',
+      notes: `${tierLabel(oldTier)} → ${tierLabel(newTier)}`,
+    });
+  }
 
   return { updatedContact, pointsEarned, pointsRedeemed, tierChanged, oldTier, newTier, newLifetimeSpend };
 }

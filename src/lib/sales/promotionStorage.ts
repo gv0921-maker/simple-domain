@@ -2,6 +2,7 @@
 // behind the same API, so callers should always go through this module.
 
 import { getItem, setItem } from '@/lib/storage';
+import { syncPromotionUpsert, syncPromotionDelete } from '@/lib/sales/supabaseSync';
 
 export type PromotionDiscountType = 'percent' | 'amount';
 
@@ -50,9 +51,11 @@ export function savePromotion(p: Partial<SeasonalPromotion> & { id?: string }): 
   };
   if (idx >= 0) all[idx] = next; else all.push(next);
   setItem(KEY, all);
+  syncPromotionUpsert(next);
   return next;
 }
 
 export function deletePromotion(id: string): void {
   setItem(KEY, getPromotions().filter((p) => p.id !== id));
+  syncPromotionDelete(id);
 }
