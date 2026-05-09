@@ -179,10 +179,10 @@ export default function QuotationForm() {
   const validate = useCallback((): { ok: boolean; error?: string } => {
     if (!formData.customerId) return { ok: false, error: 'Please select a customer' };
     if (lines.length === 0) return { ok: false, error: 'Please add at least one product' };
-    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1).valid) {
+    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1)) {
       return { ok: false, error: 'Please enter a valid primary phone' };
     }
-    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2).valid) {
+    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2)) {
       return { ok: false, error: 'Please enter a valid secondary phone' };
     }
     if (!formData.billingLocationType) {
