@@ -1,67 +1,32 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter,
-} from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Save,
-  Send,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  Package,
-  AlertTriangle,
-  FileText,
+  ArrowLeft, Save, Send, CheckCircle, XCircle, ArrowRight, FileText,
 } from 'lucide-react';
 import {
-  getQuotation,
-  getQuotations,
-  saveQuotation,
-  generateQuotationReference,
-  getPricelists,
-  getTaxRules,
-  calculateLineTotal,
-  applyPricelistPrice,
-  checkStockAvailability,
-  convertQuotationToOrder,
+  getQuotation, saveQuotation, generateQuotationReference,
+  getPricelists, convertQuotationToOrder,
 } from '@/lib/services/sales/storage';
-import type { Quotation, QuotationLine, QuotationStatus, DiscountType } from '@/lib/services/sales/types';
-import { getContacts } from '@/lib/services/sales';
-import { getProducts } from '@/lib/services/inventory';
+import type {
+  Quotation, QuotationLine, QuotationStatus,
+  GSTType, OrderDiscountType,
+} from '@/lib/services/sales/types';
+import { getContacts, determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,9 +35,7 @@ import { format, parseISO, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { BillingSection } from '@/components/sales/BillingSection';
 import { DeliverySection } from '@/components/sales/DeliverySection';
-import { OrderLinesTable } from '@/components/sales/OrderLinesTable';
-import { determineGSTType } from '@/lib/services/sales';
-import type { GSTType, OrderDiscountType } from '@/lib/services/sales/types';
+import { OrderLinesTable, type OrderSummaryValue } from '@/components/sales/OrderLinesTable';
 
 const PAYMENT_TERMS = [
   { value: 'immediate', label: 'Immediate Payment' },
@@ -90,6 +53,9 @@ const STATUS_CONFIG: Record<QuotationStatus, { label: string; className: string 
   cancelled: { label: 'Cancelled', className: 'bg-destructive/20 text-destructive border-destructive' },
 };
 
+const formatINR = (n: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(n || 0);
+
 export default function QuotationForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -98,21 +64,19 @@ export default function QuotationForm() {
   const { user } = useAuth();
   const isNew = !id || id === 'new';
   const studio = useStudioConfig('sales', 'Quotation');
-  
-  const [contacts] = useState(() => getContacts());
 
-  // Pre-fill from CRM URL params
+  const [contacts] = useState(() => getContacts());
+  const [pricelists] = useState(() => getPricelists());
+
   const urlCustomerId = searchParams.get('customerId');
   const urlOpportunityId = searchParams.get('opportunityId');
-  const [products] = useState(() => getProducts());
-  const [pricelists] = useState(() => getPricelists());
-  const [taxRules] = useState(() => getTaxRules());
-  
+
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'send' | 'accept' | 'cancel' | 'convert' | null>(null);
-  
+  const billingRef = useRef<HTMLDivElement | null>(null);
+
   const [formData, setFormData] = useState<Partial<Quotation>>({
     customerId: '',
     customerName: '',
@@ -122,23 +86,17 @@ export default function QuotationForm() {
     currency: 'INR',
     pricelistId: 'pl_standard',
     paymentTerms: 'net30',
-    globalDiscount: 0,
-    globalDiscountType: 'percentage',
     notes: '',
     termsAndConditions: 'Standard terms and conditions apply. Prices are valid for 30 days from the quotation date.',
     status: 'draft',
-  });
-  
-  const [lines, setLines] = useState<QuotationLine[]>([]);
-  const [newLine, setNewLine] = useState({
-    productId: '',
-    quantity: 1,
-    discount: 0,
-    discountType: 'percentage' as DiscountType,
-    taxId: 'tax_18',
+    deliverySameAsBilling: true,
+    orderDiscountType: null,
+    orderDiscountValue: 0,
   });
 
-  // Derived GST type from billing state vs company state
+  const [lines, setLines] = useState<QuotationLine[]>([]);
+
+  // GST type derived from billing state vs company state
   const gstType: GSTType = useMemo(
     () => determineGSTType(formData.billingCity || '', formData.billingState || ''),
     [formData.billingCity, formData.billingState],
@@ -146,17 +104,14 @@ export default function QuotationForm() {
 
   const userRole = (user as any)?.role as string | undefined;
   const canApplyOrderDiscount = userRole === 'admin' || userRole === 'manager' || userRole === 'super_admin';
-  const allowedLineTypes = canApplyOrderDiscount
-    ? (['flat_order', 'item', 'loyalty', 'seasonal'] as const)
-    : (['item', 'loyalty', 'seasonal'] as const);
-  
+
   // Load existing quotation
   useEffect(() => {
     if (!isNew && id) {
-      const quotation = getQuotation(id);
-      if (quotation) {
-        setFormData(quotation);
-        setLines(quotation.lines);
+      const q = getQuotation(id);
+      if (q) {
+        setFormData(q);
+        setLines(q.lines);
       } else {
         toast({ title: 'Quotation not found', variant: 'destructive' });
         navigate('/sales/quotations');
@@ -165,134 +120,94 @@ export default function QuotationForm() {
     }
   }, [id, isNew, navigate, toast]);
 
-  // Pre-fill customer from CRM URL params
-  useEffect(() => {
-    if (isNew && urlCustomerId) {
-      const contact = contacts.find(c => c.id === urlCustomerId);
-      if (contact) {
-        setFormData(prev => ({
-          ...prev,
-          customerId: contact.id,
-          customerName: contact.company ? `${contact.name} - ${contact.company}` : contact.name,
-        }));
-      }
-    }
-  }, [isNew, urlCustomerId, contacts]);
-
-  // Calculate totals
-  const totals = useMemo(() => {
-    const subtotal = lines.reduce((sum, line) => sum + line.subtotal, 0);
-    const lineDiscount = lines.reduce((sum, line) => {
-      if (line.discountType === 'percentage') {
-        return sum + (line.unitPrice * line.quantity * line.discount / 100);
-      }
-      return sum + line.discount;
-    }, 0);
-    
-    let globalDiscountAmount = 0;
-    if (formData.globalDiscountType === 'percentage') {
-      globalDiscountAmount = subtotal * (formData.globalDiscount || 0) / 100;
-    } else {
-      globalDiscountAmount = formData.globalDiscount || 0;
-    }
-    
-    const taxableAmount = subtotal - globalDiscountAmount;
-    const taxAmount = lines.reduce((sum, line) => sum + line.taxAmount, 0);
-    const adjustedTax = taxAmount * (1 - (formData.globalDiscount || 0) / 100);
-    
-    return {
-      subtotal: Math.round(subtotal * 100) / 100,
-      discountAmount: Math.round((lineDiscount + globalDiscountAmount) * 100) / 100,
-      taxAmount: Math.round(adjustedTax * 100) / 100,
-      total: Math.round((taxableAmount + adjustedTax) * 100) / 100,
-    };
-  }, [lines, formData.globalDiscount, formData.globalDiscountType]);
-  
+  // Auto-populate billing from selected contact
   const handleCustomerChange = useCallback((customerId: string) => {
-    const contact = contacts.find((c) => c.id === customerId);
-    if (contact) {
-      setFormData((prev) => ({
-        ...prev,
-        customerId,
-        customerName: contact.company ? `${contact.name} - ${contact.company}` : contact.name,
-      }));
-    }
-  }, [contacts]);
-  
-  const handleAddLine = useCallback(() => {
-    if (!newLine.productId) {
-      toast({ title: 'Please select a product', variant: 'destructive' });
-      return;
-    }
-    
-    const product = products.find((p) => p.id === newLine.productId);
-    if (!product) return;
-    
-    const unitPrice = applyPricelistPrice(product.id, newLine.quantity, formData.pricelistId);
-    const { subtotal, taxAmount, total } = calculateLineTotal(
-      unitPrice,
-      newLine.quantity,
-      newLine.discount,
-      newLine.discountType,
-      [newLine.taxId]
-    );
-    
-    const stockInfo = checkStockAvailability(product.id, newLine.quantity);
-    
-    const line: QuotationLine = {
-      id: crypto.randomUUID(),
-      productId: product.id,
-      productName: product.name,
-      quantity: newLine.quantity,
-      unitPrice,
-      discount: newLine.discount,
-      discountType: newLine.discountType,
-      taxIds: [newLine.taxId],
-      subtotal,
-      taxAmount,
-      total,
-      stockAvailable: stockInfo.stockOnHand,
-    };
-    
-    setLines((prev) => [...prev, line]);
-    setNewLine({ productId: '', quantity: 1, discount: 0, discountType: 'percentage', taxId: 'tax_18' });
-  }, [newLine, products, formData.pricelistId, toast]);
-  
-  const handleUpdateLine = useCallback((lineId: string, updates: Partial<QuotationLine>) => {
-    setLines((prev) => prev.map((line) => {
-      if (line.id !== lineId) return line;
-      
-      const updatedLine = { ...line, ...updates };
-      const { subtotal, taxAmount, total } = calculateLineTotal(
-        updatedLine.unitPrice,
-        updatedLine.quantity,
-        updatedLine.discount,
-        updatedLine.discountType,
-        updatedLine.taxIds
-      );
-      
-      return { ...updatedLine, subtotal, taxAmount, total };
+    const c: any = contacts.find((x) => x.id === customerId);
+    if (!c) return;
+    const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '';
+    const phone1 = c.phones?.[0]?.phone || c.phone || '';
+    const addr = c.addresses?.[0] || {};
+    setFormData((prev) => ({
+      ...prev,
+      customerId,
+      customerName: c.company ? `${fullName || c.name} - ${c.company}` : (fullName || c.name || ''),
+      billingCustomerName: fullName,
+      billingName: fullName,
+      billingPhone1: phone1,
+      billingAddressLine1: addr.street || '',
+      billingAddressLine2: addr.street2 || '',
+      billingCity: addr.city || '',
+      billingState: addr.state || '',
+      billingZip: addr.postalCode || '',
     }));
+  }, [contacts]);
+
+  useEffect(() => {
+    if (isNew && urlCustomerId) handleCustomerChange(urlCustomerId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNew, urlCustomerId]);
+
+  const handleTotalsChange = useCallback((t: OrderSummaryValue) => {
+    setFormData((prev) => {
+      if (
+        prev.totalUntaxed === t.totalUntaxed &&
+        prev.totalCGST === t.totalCGST &&
+        prev.totalSGST === t.totalSGST &&
+        prev.totalIGST === t.totalIGST &&
+        prev.totalGST === t.totalGST &&
+        prev.grandTotal === t.grandTotal &&
+        prev.orderDiscountAmount === t.orderDiscountAmount
+      ) return prev;
+      return {
+        ...prev,
+        totalUntaxed: t.totalUntaxed,
+        totalCGST: t.totalCGST,
+        totalSGST: t.totalSGST,
+        totalIGST: t.totalIGST,
+        totalGST: t.totalGST,
+        grandTotal: t.grandTotal,
+        orderDiscountAmount: t.orderDiscountAmount,
+        gstType,
+      };
+    });
+  }, [gstType]);
+
+  const handleOrderDiscountChange = useCallback((type: OrderDiscountType, value: number) => {
+    setFormData((prev) => ({ ...prev, orderDiscountType: type, orderDiscountValue: value }));
   }, []);
-  
-  const handleRemoveLine = useCallback((lineId: string) => {
-    setLines((prev) => prev.filter((line) => line.id !== lineId));
-  }, []);
-  
+
+  const validate = useCallback((): { ok: boolean; error?: string } => {
+    if (!formData.customerId) return { ok: false, error: 'Please select a customer' };
+    if (lines.length === 0) return { ok: false, error: 'Please add at least one product' };
+    if (!formData.billingPhone1 || !validatePhone(formData.billingPhone1).valid) {
+      return { ok: false, error: 'Please enter a valid primary phone' };
+    }
+    if (formData.billingPhone2 && !validatePhone(formData.billingPhone2).valid) {
+      return { ok: false, error: 'Please enter a valid secondary phone' };
+    }
+    if (!formData.billingLocationType) {
+      return { ok: false, error: 'Please select a billing location type' };
+    }
+    if (formData.billingLocationType === 'office' && formData.billingGSTIN && !validateGSTIN(formData.billingGSTIN)) {
+      return { ok: false, error: 'Invalid billing GSTIN format' };
+    }
+    return { ok: true };
+  }, [formData, lines.length]);
+
   const handleSave = useCallback(async (newStatus?: QuotationStatus) => {
-    if (!formData.customerId) {
-      toast({ title: 'Please select a customer', variant: 'destructive' });
+    const v = validate();
+    if (!v.ok) {
+      toast({ title: v.error!, variant: 'destructive' });
+      billingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    if (lines.length === 0) {
-      toast({ title: 'Please add at least one product', variant: 'destructive' });
-      return;
-    }
-    
+
     setSaving(true);
-    
     try {
-      const quotationData: Quotation = {
+      const subtotal = formData.totalUntaxed || 0;
+      const grand = formData.grandTotal || 0;
+      const tax = formData.totalGST || 0;
+      const data: Quotation = {
         id: isNew ? crypto.randomUUID() : id!,
         reference: formData.reference || generateQuotationReference(),
         customerId: formData.customerId!,
@@ -305,16 +220,16 @@ export default function QuotationForm() {
         salespersonId: user?.id,
         salespersonName: user?.name,
         salesTeam: formData.salesTeam,
-        currency: formData.currency || 'USD',
+        currency: formData.currency || 'INR',
         pricelistId: formData.pricelistId,
         paymentTerms: formData.paymentTerms,
         lines,
-        globalDiscount: formData.globalDiscount || 0,
-        globalDiscountType: formData.globalDiscountType || 'percentage',
-        subtotal: totals.subtotal,
-        discountAmount: totals.discountAmount,
-        taxAmount: totals.taxAmount,
-        total: totals.total,
+        globalDiscount: 0,
+        globalDiscountType: 'percentage',
+        subtotal,
+        discountAmount: formData.orderDiscountAmount || 0,
+        taxAmount: tax,
+        total: grand,
         notes: formData.notes,
         termsAndConditions: formData.termsAndConditions,
         status: newStatus || formData.status || 'draft',
@@ -326,45 +241,39 @@ export default function QuotationForm() {
         createdBy: formData.createdBy || user?.name || 'System',
         createdAt: formData.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      };
-      
-      saveQuotation(quotationData);
-      toast({
-        title: isNew ? 'Quotation Created' : 'Quotation Updated',
-        description: `${quotationData.reference} has been saved.`,
-      });
+        // B2C custom fields - preserve all from formData
+        ...formData,
+      } as Quotation;
+
+      saveQuotation(data);
+      toast({ title: isNew ? 'Quotation Created' : 'Quotation Updated', description: `${data.reference} saved.` });
       navigate('/sales/quotations');
     } catch (error) {
       toast({ title: 'Error saving quotation', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
-  }, [formData, lines, totals, isNew, id, user, toast, navigate]);
-  
+  }, [formData, lines, isNew, id, user, toast, navigate, validate]);
+
   const handleConfirmAction = useCallback(() => {
     switch (confirmAction) {
-      case 'send':
-        handleSave('sent');
-        break;
-      case 'accept':
-        handleSave('accepted');
-        break;
-      case 'cancel':
-        handleSave('cancelled');
-        break;
-      case 'convert':
+      case 'send': handleSave('sent'); break;
+      case 'accept': handleSave('accepted'); break;
+      case 'cancel': handleSave('cancelled'); break;
+      case 'convert': {
         const order = convertQuotationToOrder(id!, user?.id || '1', user?.name || 'System');
         if (order) {
           toast({ title: 'Order Created', description: `${order.reference} created` });
           navigate('/sales/orders');
         }
         break;
+      }
     }
     setConfirmDialogOpen(false);
   }, [confirmAction, handleSave, id, user, toast, navigate]);
-  
+
   const isEditable = formData.status === 'draft';
-  
+
   if (loading) {
     return (
       <AppLayout title="Sales" moduleNav={SALES_NAV}>
@@ -374,7 +283,7 @@ export default function QuotationForm() {
       </AppLayout>
     );
   }
-  
+
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
       <div className="p-6 space-y-6">
@@ -404,63 +313,52 @@ export default function QuotationForm() {
             {isEditable && (
               <>
                 <Button variant="outline" onClick={() => handleSave()} disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Draft
+                  <Save className="h-4 w-4 mr-2" /> Save Draft
                 </Button>
                 <Button onClick={() => { setConfirmAction('send'); setConfirmDialogOpen(true); }} disabled={saving}>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send
+                  <Send className="h-4 w-4 mr-2" /> Send
                 </Button>
               </>
             )}
             {formData.status === 'sent' && (
               <>
                 <Button variant="outline" onClick={() => { setConfirmAction('cancel'); setConfirmDialogOpen(true); }}>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
+                  <XCircle className="h-4 w-4 mr-2" /> Reject
                 </Button>
                 <Button onClick={() => { setConfirmAction('accept'); setConfirmDialogOpen(true); }}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Accept
+                  <CheckCircle className="h-4 w-4 mr-2" /> Accept
                 </Button>
               </>
             )}
             {formData.status === 'accepted' && !formData.convertedToOrderId && (
               <Button onClick={() => { setConfirmAction('convert'); setConfirmDialogOpen(true); }}>
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Convert to Order
+                <ArrowRight className="h-4 w-4 mr-2" /> Convert to Order
               </Button>
             )}
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Customer & Details */}
             <Card>
-              <CardHeader>
-                <CardTitle>Customer Details</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {studio.isFieldVisible('customer') && (
                     <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('customer', 'Customer')} {studio.isFieldRequired('customer', true) && '*'}</Label>
-                      <Select
-                        value={formData.customerId}
-                        onValueChange={handleCustomerChange}
-                        disabled={!isEditable}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select customer" />
-                        </SelectTrigger>
+                      <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
+                      <Select value={formData.customerId} onValueChange={handleCustomerChange} disabled={!isEditable}>
+                        <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
                         <SelectContent>
-                          {contacts.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name} {c.company && `- ${c.company}`}
-                            </SelectItem>
-                          ))}
+                          {contacts.map((c: any) => {
+                            const display = [c.firstName, c.lastName].filter(Boolean).join(' ') || c.name || '';
+                            return (
+                              <SelectItem key={c.id} value={c.id}>
+                                {display}{c.company ? ` - ${c.company}` : ''}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -468,19 +366,11 @@ export default function QuotationForm() {
                   {studio.isFieldVisible('pricelist') && (
                     <div className="space-y-2">
                       <Label>{studio.getFieldLabel('pricelist', 'Pricelist')}</Label>
-                      <Select
-                        value={formData.pricelistId}
-                        onValueChange={(v) => setFormData({ ...formData, pricelistId: v })}
-                        disabled={!isEditable}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select pricelist" />
-                        </SelectTrigger>
+                      <Select value={formData.pricelistId} onValueChange={(v) => setFormData({ ...formData, pricelistId: v })} disabled={!isEditable}>
+                        <SelectTrigger><SelectValue placeholder="Select pricelist" /></SelectTrigger>
                         <SelectContent>
                           {pricelists.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.name} ({p.currency})
-                            </SelectItem>
+                            <SelectItem key={p.id} value={p.id}>{p.name} ({p.currency})</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -490,338 +380,118 @@ export default function QuotationForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Quotation Date</Label>
-                    <Input
-                      type="date"
-                      value={formData.quotationDate}
+                    <Input type="date" value={formData.quotationDate}
                       onChange={(e) => setFormData({ ...formData, quotationDate: e.target.value })}
-                      disabled={!isEditable}
-                    />
+                      disabled={!isEditable} />
                   </div>
-                  {studio.isFieldVisible('expirationDate') && (
-                    <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('expirationDate', 'Valid Until')}</Label>
-                      <Input
-                        type="date"
-                        value={formData.validUntil}
-                        onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                        disabled={!isEditable}
-                      />
-                    </div>
-                  )}
-                  {studio.isFieldVisible('paymentTerms') && (
-                    <div className="space-y-2">
-                      <Label>{studio.getFieldLabel('paymentTerms', 'Payment Terms')}</Label>
-                      <Select
-                        value={formData.paymentTerms}
-                        onValueChange={(v) => setFormData({ ...formData, paymentTerms: v })}
-                        disabled={!isEditable}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select terms" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PAYMENT_TERMS.map((term) => (
-                            <SelectItem key={term.value} value={term.value}>
-                              {term.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label>Valid Until</Label>
+                    <Input type="date" value={formData.validUntil}
+                      onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
+                      disabled={!isEditable} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Payment Terms</Label>
+                    <Select value={formData.paymentTerms} onValueChange={(v) => setFormData({ ...formData, paymentTerms: v })} disabled={!isEditable}>
+                      <SelectTrigger><SelectValue placeholder="Select terms" /></SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_TERMS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Line Items */}
+
+            {/* Billing */}
+            <div ref={billingRef}>
+              <BillingSection value={formData as any} onChange={(v) => setFormData(v as any)} disabled={!isEditable} />
+            </div>
+
+            {/* Delivery */}
+            <DeliverySection value={formData as any} onChange={(v) => setFormData(v as any)} disabled={!isEditable} />
+
+            {/* Order Lines */}
             <Card>
-              <CardHeader>
-                <CardTitle>Products & Services</CardTitle>
-                <CardDescription>Add items to your quotation</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Add Line */}
-                {isEditable && (
-                  <div className="flex flex-wrap gap-2 p-4 bg-muted/50 rounded-lg">
-                    <Select
-                      value={newLine.productId}
-                      onValueChange={(v) => setNewLine({ ...newLine, productId: v })}
-                    >
-                      <SelectTrigger className="flex-1 min-w-[200px]">
-                        <SelectValue placeholder="Select product" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            <div className="flex items-center gap-2">
-                              <Package className="h-4 w-4" />
-                              {p.name} - ₹{p.salePrice}
-                              <Badge variant="outline" className="ml-2">
-                                Stock: {p.stockOnHand}
-                              </Badge>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={newLine.quantity}
-                      onChange={(e) => setNewLine({ ...newLine, quantity: parseInt(e.target.value) || 1 })}
-                      className="w-20"
-                      placeholder=""
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={newLine.discount}
-                      onChange={(e) => setNewLine({ ...newLine, discount: parseFloat(e.target.value) || 0 })}
-                      className="w-20"
-                      placeholder=""
-                    />
-                    <Select
-                      value={newLine.taxId}
-                      onValueChange={(v) => setNewLine({ ...newLine, taxId: v })}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Tax" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {taxRules.filter((t) => t.isActive).map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button onClick={handleAddLine} size="icon">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Lines Table */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[300px]">Product</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Unit Price</TableHead>
-                      <TableHead className="text-right">Discount</TableHead>
-                      <TableHead className="text-right">Tax</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      {isEditable && <TableHead className="w-[50px]"></TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lines.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={isEditable ? 7 : 6} className="text-center py-8 text-muted-foreground">
-                          No items added yet
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      lines.map((line) => {
-                        const stockWarning = line.stockAvailable !== undefined && line.stockAvailable < line.quantity;
-                        return (
-                          <TableRow key={line.id} className="animate-fade-in">
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                                <div>
-                                  <p className="font-medium">{line.productName}</p>
-                                  {stockWarning && (
-                                    <div className="flex items-center gap-1 text-xs text-warning">
-                                      <AlertTriangle className="h-3 w-3" />
-                                      Only {line.stockAvailable} in stock
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {isEditable ? (
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  value={line.quantity}
-                                  onChange={(e) => handleUpdateLine(line.id, { quantity: parseInt(e.target.value) || 1 })}
-                                  className="w-20 text-right ml-auto"
-                                />
-                              ) : (
-                                line.quantity
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">{`₹${line.unitPrice.toLocaleString('en-IN')}`}</TableCell>
-                            <TableCell className="text-right">
-                              {line.discount > 0 ? (
-                                <Badge variant="outline" className="text-success">
-                                  -{line.discount}{line.discountType === 'percentage' ? '%' : '$'}
-                                </Badge>
-                              ) : '-'}
-                            </TableCell>
-                            <TableCell className="text-right">{`₹${line.taxAmount.toLocaleString('en-IN')}`}</TableCell>
-                            <TableCell className="text-right font-semibold">{`₹${line.total.toLocaleString('en-IN')}`}</TableCell>
-                            {isEditable && (
-                              <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRemoveLine(line.id)}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        );
-                      })
-                    )}
-                  </TableBody>
-                  {lines.length > 0 && (
-                    <TableFooter>
-                      <TableRow>
-                        <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-medium">Subtotal</TableCell>
-                        <TableCell className="text-right">{`₹${totals.subtotal.toLocaleString('en-IN')}`}</TableCell>
-                        {isEditable && <TableCell />}
-                      </TableRow>
-                      {totals.discountAmount > 0 && (
-                        <TableRow>
-                          <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-medium text-success">Discount</TableCell>
-                          <TableCell className="text-right text-success">{`-₹${totals.discountAmount.toLocaleString('en-IN')}`}</TableCell>
-                          {isEditable && <TableCell />}
-                        </TableRow>
-                      )}
-                      <TableRow>
-                        <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-medium">Tax</TableCell>
-                        <TableCell className="text-right">{`₹${totals.taxAmount.toLocaleString('en-IN')}`}</TableCell>
-                        {isEditable && <TableCell />}
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={isEditable ? 5 : 4} className="text-right font-bold text-lg">Total</TableCell>
-                        <TableCell className="text-right font-bold text-lg">{`₹${totals.total.toLocaleString('en-IN')}`}</TableCell>
-                        {isEditable && <TableCell />}
-                      </TableRow>
-                    </TableFooter>
-                  )}
-                </Table>
+              <CardHeader><CardTitle>Products & Services</CardTitle></CardHeader>
+              <CardContent>
+                <OrderLinesTable<QuotationLine>
+                  lines={lines}
+                  onChange={setLines}
+                  gstType={gstType}
+                  orderDiscountType={(formData.orderDiscountType ?? null) as OrderDiscountType}
+                  orderDiscountValue={formData.orderDiscountValue || 0}
+                  onOrderDiscountChange={handleOrderDiscountChange}
+                  canApplyOrderDiscount={canApplyOrderDiscount}
+                  disabled={!isEditable}
+                  onTotalsChange={handleTotalsChange}
+                  newLine={(id) => ({
+                    id, productId: '', productName: '', quantity: 1, units: 1,
+                    unitPrice: 0, discount: 0, discountType: 'percentage',
+                    taxIds: [], subtotal: 0, taxAmount: 0, total: 0, gstRate: 18,
+                  } as QuotationLine)}
+                />
               </CardContent>
             </Card>
-            
+
             {/* Notes & Terms */}
             <Card>
-              <CardHeader>
-                <CardTitle>Notes & Terms</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Notes & Terms</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Notes</Label>
-                  <Textarea
-                    placeholder=""
-                    value={formData.notes || ''}
+                  <Textarea placeholder="" value={formData.notes || ''}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    disabled={!isEditable}
-                    rows={3}
-                  />
+                    disabled={!isEditable} rows={3} />
                 </div>
                 <div className="space-y-2">
                   <Label>Terms & Conditions</Label>
-                  <Textarea
-                    placeholder=""
-                    value={formData.termsAndConditions || ''}
+                  <Textarea placeholder="" value={formData.termsAndConditions || ''}
                     onChange={(e) => setFormData({ ...formData, termsAndConditions: e.target.value })}
-                    disabled={!isEditable}
-                    rows={4}
-                  />
+                    disabled={!isEditable} rows={4} />
                 </div>
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Summary */}
             <Card>
-              <CardHeader>
-                <CardTitle>Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              <CardHeader><CardTitle>Summary</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Items</span>
                   <span className="font-medium">{lines.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">₹{totals.subtotal.toLocaleString('en-IN')}</span>
+                  <span className="font-medium">{formatINR(formData.totalUntaxed || 0)}</span>
                 </div>
-                {totals.discountAmount > 0 && (
+                {(formData.orderDiscountAmount || 0) > 0 && (
                   <div className="flex justify-between text-sm text-success">
                     <span>Discount</span>
-                    <span>-₹{totals.discountAmount.toLocaleString('en-IN')}</span>
+                    <span>-{formatINR(formData.orderDiscountAmount || 0)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span className="font-medium">₹{totals.taxAmount.toLocaleString('en-IN')}</span>
+                  <span className="text-muted-foreground">{gstType === 'igst' ? 'IGST' : 'CGST + SGST'}</span>
+                  <span className="font-medium">{formatINR(formData.totalGST || 0)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
                   <span className="font-semibold">Total</span>
-                  <span className="text-xl font-bold">₹{totals.total.toLocaleString('en-IN')}</span>
+                  <span className="text-xl font-bold">{formatINR(formData.grandTotal || 0)}</span>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Global Discount */}
-            {isEditable && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Global Discount</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max={formData.globalDiscountType === 'percentage' ? 100 : totals.subtotal}
-                      value={formData.globalDiscount || 0}
-                      onChange={(e) => setFormData({ ...formData, globalDiscount: parseFloat(e.target.value) || 0 })}
-                      className="flex-1"
-                    />
-                    <Select
-                      value={formData.globalDiscountType}
-                      onValueChange={(v: DiscountType) => setFormData({ ...formData, globalDiscountType: v })}
-                    >
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">%</SelectItem>
-                        <SelectItem value="fixed">₹</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Actions */}
+
             {!isNew && formData.status === 'accepted' && formData.convertedToOrderId && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Linked Order</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Linked Order</CardTitle></CardHeader>
                 <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => navigate(`/sales/orders/${formData.convertedToOrderId}`)}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Sales Order
+                  <Button variant="outline" className="w-full"
+                    onClick={() => navigate(`/sales/orders/${formData.convertedToOrderId}`)}>
+                    <FileText className="h-4 w-4 mr-2" /> View Sales Order
                   </Button>
                 </CardContent>
               </Card>
@@ -829,8 +499,7 @@ export default function QuotationForm() {
           </div>
         </div>
       </div>
-      
-      {/* Confirmation Dialog */}
+
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -841,17 +510,15 @@ export default function QuotationForm() {
               {confirmAction === 'convert' && 'Convert to Sales Order?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction === 'send' && 'This will mark the quotation as sent. You can still edit it until the customer responds.'}
-              {confirmAction === 'accept' && 'This will mark the quotation as accepted. You can then convert it to a sales order.'}
-              {confirmAction === 'cancel' && 'This will mark the quotation as rejected/cancelled.'}
+              {confirmAction === 'send' && 'Mark the quotation as sent.'}
+              {confirmAction === 'accept' && 'Mark the quotation as accepted.'}
+              {confirmAction === 'cancel' && 'This will reject the quotation.'}
               {confirmAction === 'convert' && 'This will create a new sales order from this quotation.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAction}>
-              Confirm
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmAction}>Continue</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
