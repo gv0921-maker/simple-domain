@@ -330,7 +330,7 @@ export default function SalesOrderForm() {
 
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-3">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -369,22 +369,21 @@ export default function SalesOrderForm() {
 
         {/* Status chevrons */}
         {!isNew && (
-          <Card>
-            <CardContent className="pt-6">
+          <Card className="max-w-4xl mx-auto w-full">
+            <CardContent className="p-4">
               <OrderStatusChevrons status={status} onStepClick={handleStatusStepClick} />
             </CardContent>
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="max-w-4xl mx-auto flex flex-col gap-3 w-full">
             {/* Customer & Details */}
             <Card>
-              <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Customer Details</CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-4 pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {studio.isFieldVisible('customer') && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
                       <CustomerSelector
                         value={formData.customerId}
@@ -394,10 +393,10 @@ export default function SalesOrderForm() {
                       />
                     </div>
                   )}
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label>Pricelist</Label>
                     <Select value={formData.pricelistId} onValueChange={(v) => setFormData({ ...formData, pricelistId: v })} disabled={!isEditable}>
-                      <SelectTrigger><SelectValue placeholder="Select pricelist" /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Select pricelist" /></SelectTrigger>
                       <SelectContent>
                         {pricelists.map((p) => (
                           <SelectItem key={p.id} value={p.id}>{p.name} ({p.currency})</SelectItem>
@@ -406,23 +405,23 @@ export default function SalesOrderForm() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
                     <Label>Order Date</Label>
-                    <Input type="date" value={formData.orderDate}
+                    <Input type="date" className="h-9" value={formData.orderDate}
                       onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
                       disabled={!isEditable} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label>Delivery Date</Label>
-                    <Input type="date" value={formData.deliveryDate}
+                    <Input type="date" className="h-9" value={formData.deliveryDate}
                       onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
                       disabled={!isEditable} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label>Payment Terms</Label>
                     <Select value={formData.paymentTerms} onValueChange={(v) => setFormData({ ...formData, paymentTerms: v })} disabled={!isEditable}>
-                      <SelectTrigger><SelectValue placeholder="Select terms" /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Select terms" /></SelectTrigger>
                       <SelectContent>
                         {PAYMENT_TERMS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                       </SelectContent>
@@ -430,15 +429,15 @@ export default function SalesOrderForm() {
                   </div>
                 </div>
                 {fiscalPositions.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
                       <Label>Fiscal Position</Label>
                       <Select
                         value={formData.fiscalPositionId || '__none__'}
                         onValueChange={(v) => setFormData({ ...formData, fiscalPositionId: v === '__none__' ? undefined : v })}
                         disabled={!isEditable}
                       >
-                        <SelectTrigger><SelectValue placeholder="Default (no remapping)" /></SelectTrigger>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Default (no remapping)" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">Default (no remapping)</SelectItem>
                           {fiscalPositions.map((f) => (
@@ -459,12 +458,12 @@ export default function SalesOrderForm() {
             <DeliverySection value={formData as any} onChange={(v) => setFormData(v as any)} disabled={!isEditable} />
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5" /> Order Lines
+              <CardHeader className="pb-3 p-4">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ShoppingCart className="h-4 w-4" /> Order Lines
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <OrderLinesTable<SalesOrderLine>
                   lines={lines}
                   onChange={setLines}
@@ -487,26 +486,26 @@ export default function SalesOrderForm() {
             </Card>
 
             <Card>
-              <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
-              <CardContent>
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Notes</CardTitle></CardHeader>
+              <CardContent className="p-4 pt-0">
                 <Textarea value={formData.notes || ''}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  disabled={!isEditable} placeholder="" rows={4} />
+                  disabled={!isEditable} placeholder="" rows={3} className="min-h-[72px]" />
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Summary (full width, right-aligned) */}
             <Card>
-              <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Order Summary</CardTitle></CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="flex justify-end">
+                  <div className="w-full max-w-sm space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Items</span>
                   <span>{lines.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">Total Untaxed</span>
                   <span>{formatINR(formData.totalUntaxed || 0)}</span>
                 </div>
                 {(formData.orderDiscountAmount || 0) > 0 && (
@@ -538,12 +537,13 @@ export default function SalesOrderForm() {
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
+                  <span>Grand Total</span>
                   <span className="text-primary">{formatINR(formData.grandTotal || 0)}</span>
+                </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
         </div>
       </div>
 

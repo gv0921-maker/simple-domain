@@ -48,7 +48,7 @@ export function DeliverySection({ value, onChange, disabled }: Props) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3 p-4">
         <CardTitle className="text-base">Delivery Details</CardTitle>
         <div className="flex items-center gap-2">
           <Label htmlFor="same-as-billing" className="font-normal text-sm">Same as Billing</Label>
@@ -61,7 +61,7 @@ export function DeliverySection({ value, onChange, disabled }: Props) {
         </div>
       </CardHeader>
       {!sameAsBilling && (
-        <CardContent>
+        <CardContent className="p-4 pt-0">
           <AddressBlock
             idPrefix="delivery"
             value={pickDelivery(value)}

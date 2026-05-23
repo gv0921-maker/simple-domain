@@ -31,11 +31,11 @@ export function BillingSection({ value, onChange, disabled }: Props) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3 p-4">
         <CardTitle className="text-base">Billing Details</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
+      <CardContent className="space-y-3 p-4 pt-0">
+        <div className="space-y-1">
           <Label htmlFor="billing-customer">Customer Name <span className="text-destructive">*</span></Label>
           <Input
             id="billing-customer"
@@ -43,10 +43,11 @@ export function BillingSection({ value, onChange, disabled }: Props) {
             onChange={(e) => set({ billingCustomerName: e.target.value })}
             disabled={disabled}
             placeholder=""
+            className="h-9"
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <PhoneInput
             id="billing-phone1"
             label="Primary Phone"
