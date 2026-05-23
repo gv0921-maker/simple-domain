@@ -339,8 +339,8 @@ export default function QuotationForm() {
 
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
-      <div className="p-6 space-y-6">
-        {/* Header */}
+      <div className="p-4 space-y-3">
+        {/* Header (full width) */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/sales/quotations')}>
@@ -403,15 +403,14 @@ export default function QuotationForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="max-w-4xl mx-auto flex flex-col gap-3 w-full">
             {/* Customer & Details */}
             <Card>
-              <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Customer Details</CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-4 pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {studio.isFieldVisible('customer') && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
                       <CustomerSelector
                         value={formData.customerId}
@@ -422,10 +421,10 @@ export default function QuotationForm() {
                     </div>
                   )}
                   {studio.isFieldVisible('pricelist') && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label>{studio.getFieldLabel('pricelist', 'Pricelist')}</Label>
                       <Select value={formData.pricelistId} onValueChange={(v) => setFormData({ ...formData, pricelistId: v })} disabled={!isEditable}>
-                        <SelectTrigger><SelectValue placeholder="Select pricelist" /></SelectTrigger>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Select pricelist" /></SelectTrigger>
                         <SelectContent>
                           {pricelists.map((p) => (
                             <SelectItem key={p.id} value={p.id}>{p.name} ({p.currency})</SelectItem>
@@ -435,23 +434,23 @@ export default function QuotationForm() {
                     </div>
                   )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
                     <Label>Quotation Date</Label>
-                    <Input type="date" value={formData.quotationDate}
+                    <Input type="date" className="h-9" value={formData.quotationDate}
                       onChange={(e) => setFormData({ ...formData, quotationDate: e.target.value })}
                       disabled={!isEditable} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label>Valid Until</Label>
-                    <Input type="date" value={formData.validUntil}
+                    <Input type="date" className="h-9" value={formData.validUntil}
                       onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
                       disabled={!isEditable} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label>Payment Terms</Label>
                     <Select value={formData.paymentTerms} onValueChange={(v) => setFormData({ ...formData, paymentTerms: v })} disabled={!isEditable}>
-                      <SelectTrigger><SelectValue placeholder="Select terms" /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Select terms" /></SelectTrigger>
                       <SelectContent>
                         {PAYMENT_TERMS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                       </SelectContent>
@@ -471,8 +470,8 @@ export default function QuotationForm() {
 
             {/* Order Lines */}
             <Card>
-              <CardHeader><CardTitle>Products & Services</CardTitle></CardHeader>
-              <CardContent>
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Products & Services</CardTitle></CardHeader>
+              <CardContent className="p-4 pt-0">
                 <OrderLinesTable<QuotationLine>
                   lines={lines}
                   onChange={setLines}
@@ -494,35 +493,35 @@ export default function QuotationForm() {
 
             {/* Notes & Terms */}
             <Card>
-              <CardHeader><CardTitle>Notes & Terms</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Notes & Terms</CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-4 pt-0">
+                <div className="space-y-1">
                   <Label>Notes</Label>
                   <Textarea placeholder="" value={formData.notes || ''}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    disabled={!isEditable} rows={3} />
+                    disabled={!isEditable} rows={3} className="min-h-[72px]" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Terms & Conditions</Label>
                   <Textarea placeholder="" value={formData.termsAndConditions || ''}
                     onChange={(e) => setFormData({ ...formData, termsAndConditions: e.target.value })}
-                    disabled={!isEditable} rows={4} />
+                    disabled={!isEditable} rows={3} className="min-h-[72px]" />
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Summary (full width, right-aligned numbers) */}
             <Card>
-              <CardHeader><CardTitle>Summary</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
+              <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Summary</CardTitle></CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="flex justify-end">
+                  <div className="w-full max-w-sm space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Items</span>
                   <span className="font-medium">{lines.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">Total Untaxed</span>
                   <span className="font-medium">{formatINR(formData.totalUntaxed || 0)}</span>
                 </div>
                 {(formData.orderDiscountAmount || 0) > 0 && (
@@ -554,16 +553,18 @@ export default function QuotationForm() {
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <span className="font-semibold">Total</span>
-                  <span className="text-xl font-bold">{formatINR(formData.grandTotal || 0)}</span>
+                  <span className="font-semibold">Grand Total</span>
+                  <span className="text-xl font-bold text-primary">{formatINR(formData.grandTotal || 0)}</span>
+                </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {!isNew && formData.status === 'accepted' && formData.convertedToOrderId && (
               <Card>
-                <CardHeader><CardTitle>Linked Order</CardTitle></CardHeader>
-                <CardContent>
+                <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Linked Order</CardTitle></CardHeader>
+                <CardContent className="p-4 pt-0">
                   <Button variant="outline" className="w-full"
                     onClick={() => navigate(`/sales/orders/${formData.convertedToOrderId}`)}>
                     <FileText className="h-4 w-4 mr-2" /> View Sales Order
@@ -574,12 +575,12 @@ export default function QuotationForm() {
 
             {!isNew && versions.length > 0 && (
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-3 p-4">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <History className="h-4 w-4" /> Version History
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 max-h-72 overflow-auto">
+                <CardContent className="space-y-2 max-h-72 overflow-auto p-4 pt-0">
                   {versions.slice().reverse().map((v) => (
                     <div key={v.version} className="flex items-center justify-between p-2 border rounded-md text-xs">
                       <div>
@@ -596,7 +597,6 @@ export default function QuotationForm() {
                 </CardContent>
               </Card>
             )}
-          </div>
         </div>
       </div>
 
