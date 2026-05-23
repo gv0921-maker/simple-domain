@@ -23,7 +23,9 @@ import type {
   SalesOrder, SalesOrderLine, SalesOrderStatus,
   GSTType, OrderDiscountType,
 } from '@/lib/services/sales/types';
-import { getContacts, determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
+import { determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
+import { CustomerSelector } from '@/components/sales/CustomerSelector';
+import { useContactAutoPopulate } from '@/hooks/sales/useContactAutoPopulate';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,7 +69,6 @@ export default function SalesOrderForm() {
   const isNew = id === 'new' || !id;
   const studio = useStudioConfig('sales', 'Sales Order');
 
-  const [contacts] = useState(() => getContacts());
   const [pricelists] = useState(() => getPricelists());
   const [fiscalPositions] = useState(() => getFiscalPositions().filter((f) => f.isActive));
 
@@ -118,26 +119,8 @@ export default function SalesOrderForm() {
     }
   }, [id, isNew, navigate, toast]);
 
-  const handleCustomerChange = useCallback((customerId: string) => {
-    const c: any = contacts.find((x) => x.id === customerId);
-    if (!c) return;
-    const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '';
-    const phone1 = c.phones?.[0]?.phone || c.phone || '';
-    const addr = c.addresses?.[0] || {};
-    setFormData((prev) => ({
-      ...prev,
-      customerId,
-      customerName: c.company ? `${fullName || c.name} - ${c.company}` : (fullName || c.name || ''),
-      billingCustomerName: fullName,
-      billingName: fullName,
-      billingPhone1: phone1,
-      billingAddressLine1: addr.street || '',
-      billingAddressLine2: addr.street2 || '',
-      billingCity: addr.city || '',
-      billingState: addr.state || '',
-      billingZip: addr.postalCode || '',
-    }));
-  }, [contacts]);
+  // Auto-populate billing + delivery from selected contact (shared hook).
+  const populateFromContact = useContactAutoPopulate(setFormData);
 
   const handleTotalsChange = useCallback((t: OrderSummaryValue) => {
     setFormData((prev) => {
@@ -364,19 +347,11 @@ export default function SalesOrderForm() {
                   {studio.isFieldVisible('customer') && (
                     <div className="space-y-2">
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
-                      <Select value={formData.customerId} onValueChange={handleCustomerChange} disabled={!isEditable}>
-                        <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                        <SelectContent>
-                          {contacts.map((c: any) => {
-                            const display = [c.firstName, c.lastName].filter(Boolean).join(' ') || c.name || '';
-                            return (
-                              <SelectItem key={c.id} value={c.id}>
-                                {display}{c.company ? ` - ${c.company}` : ''}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                      <CustomerSelector
+                        value={formData.customerId}
+                        onChange={populateFromContact}
+                        disabled={!isEditable}
+                      />
                     </div>
                   )}
                   <div className="space-y-2">
@@ -500,8 +475,25 @@ export default function SalesOrderForm() {
                     <span>-{formatINR(formData.orderDiscountAmount || 0)}</span>
                   </div>
                 )}
+                {gstType === 'cgst_sgst' ? (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">CGST</span>
+                      <span>{formatINR(formData.totalCGST || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">SGST</span>
+                      <span>{formatINR(formData.totalSGST || 0)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">IGST</span>
+                    <span>{formatINR(formData.totalIGST || 0)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{gstType === 'igst' ? 'IGST' : 'CGST + SGST'}</span>
+                  <span className="text-muted-foreground">Total GST</span>
                   <span>{formatINR(formData.totalGST || 0)}</span>
                 </div>
                 <Separator />
