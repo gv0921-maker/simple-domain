@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -13,6 +13,7 @@ interface CustomerSelectorProps {
   onChange: (contact: any) => void;
   disabled?: boolean;
   placeholder?: string;
+  onCreateNew?: () => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function CustomerSelector({
   onChange,
   disabled,
   placeholder = 'Select customer...',
+  onCreateNew,
 }: CustomerSelectorProps) {
   const { data: contacts = [], isLoading } = useContacts();
   const [open, setOpen] = useState(false);
@@ -98,6 +100,22 @@ export function CustomerSelector({
               })}
             </CommandGroup>
           </CommandList>
+          {onCreateNew && (
+            <div className="border-t bg-popover">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setOpen(false);
+                  onCreateNew();
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                Create New Contact
+              </button>
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
