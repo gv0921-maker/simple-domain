@@ -1,84 +1,152 @@
-# Sales Module — Production Completion Plan
+# OrderLinesTable Redesign — Odoo-Style Clean Layout
 
-Phased build of all gaps from the verification report plus the new B2C custom fields, GST engine, loyalty system, and workflow. Work proceeds in 6 phases with a TypeScript clean check after each.
+UI-only rewrite of `src/components/sales/OrderLinesTable.tsx`. All calculation logic (`recomputeLine`, `calculateLineTax`, `calculateOrderTotals`, discount/loyalty/seasonal flows) is preserved verbatim. Both `QuotationForm` and `SalesOrderForm` consume this single component, so the redesign covers both.
 
-## Constraints (apply to every phase)
+## Implementation Order
 
-- Do not touch CRM module files, auth files, or `src/lib/data/` files (write new logic in `src/lib/sales/*` and update `src/lib/data/sales/types.ts` + `storage.ts` only where the spec explicitly requires it — type additions are unavoidable, so types.ts is the one allowed data-layer file to extend).
-- All component/page/hook imports must go through `@/lib/services/sales`, never `@/lib/data/sales`.
-- Semantic design tokens only. No hard-coded colors in components.
-- Indian Rupee (₹) and en-IN locale everywhere.
-- Full-page routes for new forms (Promotions). No modal dialogs for primary forms.
+1. Read the current `OrderLinesTable.tsx` end-to-end and map out which helpers and computed values must remain (`recomputeLine`, `productMap`/`barcodeMap`, `applySeasonalForLine`, `totals`, `grandAfterPoints`, `useMemoNotify`).
+2. Build the new layout as a separate render section inside the file. Keep the old JSX untouched while wiring the new markup to the existing handlers.
+3. Run TypeScript check on the dual-render version.
+4. Swap out the old JSX in one edit — no mixed markup left behind.
+5. Final TypeScript check — zero errors.
+6. Verify in preview at 1280px on both `/sales/quotations/new` and `/sales/orders/new`: no horizontal scroll inside the Order Lines card.
 
-## Phase 1 — Types, GST engine, validators
-
-1. Extend `Quotation`, `SalesOrder`, `OrderLine` (and the modern `QuotationLine` / `SalesOrderLine`) interfaces in `src/lib/data/sales/types.ts` with all billing/delivery/line/summary/loyalty fields and the new 5-stage `SalesOrderStatus`.
-2. Add `src/lib/sales/gstCalculator.ts` (`determineGSTType`, `calculateLineTax`, `calculateOrderTotals`).
-3. Add `src/lib/sales/phoneValidation.ts` (prefix-aware validator + formatter).
-4. Add `src/lib/sales/gstinValidation.ts` (15-char GSTIN regex).
-5. Add company `state` to settings schema (`getCompanySettings`) so GST type can be determined.
-6. TS check.
-
-## Phase 2 — Quotation & Order forms
-
-1. `src/components/sales/BillingSection.tsx` — customer auto-fetch, dual phone w/ prefix dropdown, address, segmented `House | Flat | Office` selector, conditional fields per type, GSTIN live validation.
-2. `src/components/sales/DeliverySection.tsx` — "Same as Billing" toggle with mirror/prefill behavior; identical conditional fields.
-3. `src/components/sales/OrderLinesTable.tsx` — product+barcode+customization cell, units, computed net/tax/discount/final, per-line discount dropdown gated by role, drag-reorder, delete; right-aligned summary block with conditional CGST/SGST vs IGST rows, manager-only Order Discount, loyalty redemption row.
-4. Wire components into `QuotationForm.tsx` and `SalesOrderForm.tsx`; auto-populate on contact select; recalc taxes on city/state change; submit-time validation with scroll-to-first-error.
-5. New 5-stage chevron progress bar in `SalesOrderDetail` using existing `WorkflowStatus` pattern; role-gated transitions; auto-log into the order activity timeline.
-6. TS check.
-
-## Phase 3 — Pricing & loyalty
-
-1. `src/lib/sales/loyaltyEngine.ts` — tiers (Bronze 0–25k, Silver 25k–1L, Gold 1L+), points rates (1/2/3 %), tier-based unit-price discount (2/5/10 %), 1:1 redemption value.
-2. Extend Contact type (in `src/lib/data/sales/types.ts` SalesCustomer + a CRM-side mirror via service layer extension — no edits to `src/lib/data/crm.ts`; instead store loyalty fields in a sidecar `sales_loyalty_state` keyed by contactId managed through `@/lib/services/sales`).
-3. On `delivered` status transition: update lifetime spend, recompute tier, award points, append system note to chatter.
-4. Loyalty redemption row in OrderLinesTable: validates ≤ available points and ≤ 20 % of grand total; deducts on save; persists `pointsEarned`, `pointsRedeemed`, `redemptionAmount` on order.
-5. `src/lib/sales/seasonalPricing.ts` + `src/pages/sales/PromotionsList.tsx` + `src/pages/sales/PromotionForm.tsx`; route `/sales/promotions`; add to `SALES_NAV`; manager/admin gated.
-6. Per-role discount enforcement in OrderLinesTable (flat order discount → manager/admin only; toast + revert otherwise).
-7. TS check.
-
-## Phase 4 — Verification-report gaps
-
-1. Fiscal Position dropdown in both forms; remap GST rates per line; tooltip in summary.
-2. Stock reservation hook on `estimate → confirmed`; partial-fulfillment warning toast and red flag on under-reserved lines (no block).
-3. Quotation version history panel in `QuotationForm`/detail view: version badge, history drawer, view snapshot, restore (manager/admin) — snapshot current before restore.
-4. `checkExpiringQuotations()` in `src/lib/sales/automation.ts`; bootstrap from `AppLayout` with 4 h interval; routes notifications through existing notifications utility.
-5. CRM ↔ Sales display: enhance existing Sales History block in `CRMContactDetail` (loyalty badge, lifetime spend, points, recent orders, "Create Quotation" prefill); add "Linked Quotations" block in `OpportunityDetail` LINKED ACTIONS area. (Read-only enhancements that consume sales services — does not modify CRM data layer.)
-6. `processSubscriptionRenewals()` in automation.ts; create order from subscription template, advance `nextBillingDate`, notify salesperson; bootstrap on same interval.
-7. TS check.
-
-## Phase 5 — Supabase schema
-
-Single migration adds:
-
-- `sales_loyalty_tiers` (reference)
-- `sales_seasonal_promotions`
-- `sales_loyalty_transactions`
-- New columns on `sales_quotations` and `sales_orders` matching Phase 1 types (billing/delivery JSONB block + loyalty fields + new status enum)
-
-RLS disabled per spec. Then add new TanStack hooks under `src/hooks/sales/`: `useSeasonalPromotions`, `useSavePromotion`, `useDeletePromotion`, `useActivePromotionsForProduct`, `useLoyaltyTransactions`, `useAddLoyaltyTransaction`, `useContactLoyalty`.
-
-## Phase 6 — Verification
-
-- `tsc --noEmit` clean.
-- `rg "@/lib/data/sales" src/{components,pages,hooks}` returns zero matches.
-- Manual smoke test of the full workflow listed in the spec (quote → convert → status advance → loyalty award → tier upgrade → redemption → promotion → version history → expiry notification).
-
-## Technical notes
-
-- Status enum change is breaking for existing orders; migration includes a default mapping (`draft→estimate`, `confirmed→confirmed`, `locked→ready_to_pick`, `cancelled→cancelled`).
-- Loyalty state is stored sales-side (sidecar table + localStorage cache) to avoid editing CRM data files; CRM views read it through `@/lib/services/sales/loyalty`.
-- GST rate per line stays on the line; fiscal position remapping is applied at calculation time, not stored.
-- Promotion auto-application happens when a product is selected in OrderLinesTable; the user can override via the per-line discount dropdown.
-- All new components use existing shadcn primitives (Input, Select, Switch, Toggle, Table) and the WorkflowStatus pattern for the chevron bar.
+## New Table Structure
 
 ```text
-QuotationForm / SalesOrderForm
-  ├─ BillingSection            (customer + billing + conditional)
-  ├─ DeliverySection           (same-as-billing toggle + mirror)
-  ├─ OrderLinesTable
-  │    ├─ line rows            (product/barcode/customization + tax/discount)
-  │    └─ summary              (untaxed → CGST/SGST|IGST → order disc → loyalty → grand total)
-  └─ FiscalPosition select     (remaps line GST)
+⠿ | Product                | Qty   | Unit Price | Disc.% | Amount  | 🗑
+──┼────────────────────────┼───────┼────────────┼────────┼─────────┼──
+⠿ | Product name ▾         | 1.00  | ₹2,000.00  | 0.00   | ₹2,000  | 🗑
+  | [GST 18%]              |       |            |        |         |
+  | [barcode] (hover/val)  |       |            |        |         |
+  | customization (hover)  |       |            |        |         |
 ```
+
+`table-fixed`, widths chosen so the whole table fits a card at 1280px viewport:
+
+| Col | Width |
+|---|---|
+| Drag handle | 24px |
+| Product | flex (auto) |
+| Qty | 80px |
+| Unit Price | 110px |
+| Disc.% | 80px |
+| Amount | 100px |
+| Delete | 32px |
+
+## Row Reveal — State Driven
+
+Use a `useState<string | null>(hoveredRowId)` plus a `focusedRowId` state. Barcode + customization rows render when:
+- the row id matches `hoveredRowId` or `focusedRowId`, OR
+- the corresponding field already has a value.
+
+Pure CSS `:hover` is not enough because the input must stay visible after the mouse leaves while the field is focused. Handlers: `onMouseEnter`/`onMouseLeave` on the `<tr>`, `onFocusCapture`/`onBlurCapture` to track focus inside the row.
+
+Active row gets `bg-muted/30`; delete button and drag handle render only in the revealed state.
+
+## GST Rate — Inline Popover
+
+GST% column is removed. Each product cell shows a small badge `GST 18%` (10px, `bg-muted`, rounded). Click opens the existing `@/components/ui/popover`:
+
+```text
+GST Rate
+[ 18 ] %
+Common: [0] [5] [12] [18] [28]
+```
+
+- Quick-select buttons set the rate directly.
+- Enter or outside-click closes.
+- Writes via existing `updateLine(line.id, { gstRate })`.
+
+No new packages.
+
+## Discount — Inline Type Selector
+
+The per-line discount-type column is removed. The Disc.% cell shows only the percentage input. When focused or when the row has a non-default `perLineDiscountType`, a small segmented control renders below the input: `[Item %] [Loyalty] [Seasonal]` (Flat Order remains order-level only).
+
+- Loyalty / Seasonal → input becomes read-only and reflects the auto-resolved rate; tiny caption shows promo name (via `applySeasonalForLine`).
+- Respects existing `allowedLineDiscountTypes`. When the user has no discount permission, the input is replaced by a lock icon.
+
+## Amount Column
+
+Read-only `finalAmount`. Wrapped in `Tooltip` from `@/components/ui/tooltip` with the breakdown, all in en-IN `₹`:
+
+```text
+Net:        ₹2,000.00
+GST (18%):  ₹360.00
+Discount:  -₹0.00
+Total:      ₹2,360.00
+```
+
+All numbers reused from the per-line computed fields; nothing recalculated.
+
+## Summary Panel
+
+Below the table, right-aligned, `max-w-sm ml-auto`:
+
+```text
+Total Untaxed Amount      ₹2,000.00
+──────────────────────────────────
+CGST (9%)                   ₹180.00     (or IGST when inter-state)
+SGST (9%)                   ₹180.00
+Total GST                   ₹360.00
+──────────────────────────────────
+Order Discount  [%|₹] [__]  -₹0.00      (manager/admin only)
+Loyalty Points  …                       (only when points available)
+──────────────────────────────────
+Grand Total                 ₹2,360.00   (bold, text-primary)
+```
+
+Same data the current summary emits; only spacing and dividers change.
+
+## Card Wrapper
+
+```tsx
+<Card>
+  <CardHeader className="pb-3">
+    <CardTitle className="text-base flex items-center gap-2">
+      <ShoppingCart className="h-4 w-4" /> Order Lines
+    </CardTitle>
+  </CardHeader>
+  <CardContent className="p-0">…table + add link + summary…</CardContent>
+</Card>
+```
+
+## Add Line
+
+Replaces the outlined button:
+
+```tsx
+<button className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1">
+  <Plus className="h-3.5 w-3.5" /> Add a product
+</button>
+```
+
+## Removed From Current UI
+
+- `overflow-x-auto` wrapper and horizontal scroll
+- CGST / SGST / IGST table columns (summary only)
+- GST% table column (moved to badge + popover)
+- Discount type table column (moved to inline selector)
+- Net Amount column (folded into Amount tooltip)
+- Always-visible drag handle (hover/focus only)
+
+## Preserved (no logic changes)
+
+- `recomputeLine`, `calculateLineTax`, `calculateOrderTotals`
+- `gstType` switching (intra vs inter state)
+- Discount types, role gating via `canApplyOrderDiscount` / `allowedLineDiscountTypes`
+- Product and barcode lookup via `productMap` / `barcodeMap`
+- Customization text, line reorder, `onTotalsChange` microtask emit
+- Loyalty redemption controls and the 20% cap
+- The generic `Props<L>` API — Quotation and Sales Order line types keep compiling
+
+## Files
+
+- Edit only: `src/components/sales/OrderLinesTable.tsx`
+- No changes to `QuotationForm.tsx`, `SalesOrderForm.tsx`, types, or data layer.
+
+## Verification Gates
+
+- `tsc` shows zero errors after the swap.
+- Preview at 1280px on `/sales/quotations/new` and `/sales/orders/new`: Order Lines card has no horizontal scrollbar; columns line up; barcode and customization stay hidden until row hover/focus or value present.
