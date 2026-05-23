@@ -70,7 +70,7 @@ export default function QuotationForm() {
   const isNew = !id || id === 'new';
   const studio = useStudioConfig('sales', 'Quotation');
 
-  const { data: contacts = [], isLoading: contactsLoading } = useContacts();
+  const { data: contacts = [] } = useContacts();
   const [pricelists] = useState(() => getPricelists());
 
   const urlCustomerId = searchParams.get('customerId');
