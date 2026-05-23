@@ -18,6 +18,11 @@ import {
 import {
   ArrowLeft, Save, Send, CheckCircle, XCircle, ArrowRight, FileText,
 } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from '@/components/ui/command';
 import {
   getQuotation, saveQuotation, generateQuotationReference,
   getPricelists, convertQuotationToOrder,
@@ -69,6 +74,7 @@ export default function QuotationForm() {
 
   const [contacts] = useState(() => getContacts());
   const [pricelists] = useState(() => getPricelists());
+  const [customerOpen, setCustomerOpen] = useState(false);
 
   const urlCustomerId = searchParams.get('customerId');
   const urlOpportunityId = searchParams.get('opportunityId');
@@ -123,26 +129,32 @@ export default function QuotationForm() {
   }, [id, isNew, navigate, toast]);
 
   // Auto-populate billing from selected contact
-  const handleCustomerChange = useCallback((customerId: string) => {
-    const c: any = contacts.find((x) => x.id === customerId);
-    if (!c) return;
+  const populateFromContact = useCallback((c: any) => {
     const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '';
     const phone1 = c.phones?.[0]?.phone || c.phone || '';
-    const addr = c.addresses?.[0] || {};
+    const phone2 = c.phones?.[1]?.phone || '';
+    const billing = c.addresses?.find((a: any) => a.type === 'billing' || a.type === 'both') || c.addresses?.[0] || {};
     setFormData((prev) => ({
       ...prev,
-      customerId,
-      customerName: c.company ? `${fullName || c.name} - ${c.company}` : (fullName || c.name || ''),
+      customerId: c.id,
+      customerName: fullName,
       billingCustomerName: fullName,
       billingName: fullName,
       billingPhone1: phone1,
-      billingAddressLine1: addr.street || '',
-      billingAddressLine2: addr.street2 || '',
-      billingCity: addr.city || '',
-      billingState: addr.state || '',
-      billingZip: addr.postalCode || '',
+      billingPhone2: phone2,
+      billingAddressLine1: billing.street || '',
+      billingAddressLine2: billing.street2 || '',
+      billingCity: billing.city || '',
+      billingState: billing.state || '',
+      billingZip: billing.postalCode || '',
     }));
-  }, [contacts]);
+  }, []);
+
+  const handleCustomerChange = useCallback((customerId: string) => {
+    const c: any = contacts.find((x) => x.id === customerId);
+    if (!c) return;
+    populateFromContact(c);
+  }, [contacts, populateFromContact]);
 
   useEffect(() => {
     if (isNew && urlCustomerId) handleCustomerChange(urlCustomerId);
@@ -385,19 +397,72 @@ export default function QuotationForm() {
                   {studio.isFieldVisible('customer') && (
                     <div className="space-y-2">
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
-                      <Select value={formData.customerId} onValueChange={handleCustomerChange} disabled={!isEditable}>
-                        <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                        <SelectContent>
-                          {contacts.map((c: any) => {
-                            const display = [c.firstName, c.lastName].filter(Boolean).join(' ') || c.name || '';
-                            return (
-                              <SelectItem key={c.id} value={c.id}>
-                                {display}{c.company ? ` - ${c.company}` : ''}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            disabled={!isEditable}
+                            className="w-full justify-between font-normal"
+                          >
+                            <span className="truncate">
+                              {formData.customerId
+                                ? (contacts.find((c: any) => c.id === formData.customerId) &&
+                                    ([(contacts.find((c: any) => c.id === formData.customerId) as any).firstName,
+                                      (contacts.find((c: any) => c.id === formData.customerId) as any).lastName]
+                                      .filter(Boolean).join(' ') || formData.customerName))
+                                : 'Select customer...'}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                          <Command
+                            filter={(value, search) => {
+                              if (!search) return 1;
+                              return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                            }}
+                          >
+                            <CommandInput placeholder="Search by name, email, phone..." />
+                            <CommandList>
+                              <CommandEmpty>No customer found.</CommandEmpty>
+                              <CommandGroup>
+                                {contacts.map((c: any) => {
+                                  const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '(No name)';
+                                  const email = c.email || c.emails?.[0]?.email || '';
+                                  const phone = c.phone || c.phones?.[0]?.phone || '';
+                                  const searchValue = `${fullName} ${email} ${phone}`;
+                                  return (
+                                    <CommandItem
+                                      key={c.id}
+                                      value={searchValue}
+                                      onSelect={() => {
+                                        populateFromContact(c);
+                                        setCustomerOpen(false);
+                                      }}
+                                      className="flex items-center justify-between gap-2"
+                                    >
+                                      <div className="flex flex-col min-w-0">
+                                        <span className="font-semibold truncate">{fullName}</span>
+                                        {email && (
+                                          <span className="text-xs text-muted-foreground truncate">{email}</span>
+                                        )}
+                                      </div>
+                                      <Check
+                                        className={cn(
+                                          'h-4 w-4 shrink-0',
+                                          formData.customerId === c.id ? 'opacity-100' : 'opacity-0',
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  );
+                                })}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
                   {studio.isFieldVisible('pricelist') && (
@@ -510,8 +575,25 @@ export default function QuotationForm() {
                     <span>-{formatINR(formData.orderDiscountAmount || 0)}</span>
                   </div>
                 )}
+                {gstType === 'cgst_sgst' ? (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">CGST</span>
+                      <span className="font-medium">{formatINR(formData.totalCGST || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">SGST</span>
+                      <span className="font-medium">{formatINR(formData.totalSGST || 0)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">IGST</span>
+                    <span className="font-medium">{formatINR(formData.totalIGST || 0)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{gstType === 'igst' ? 'IGST' : 'CGST + SGST'}</span>
+                  <span className="text-muted-foreground">Total GST</span>
                   <span className="font-medium">{formatINR(formData.totalGST || 0)}</span>
                 </div>
                 <Separator />
