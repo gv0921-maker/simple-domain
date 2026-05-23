@@ -417,6 +417,7 @@ export default function QuotationForm() {
                         value={formData.customerId}
                         onChange={populateFromContact}
                         disabled={!isEditable}
+                        onCreateNew={handleCreateNewContact}
                       />
                     </div>
                   )}
