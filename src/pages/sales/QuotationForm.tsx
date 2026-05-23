@@ -18,11 +18,6 @@ import {
 import {
   ArrowLeft, Save, Send, CheckCircle, XCircle, ArrowRight, FileText,
 } from 'lucide-react';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
-} from '@/components/ui/command';
 import {
   getQuotation, saveQuotation, generateQuotationReference,
   getPricelists, convertQuotationToOrder,
@@ -33,6 +28,8 @@ import type {
 } from '@/lib/services/sales/types';
 import { determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
 import { useContacts } from '@/hooks/crm';
+import { useContactAutoPopulate } from '@/hooks/sales/useContactAutoPopulate';
+import { CustomerSelector } from '@/components/sales/CustomerSelector';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,7 +72,6 @@ export default function QuotationForm() {
 
   const { data: contacts = [], isLoading: contactsLoading } = useContacts();
   const [pricelists] = useState(() => getPricelists());
-  const [customerOpen, setCustomerOpen] = useState(false);
 
   const urlCustomerId = searchParams.get('customerId');
   const urlOpportunityId = searchParams.get('opportunityId');
@@ -129,42 +125,8 @@ export default function QuotationForm() {
     }
   }, [id, isNew, navigate, toast]);
 
-  // Auto-populate billing from selected contact
-  const populateFromContact = useCallback((c: any) => {
-    const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '';
-    // Primary: contact.phone first, fallback to phones[0]
-    const primaryPhone = c.phone || c.phones?.[0]?.phone || '';
-    // Secondary: if direct phone used, phones[0] is secondary; otherwise phones[1]
-    const secondaryPhone = c.phone
-      ? (c.phones?.[0]?.phone || '')
-      : (c.phones?.[1]?.phone || '');
-    const billing = c.addresses?.find((a: any) =>
-      a.type?.toLowerCase() === 'billing' || a.type?.toLowerCase() === 'both'
-    ) || c.addresses?.[0] || {};
-    const shipping = c.addresses?.find((a: any) =>
-      a.type?.toLowerCase() === 'shipping' || a.type?.toLowerCase() === 'both'
-    ) || c.addresses?.[1] || {};
-    setFormData((prev) => ({
-      ...prev,
-      customerId: c.id,
-      customerName: fullName,
-      billingCustomerName: fullName,
-      billingName: fullName,
-      billingPhone1: primaryPhone,
-      billingPhone2: secondaryPhone,
-      billingAddressLine1: billing.street || '',
-      billingAddressLine2: billing.street2 || '',
-      billingCity: billing.city || '',
-      billingState: billing.state || '',
-      billingZip: billing.postalCode || '',
-      deliveryName: fullName,
-      deliveryAddressLine1: shipping.street || billing.street || '',
-      deliveryAddressLine2: shipping.street2 || billing.street2 || '',
-      deliveryCity: shipping.city || billing.city || '',
-      deliveryState: shipping.state || billing.state || '',
-      deliveryZip: shipping.postalCode || billing.postalCode || '',
-    }));
-  }, []);
+  // Auto-populate billing from selected contact (shared hook).
+  const populateFromContact = useContactAutoPopulate(setFormData);
 
   const handleCustomerChange = useCallback((customerId: string) => {
     const c: any = contacts.find((x) => x.id === customerId);
@@ -413,76 +375,11 @@ export default function QuotationForm() {
                   {studio.isFieldVisible('customer') && (
                     <div className="space-y-2">
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
-                      <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            disabled={!isEditable || contactsLoading}
-                            className="w-full justify-between font-normal"
-                          >
-                            {contactsLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <span className="truncate">
-                                {formData.customerId
-                                  ? (contacts.find((c: any) => c.id === formData.customerId) &&
-                                      ([(contacts.find((c: any) => c.id === formData.customerId) as any).firstName,
-                                        (contacts.find((c: any) => c.id === formData.customerId) as any).lastName]
-                                        .filter(Boolean).join(' ') || formData.customerName))
-                                  : 'Select customer...'}
-                              </span>
-                            )}
-                            {!contactsLoading && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-                          <Command
-                            filter={(value, search) => {
-                              if (!search) return 1;
-                              return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
-                            }}
-                          >
-                            <CommandInput placeholder="Search by name, email, phone..." />
-                            <CommandList>
-                              <CommandEmpty>No customer found.</CommandEmpty>
-                              <CommandGroup>
-                                {contacts.map((c: any) => {
-                                  const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.name || '(No name)';
-                                  const email = c.email || c.emails?.[0]?.email || '';
-                                  const phone = c.phone || c.phones?.[0]?.phone || '';
-                                  const searchValue = `${fullName} ${email} ${phone}`;
-                                  return (
-                                    <CommandItem
-                                      key={c.id}
-                                      value={searchValue}
-                                      onSelect={() => {
-                                        populateFromContact(c);
-                                        setCustomerOpen(false);
-                                      }}
-                                      className="flex items-center justify-between gap-2"
-                                    >
-                                      <div className="flex flex-col min-w-0">
-                                        <span className="font-semibold truncate">{fullName}</span>
-                                        {email && (
-                                          <span className="text-xs text-muted-foreground truncate">{email}</span>
-                                        )}
-                                      </div>
-                                      <Check
-                                        className={cn(
-                                          'h-4 w-4 shrink-0',
-                                          formData.customerId === c.id ? 'opacity-100' : 'opacity-0',
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  );
-                                })}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                      <CustomerSelector
+                        value={formData.customerId}
+                        onChange={populateFromContact}
+                        disabled={!isEditable}
+                      />
                     </div>
                   )}
                   {studio.isFieldVisible('pricelist') && (
