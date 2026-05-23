@@ -59,9 +59,9 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
   useEffect(() => { setGstinTouched(false); }, [value.locationType]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {!hideName && (
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor={`${idPrefix}-name`}>Name <span className="text-destructive">*</span></Label>
           <Input
             id={`${idPrefix}-name`}
@@ -73,7 +73,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor={`${idPrefix}-addr1`}>Address Line 1 <span className="text-destructive">*</span></Label>
         <Input
           id={`${idPrefix}-addr1`}
@@ -83,7 +83,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
           placeholder=""
         />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor={`${idPrefix}-addr2`}>Address Line 2</Label>
         <Input
           id={`${idPrefix}-addr2`}
@@ -94,8 +94,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="space-y-1">
           <Label htmlFor={`${idPrefix}-city`}>City <span className="text-destructive">*</span></Label>
           <Input
             id={`${idPrefix}-city`}
@@ -105,7 +105,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             placeholder=""
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor={`${idPrefix}-state`}>State <span className="text-destructive">*</span></Label>
           <Input
             id={`${idPrefix}-state`}
@@ -115,7 +115,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             placeholder=""
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor={`${idPrefix}-zip`}>ZIP <span className="text-destructive">*</span></Label>
           <Input
             id={`${idPrefix}-zip`}
@@ -127,7 +127,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label>Location Type <span className="text-destructive">*</span></Label>
         <div className="inline-flex rounded-md border border-input p-0.5 bg-background">
           {LOCATION_TYPES.map((lt) => {
@@ -168,8 +168,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
 
       {value.locationType === 'flat' && (
         <div className="space-y-3 rounded-md border border-input bg-muted/30 p-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
               <Label htmlFor={`${idPrefix}-floor`}>Floor Number <span className="text-destructive">*</span></Label>
               <Input
                 id={`${idPrefix}-floor`}
@@ -191,8 +191,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             </div>
           </div>
           {!value.cargoElevator && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
+              <div className="space-y-1">
                 <Label htmlFor={`${idPrefix}-sw`}>Staircase Width (in)</Label>
                 <Input
                   id={`${idPrefix}-sw`}
@@ -203,7 +203,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                   placeholder=""
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor={`${idPrefix}-sh`}>Staircase Height (in)</Label>
                 <Input
                   id={`${idPrefix}-sh`}
@@ -222,7 +222,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
 
       {value.locationType === 'office' && (
         <div className="space-y-3 rounded-md border border-input bg-muted/30 p-3">
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor={`${idPrefix}-gstin`}>GSTIN <span className="text-destructive">*</span></Label>
             <div className="relative">
               <Input
@@ -248,8 +248,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
               <p className="text-xs text-destructive">Invalid GSTIN format</p>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
               <Label htmlFor={`${idPrefix}-ofloor`}>Floor Number <span className="text-destructive">*</span></Label>
               <Input
                 id={`${idPrefix}-ofloor`}
@@ -271,8 +271,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             </div>
           </div>
           {!value.officeCargoElevator && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
+              <div className="space-y-1">
                 <Label htmlFor={`${idPrefix}-osw`}>Staircase Width (in)</Label>
                 <Input
                   id={`${idPrefix}-osw`}
@@ -283,7 +283,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                   placeholder=""
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor={`${idPrefix}-osh`}>Staircase Height (in)</Label>
                 <Input
                   id={`${idPrefix}-osh`}
