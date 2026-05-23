@@ -390,6 +390,7 @@ export default function SalesOrderForm() {
                         value={formData.customerId}
                         onChange={populateFromContact}
                         disabled={!isEditable}
+                        onCreateNew={handleCreateNewContact}
                       />
                     </div>
                   )}
