@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,10 @@ import type {
 import { determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
 import { CustomerSelector } from '@/components/sales/CustomerSelector';
 import { useContactAutoPopulate } from '@/hooks/sales/useContactAutoPopulate';
+import { useContacts } from '@/hooks/crm';
+import {
+  writeSalesReturnContext, clearStaleSalesReturnContext,
+} from '@/lib/sales/contactPopulation';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,6 +68,7 @@ const formatINR = (n: number) =>
 export default function SalesOrderForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const isNew = id === 'new' || !id;
@@ -121,6 +126,40 @@ export default function SalesOrderForm() {
 
   // Auto-populate billing + delivery from selected contact (shared hook).
   const populateFromContact = useContactAutoPopulate(setFormData);
+  const { data: contacts = [] } = useContacts();
+
+  // Clear stale return context (>30 min) on mount.
+  useEffect(() => { clearStaleSalesReturnContext(); }, []);
+
+  // Restore form state when returning from "Create New Contact" flow.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    const state: any = location.state;
+    if (state?.restoredFormData) {
+      setFormData(state.restoredFormData);
+      restoredRef.current = true;
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [location.state]);
+
+  // After contacts load, re-populate from the new contact to ensure full sync.
+  useEffect(() => {
+    const newContactId = (location.state as any)?.newContactId;
+    if (newContactId && contacts.length > 0) {
+      const c: any = contacts.find((x: any) => x.id === newContactId);
+      if (c) populateFromContact(c);
+    }
+  }, [contacts, location.state, populateFromContact]);
+
+  const handleCreateNewContact = useCallback(() => {
+    writeSalesReturnContext({
+      returnTo: window.location.pathname,
+      formData,
+      timestamp: Date.now(),
+    });
+    navigate('/crm/contacts/new?returnTo=sales_form');
+  }, [formData, navigate]);
 
   const handleTotalsChange = useCallback((t: OrderSummaryValue) => {
     setFormData((prev) => {
