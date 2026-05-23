@@ -19,6 +19,7 @@ export function PhoneInput({ label, value, onChange, required, disabled, id }: P
   const [prefix, setPrefix] = useState(initial.prefix);
   const [number, setNumber] = useState(initial.number);
   const [touched, setTouched] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     const next = splitPhone(value || '');
@@ -27,7 +28,7 @@ export function PhoneInput({ label, value, onChange, required, disabled, id }: P
   }, [value]);
 
   const composed = `${prefix} ${number}`.trim();
-  const isInvalid = touched && number.length > 0 && !validatePhone(composed);
+  const isInvalid = touched && number.length > 0 && !isFocused && !validatePhone(composed);
 
   const update = (p: string, n: string) => {
     setPrefix(p);
@@ -56,13 +57,14 @@ export function PhoneInput({ label, value, onChange, required, disabled, id }: P
           inputMode="tel"
           value={number}
           onChange={(e) => update(prefix, e.target.value.replace(/[^\d]/g, ''))}
-          onBlur={() => setTouched(true)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => { setIsFocused(false); setTouched(true); }}
           disabled={disabled}
           placeholder=""
           className={cn(isInvalid && 'border-destructive focus-visible:ring-destructive')}
         />
       </div>
-      {isInvalid && <p className="text-xs text-destructive">Enter a valid phone number (10–12 digits)</p>}
+      {isInvalid && <p className="text-xs text-destructive">Enter a valid phone number</p>}
     </div>
   );
 }
