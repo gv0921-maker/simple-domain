@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -134,7 +134,15 @@ export function OrderLinesTable<L extends AnyLine>({
 
   const grandAfterPoints = Math.max(0, totals.grandTotal - (pointsRedeemed || 0));
 
-  useMemoNotify(totals, grandAfterPoints, onTotalsChange);
+  const prevTotalsRef = useRef<string>('');
+  useEffect(() => {
+    if (!onTotalsChange) return;
+    const payload = { ...totals, grandTotal: grandAfterPoints };
+    const key = JSON.stringify(payload);
+    if (key === prevTotalsRef.current) return;
+    prevTotalsRef.current = key;
+    onTotalsChange(payload);
+  }, [totals, grandAfterPoints, onTotalsChange]);
 
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
@@ -625,14 +633,4 @@ function SummaryRow({ label, value, muted }: { label: string; value: string; mut
       <span className="text-right">{value}</span>
     </div>
   );
-}
-
-function useMemoNotify(
-  totals: OrderSummaryValue,
-  grandAfterPoints: number,
-  cb?: (t: OrderSummaryValue) => void,
-) {
-  if (cb) {
-    queueMicrotask(() => cb({ ...totals, grandTotal: grandAfterPoints }));
-  }
 }
