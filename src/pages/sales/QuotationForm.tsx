@@ -18,7 +18,7 @@ import {
 import {
   ArrowLeft, Save, Send, CheckCircle, XCircle, ArrowRight, FileText,
 } from 'lucide-react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
@@ -31,7 +31,8 @@ import type {
   Quotation, QuotationLine, QuotationStatus,
   GSTType, OrderDiscountType,
 } from '@/lib/services/sales/types';
-import { getContacts, determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
+import { determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
+import { useContacts } from '@/hooks/crm';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -72,7 +73,7 @@ export default function QuotationForm() {
   const isNew = !id || id === 'new';
   const studio = useStudioConfig('sales', 'Quotation');
 
-  const [contacts] = useState(() => getContacts());
+  const { data: contacts = [], isLoading: contactsLoading } = useContacts();
   const [pricelists] = useState(() => getPricelists());
   const [customerOpen, setCustomerOpen] = useState(false);
 
@@ -403,18 +404,22 @@ export default function QuotationForm() {
                             type="button"
                             variant="outline"
                             role="combobox"
-                            disabled={!isEditable}
+                            disabled={!isEditable || contactsLoading}
                             className="w-full justify-between font-normal"
                           >
-                            <span className="truncate">
-                              {formData.customerId
-                                ? (contacts.find((c: any) => c.id === formData.customerId) &&
-                                    ([(contacts.find((c: any) => c.id === formData.customerId) as any).firstName,
-                                      (contacts.find((c: any) => c.id === formData.customerId) as any).lastName]
-                                      .filter(Boolean).join(' ') || formData.customerName))
-                                : 'Select customer...'}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            {contactsLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <span className="truncate">
+                                {formData.customerId
+                                  ? (contacts.find((c: any) => c.id === formData.customerId) &&
+                                      ([(contacts.find((c: any) => c.id === formData.customerId) as any).firstName,
+                                        (contacts.find((c: any) => c.id === formData.customerId) as any).lastName]
+                                        .filter(Boolean).join(' ') || formData.customerName))
+                                  : 'Select customer...'}
+                              </span>
+                            )}
+                            {!contactsLoading && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
