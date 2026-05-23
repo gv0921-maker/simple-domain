@@ -29,6 +29,11 @@ import { useContacts, useSaveContact } from '@/hooks/crm/useCRMQueries';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { useToast } from '@/hooks/use-toast';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import {
+  buildContactPopulationFields,
+  readSalesReturnContext,
+  clearSalesReturnContext,
+} from '@/lib/sales/contactPopulation';
 
 type EmailEntry = { email: string; type: string };
 type PhoneEntry = { phone: string; type: string };
@@ -55,6 +60,7 @@ export default function ContactForm() {
     if (!rc) return null;
     try { return JSON.parse(decodeURIComponent(rc)); } catch { return null; }
   })();
+  const returnToSales = searchParams.get('returnTo') === 'sales_form';
 
   const [formData, setFormData] = useState({
     type: 'individual' as Contact['type'],
@@ -241,6 +247,22 @@ export default function ContactForm() {
     }, {
       onSuccess: (saved) => {
         toast({ title: isEdit ? 'Contact updated' : 'Contact created' });
+
+        // When invoked from a Sales form, always return there — even on
+        // "Save & New" — instead of creating yet another blank contact.
+        if (returnToSales) {
+          const ctx = readSalesReturnContext();
+          clearSalesReturnContext();
+          const populated = buildContactPopulationFields(saved);
+          const target = ctx?.returnTo || '/sales/quotations/new';
+          navigate(target, {
+            state: {
+              restoredFormData: { ...(ctx?.formData || {}), ...populated },
+              newContactId: saved.id,
+            },
+          });
+          return;
+        }
 
         if (action === 'new') {
           setFormData({
