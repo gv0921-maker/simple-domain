@@ -1,0 +1,105 @@
+import { useState } from 'react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from '@/components/ui/command';
+import { useContacts } from '@/hooks/crm';
+import { cn } from '@/lib/utils';
+
+interface CustomerSelectorProps {
+  value?: string;
+  onChange: (contact: any) => void;
+  disabled?: boolean;
+  placeholder?: string;
+}
+
+/**
+ * Shared searchable Customer combobox for Sales forms.
+ * Loads contacts via TanStack Query (useContacts) and emits the
+ * full Contact object on select so the parent can auto-populate.
+ */
+export function CustomerSelector({
+  value,
+  onChange,
+  disabled,
+  placeholder = 'Select customer...',
+}: CustomerSelectorProps) {
+  const { data: contacts = [], isLoading } = useContacts();
+  const [open, setOpen] = useState(false);
+
+  const selected: any = value ? contacts.find((c: any) => c.id === value) : undefined;
+  const selectedLabel = selected
+    ? ([selected.firstName, selected.lastName].filter(Boolean).join(' ').trim() ||
+        selected.name || '')
+    : '';
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          disabled={disabled || isLoading}
+          className="w-full justify-between font-normal"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <span className="truncate">{selectedLabel || placeholder}</span>
+          )}
+          {!isLoading && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+        <Command
+          filter={(v, search) => {
+            if (!search) return 1;
+            return v.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+          }}
+        >
+          <CommandInput placeholder="Search by name, email, phone..." />
+          <CommandList>
+            <CommandEmpty>No customer found.</CommandEmpty>
+            <CommandGroup>
+              {contacts.map((c: any) => {
+                const fullName =
+                  [c.firstName, c.lastName].filter(Boolean).join(' ').trim() ||
+                  c.name || '(No name)';
+                const email = c.email || c.emails?.[0]?.email || '';
+                const phone = c.phone || c.phones?.[0]?.phone || '';
+                const searchValue = `${fullName} ${email} ${phone}`;
+                return (
+                  <CommandItem
+                    key={c.id}
+                    value={searchValue}
+                    onSelect={() => {
+                      onChange(c);
+                      setOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-semibold truncate">{fullName}</span>
+                      {email && (
+                        <span className="text-xs text-muted-foreground truncate">{email}</span>
+                      )}
+                    </div>
+                    <Check
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        value === c.id ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
