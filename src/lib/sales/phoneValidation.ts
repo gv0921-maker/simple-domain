@@ -14,11 +14,19 @@ export const PHONE_PREFIXES = [
 ] as const;
 
 export function validatePhone(phone: string): boolean {
-  if (!phone) return false;
-  const cleaned = phone.replace(/[\s-]/g, '');
-  if (!cleaned.startsWith('+')) return false;
-  const digits = cleaned.replace(/^\+\d{1,3}/, '');
-  return /^\d{10,12}$/.test(digits);
+  if (!phone || !phone.trim()) return false;
+
+  const cleaned = phone.replace(/[\s-]/g, '').trim();
+
+  if (cleaned.startsWith('+')) {
+    const withoutPlus = cleaned.slice(1);
+    const match = withoutPlus.match(/^(\d{1,3})(\d+)$/);
+    if (!match) return false;
+    const localNumber = match[2];
+    return localNumber.length >= 7 && localNumber.length <= 12;
+  }
+
+  return /^\d{7,12}$/.test(cleaned);
 }
 
 export function formatPhone(phone: string): string {
