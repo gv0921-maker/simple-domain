@@ -69,6 +69,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             onChange={(e) => set('name', e.target.value)}
             disabled={disabled}
             placeholder=""
+            className="h-9"
           />
         </div>
       )}
@@ -81,7 +82,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
           onChange={(e) => set('addressLine1', e.target.value)}
           disabled={disabled}
           placeholder=""
-        />
+            className="h-9"
+          />
       </div>
       <div className="space-y-1">
         <Label htmlFor={`${idPrefix}-addr2`}>Address Line 2</Label>
@@ -91,7 +93,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
           onChange={(e) => set('addressLine2', e.target.value)}
           disabled={disabled}
           placeholder=""
-        />
+            className="h-9"
+          />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -103,6 +106,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             onChange={(e) => set('city', e.target.value)}
             disabled={disabled}
             placeholder=""
+            className="h-9"
           />
         </div>
         <div className="space-y-1">
@@ -113,6 +117,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             onChange={(e) => set('state', e.target.value)}
             disabled={disabled}
             placeholder=""
+            className="h-9"
           />
         </div>
         <div className="space-y-1">
@@ -123,6 +128,7 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
             onChange={(e) => set('zip', e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
             disabled={disabled}
             placeholder=""
+            className="h-9"
           />
         </div>
       </div>
@@ -178,7 +184,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                 onChange={(e) => set('floorNumber', e.target.value === '' ? undefined : Number(e.target.value))}
                 disabled={disabled}
                 placeholder=""
-              />
+            className="h-9"
+          />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor={`${idPrefix}-elev`} className="font-normal">Cargo elevator available</Label>
@@ -201,7 +208,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                   onChange={(e) => set('staircaseWidth', e.target.value === '' ? undefined : Number(e.target.value))}
                   disabled={disabled}
                   placeholder=""
-                />
+            className="h-9"
+          />
               </div>
               <div className="space-y-1">
                 <Label htmlFor={`${idPrefix}-sh`}>Staircase Height (in)</Label>
@@ -212,7 +220,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                   onChange={(e) => set('staircaseHeight', e.target.value === '' ? undefined : Number(e.target.value))}
                   disabled={disabled}
                   placeholder=""
-                />
+            className="h-9"
+          />
               </div>
               <p className="col-span-full text-xs text-muted-foreground -mt-2">Clearance dimensions (inches)</p>
             </div>
@@ -258,7 +267,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                 onChange={(e) => set('officeFloorNumber', e.target.value === '' ? undefined : Number(e.target.value))}
                 disabled={disabled}
                 placeholder=""
-              />
+            className="h-9"
+          />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor={`${idPrefix}-oelev`} className="font-normal">Cargo elevator available</Label>
@@ -281,7 +291,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                   onChange={(e) => set('officeStaircaseWidth', e.target.value === '' ? undefined : Number(e.target.value))}
                   disabled={disabled}
                   placeholder=""
-                />
+            className="h-9"
+          />
               </div>
               <div className="space-y-1">
                 <Label htmlFor={`${idPrefix}-osh`}>Staircase Height (in)</Label>
@@ -292,7 +303,8 @@ export function AddressBlock({ value, onChange, disabled, idPrefix, hideName }: 
                   onChange={(e) => set('officeStaircaseHeight', e.target.value === '' ? undefined : Number(e.target.value))}
                   disabled={disabled}
                   placeholder=""
-                />
+            className="h-9"
+          />
               </div>
               <p className="col-span-full text-xs text-muted-foreground -mt-2">Clearance dimensions (inches)</p>
             </div>
