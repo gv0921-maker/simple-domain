@@ -84,3 +84,56 @@ export function buildCustomerPopulationFields(c: any) {
     deliveryName: name,
   };
 }
+
+/**
+ * One-time/manual backfill: ensure every `crm_contacts` row has a matching
+ * `customers` row. Matches by lowercased email when present, otherwise by
+ * (name + phone). Returns counts of inserted / skipped / failed records.
+ */
+export async function backfillContactsToCustomers(): Promise<{
+  total: number; inserted: number; skipped: number; failed: number;
+}> {
+  const { data: contacts, error } = await supabase
+    .from('crm_contacts')
+    .select('id, first_name, last_name, company_name, email, phone, type');
+  if (error) throw error;
+
+  const { data: customers } = await supabase
+    .from('customers' as any)
+    .select('id, name, email, phone');
+
+  const byEmail = new Map<string, any>();
+  const byNamePhone = new Map<string, any>();
+  for (const c of (customers || []) as any[]) {
+    if (c.email) byEmail.set(String(c.email).toLowerCase().trim(), c);
+    byNamePhone.set(`${(c.name || '').trim()}|${c.phone || ''}`, c);
+  }
+
+  let inserted = 0, skipped = 0, failed = 0;
+  for (const ct of (contacts || []) as any[]) {
+    const name =
+      [ct.first_name, ct.last_name].filter(Boolean).join(' ').trim() ||
+      ct.company_name ||
+      '';
+    if (!name) { skipped++; continue; }
+    const email = (ct.email || '').toLowerCase().trim();
+    if (email && byEmail.has(email)) { skipped++; continue; }
+    if (!email && byNamePhone.has(`${name}|${ct.phone || ''}`)) { skipped++; continue; }
+
+    try {
+      await saveCustomer({
+        name,
+        email: ct.email ?? null,
+        phone: ct.phone ?? null,
+        company: ct.company_name ?? null,
+        contactPerson: ct.company_name ? name : null,
+        type: ct.type === 'company' ? 'company' : 'individual',
+        isActive: true,
+      });
+      inserted++;
+    } catch {
+      failed++;
+    }
+  }
+  return { total: (contacts || []).length, inserted, skipped, failed };
+}
