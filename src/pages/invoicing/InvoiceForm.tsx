@@ -1,34 +1,54 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { INVOICING_NAV } from '@/lib/navigation/invoicing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { createInvoice, type InvoiceLine } from '@/lib/services/accounting';
+import { useSaveInvoice, type InvoiceType } from '@/hooks/invoicing';
+import { useCustomers } from '@/hooks/sales';
 import { toast } from 'sonner';
+
+interface DraftLine {
+  tmpId: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+  subtotal: number;
+}
+
+const TYPE_LABEL: Record<InvoiceType, string> = {
+  regular: 'Invoice',
+  kh: 'KH Bill',
+  minimum: 'Minimum Bill',
+};
 
 export default function InvoiceForm() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const initialType = (params.get('type') as InvoiceType) || 'regular';
   const TAX_RATE = 0.18;
 
-  const [formData, setFormData] = useState({
-    customerName: '',
-    date: new Date().toISOString().split('T')[0],
-    dueDate: '',
-    lines: [] as InvoiceLine[],
-  });
+  const { data: customers = [] } = useCustomers();
+  const saveInvoice = useSaveInvoice();
 
-  const [newLine, setNewLine] = useState({
-    productName: '',
-    quantity: 1,
-    unitPrice: 0,
-  });
+  const [type, setType] = useState<InvoiceType>(
+    ['regular', 'kh', 'minimum'].includes(initialType) ? initialType : 'regular',
+  );
+  const [customerId, setCustomerId] = useState<string>('');
+  const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = useState<string>('');
+  const [lines, setLines] = useState<DraftLine[]>([]);
+  const [newLine, setNewLine] = useState({ description: '', quantity: 1, unit_price: 0 });
 
-  const subtotal = formData.lines.reduce((sum, l) => sum + l.subtotal, 0);
+  const subtotal = useMemo(() => lines.reduce((s, l) => s + l.subtotal, 0), [lines]);
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
 
@@ -36,61 +56,73 @@ export default function InvoiceForm() {
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
   const handleAddLine = () => {
-    if (!newLine.productName || newLine.unitPrice <= 0) {
-      toast.error('Please fill in product details');
+    if (!newLine.description || newLine.unit_price <= 0) {
+      toast.error('Please fill in line details');
       return;
     }
-    const lineSubtotal = newLine.quantity * newLine.unitPrice;
-    setFormData({
-      ...formData,
-      lines: [...formData.lines, {
-        id: `IL-${Date.now()}`,
-        productId: `PROD-${Date.now()}`,
-        productName: newLine.productName,
+    setLines((curr) => [
+      ...curr,
+      {
+        tmpId: `L-${Date.now()}`,
+        description: newLine.description,
         quantity: newLine.quantity,
-        unitPrice: newLine.unitPrice,
-        taxRate: TAX_RATE * 100,
-        subtotal: lineSubtotal,
-      }],
-    });
-    setNewLine({ productName: '', quantity: 1, unitPrice: 0 });
+        unit_price: newLine.unit_price,
+        tax_rate: TAX_RATE * 100,
+        subtotal: newLine.quantity * newLine.unit_price,
+      },
+    ]);
+    setNewLine({ description: '', quantity: 1, unit_price: 0 });
   };
 
-  const handleSubmit = () => {
-    if (!formData.customerName || formData.lines.length === 0) {
-      toast.error('Please add customer and invoice lines');
+  const handleSubmit = async () => {
+    if (!customerId) {
+      toast.error('Please select a customer');
       return;
     }
-
-    createInvoice({
-      customerId: '',
-      customerName: formData.customerName,
-      date: formData.date,
-      dueDate: formData.dueDate,
-      status: 'draft',
-      lines: formData.lines,
-      subtotal,
-      tax,
-      total,
-      amountPaid: 0,
-      amountDue: total,
-    })
-      .then(() => {
-        toast.success('Invoice created');
-        navigate('/invoicing');
-      })
-      .catch(() => toast.error('Failed to create invoice'));
+    if (lines.length === 0) {
+      toast.error('Please add at least one line');
+      return;
+    }
+    try {
+      await saveInvoice.mutateAsync({
+        customer_id: customerId,
+        type,
+        issue_date: issueDate,
+        due_date: dueDate || null,
+        status: 'draft',
+        subtotal,
+        tax_amount: tax,
+        discount_amount: 0,
+        total,
+        paid_amount: 0,
+        currency: 'INR',
+        lines: lines.map((l) => ({
+          product_id: null,
+          description: l.description,
+          quantity: l.quantity,
+          unit_price: l.unit_price,
+          discount: 0,
+          tax_rate: l.tax_rate,
+          subtotal: l.subtotal,
+        })),
+      });
+      toast.success(`${TYPE_LABEL[type]} created`);
+      const back = type === 'kh' ? '/invoicing/kh-bills' : type === 'minimum' ? '/invoicing/minimum-bills' : '/invoicing/bills';
+      navigate(back);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to create invoice');
+    }
   };
 
   return (
-    <AppLayout title="Invoices" subtitle="New Invoice" moduleNav={INVOICING_NAV}>
+    <AppLayout title="Invoices" subtitle={`New ${TYPE_LABEL[type]}`} moduleNav={INVOICING_NAV}>
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/invoicing')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">New Invoice</h1>
+            <h1 className="text-2xl font-semibold text-foreground">New {TYPE_LABEL[type]}</h1>
             <p className="text-muted-foreground">Create a new customer invoice with line items</p>
           </div>
         </div>
@@ -100,29 +132,36 @@ export default function InvoiceForm() {
             <CardTitle>Invoice Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
+              <div className="grid gap-2">
+                <Label>Type</Label>
+                <Select value={type} onValueChange={(v) => setType(v as InvoiceType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="regular">Regular</SelectItem>
+                    <SelectItem value="kh">KH</SelectItem>
+                    <SelectItem value="minimum">Minimum</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-2">
                 <Label>Customer *</Label>
-                <Input
-                  value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                />
+                <Select value={customerId} onValueChange={setCustomerId}>
+                  <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                  <SelectContent>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label>Invoice Date</Label>
-                <Input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                />
+                <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
               </div>
               <div className="grid gap-2">
                 <Label>Due Date</Label>
-                <Input
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                />
+                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
               </div>
             </div>
           </CardContent>
@@ -136,8 +175,8 @@ export default function InvoiceForm() {
             <div className="flex gap-2">
               <Input
                 placeholder="Product/Service"
-                value={newLine.productName}
-                onChange={(e) => setNewLine({ ...newLine, productName: e.target.value })}
+                value={newLine.description}
+                onChange={(e) => setNewLine({ ...newLine, description: e.target.value })}
                 className="flex-1"
               />
               <Input
@@ -150,8 +189,8 @@ export default function InvoiceForm() {
               <Input
                 type="number"
                 placeholder="Price"
-                value={newLine.unitPrice || ''}
-                onChange={(e) => setNewLine({ ...newLine, unitPrice: parseFloat(e.target.value) || 0 })}
+                value={newLine.unit_price || ''}
+                onChange={(e) => setNewLine({ ...newLine, unit_price: parseFloat(e.target.value) || 0 })}
                 className="w-28"
               />
               <Button onClick={handleAddLine}>
@@ -159,7 +198,7 @@ export default function InvoiceForm() {
               </Button>
             </div>
 
-            {formData.lines.length > 0 && (
+            {lines.length > 0 && (
               <>
                 <Table>
                   <TableHeader>
@@ -172,14 +211,18 @@ export default function InvoiceForm() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {formData.lines.map(line => (
-                      <TableRow key={line.id}>
-                        <TableCell>{line.productName}</TableCell>
+                    {lines.map((line) => (
+                      <TableRow key={line.tmpId}>
+                        <TableCell>{line.description}</TableCell>
                         <TableCell className="text-right">{line.quantity}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(line.unitPrice)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(line.unit_price)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(line.subtotal)}</TableCell>
                         <TableCell>
-                          <Button size="icon" variant="ghost" onClick={() => setFormData({ ...formData, lines: formData.lines.filter(l => l.id !== line.id) })}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setLines(lines.filter((l) => l.tmpId !== line.tmpId))}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -206,8 +249,10 @@ export default function InvoiceForm() {
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => navigate('/invoicing')}>Cancel</Button>
-          <Button onClick={handleSubmit}>Create Invoice</Button>
+          <Button variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saveInvoice.isPending}>
+            {saveInvoice.isPending ? 'Saving…' : `Create ${TYPE_LABEL[type]}`}
+          </Button>
         </div>
       </div>
     </AppLayout>

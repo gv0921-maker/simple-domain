@@ -1,31 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { INVOICING_NAV } from '@/lib/navigation/invoicing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getPayments, type Payment } from '@/lib/services/accounting';
+import { usePayments } from '@/hooks/invoicing';
+import { useCustomers } from '@/hooks/sales';
 import { Search, Wallet } from 'lucide-react';
 
-const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  draft: 'secondary',
-  posted: 'outline',
-  reconciled: 'default',
-};
-
 export default function PaymentsList() {
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const { data: payments = [] } = usePayments();
+  const { data: customers = [] } = useCustomers();
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    getPayments().then(setPayments).catch(() => setPayments([]));
-  }, []);
-
-  const filtered = payments.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.partnerName.toLowerCase().includes(search.toLowerCase())
+  const customerMap = useMemo(
+    () => Object.fromEntries(customers.map((c) => [c.id, c.name])),
+    [customers],
   );
+
+  const filtered = payments.filter((p) => {
+    const ref = (p.reference ?? '').toLowerCase();
+    const partner = (p.customer_id && customerMap[p.customer_id]) || '';
+    const q = search.toLowerCase();
+    return ref.includes(q) || partner.toLowerCase().includes(q);
+  });
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
@@ -52,19 +51,18 @@ export default function PaymentsList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Partner</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead>Method</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Linked Invoice</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       No payments found
                     </TableCell>
                   </TableRow>
@@ -74,16 +72,15 @@ export default function PaymentsList() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Wallet className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{p.name}</span>
+                          <span className="font-medium">{p.reference ?? p.id.slice(0, 8)}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{p.partnerName}</TableCell>
-                      <TableCell>{p.date}</TableCell>
-                      <TableCell className="capitalize">{p.type}</TableCell>
+                      <TableCell>{(p.customer_id && customerMap[p.customer_id]) || '—'}</TableCell>
+                      <TableCell>{p.payment_date}</TableCell>
                       <TableCell className="capitalize">{p.method.replace('_', ' ')}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(p.amount)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(Number(p.amount))}</TableCell>
                       <TableCell>
-                        <Badge variant={statusColors[p.status]}>{p.status}</Badge>
+                        {p.invoice_id ? <Badge variant="outline">{p.invoice_id.slice(0, 8)}</Badge> : '—'}
                       </TableCell>
                     </TableRow>
                   ))

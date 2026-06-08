@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { INVOICING_NAV } from '@/lib/navigation/invoicing';
@@ -8,12 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getInvoices, updateInvoice, type Invoice } from '@/lib/services/accounting';
+import {
+  useInvoices,
+  useSaveInvoice,
+  type Invoice,
+  type InvoiceType,
+} from '@/hooks/invoicing';
+import { useCustomers } from '@/hooks/sales';
 import { Plus, Search, DollarSign, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary',
+  sent: 'outline',
   paid: 'default',
   overdue: 'destructive',
   cancelled: 'destructive',
@@ -30,32 +37,65 @@ const variantLabels: Record<string, string> = {
   kh: 'KH Bills',
 };
 
+const variantToType: Record<NonNullable<InvoicesListProps['variant']>, InvoiceType> = {
+  bills: 'regular',
+  minimum: 'minimum',
+  kh: 'kh',
+};
+
 export default function InvoicesList({ variant = 'bills', title }: InvoicesListProps = {}) {
   const navigate = useNavigate();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const type = variantToType[variant];
+  const { data: invoices = [] } = useInvoices(type);
+  const { data: customers = [] } = useCustomers();
+  const customerMap = useMemo(
+    () => Object.fromEntries(customers.map((c) => [c.id, c.name])),
+    [customers],
+  );
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const heading = title ?? variantLabels[variant] ?? 'Bills';
+  const saveInvoice = useSaveInvoice();
 
-  useEffect(() => {
-    getInvoices().then(setInvoices).catch(() => setInvoices([]));
-  }, []);
-
-  const filteredInvoices = invoices.filter(inv => {
-    const matchesSearch = inv.number.toLowerCase().includes(search.toLowerCase()) ||
-                          inv.customerName.toLowerCase().includes(search.toLowerCase());
+  const filteredInvoices = invoices.filter((inv) => {
+    const customerName = (inv.customer_id && customerMap[inv.customer_id]) || '';
+    const matchesSearch =
+      inv.reference.toLowerCase().includes(search.toLowerCase()) ||
+      customerName.toLowerCase().includes(search.toLowerCase());
     const matchesTab = activeTab === 'all' || inv.status === activeTab;
     return matchesSearch && matchesTab;
   });
 
-  const handleMarkPaid = async (id: string) => {
-    const inv = invoices.find(i => i.id === id);
-    if (!inv) return;
+  const handleMarkPaid = async (inv: Invoice) => {
     try {
-      await updateInvoice(id, { status: 'paid', amountPaid: inv.total, amountDue: 0 });
-      setInvoices(await getInvoices());
+      await saveInvoice.mutateAsync({
+        id: inv.id,
+        reference: inv.reference,
+        customer_id: inv.customer_id,
+        sales_order_id: inv.sales_order_id,
+        type: inv.type,
+        issue_date: inv.issue_date,
+        due_date: inv.due_date,
+        status: 'paid',
+        notes: inv.notes,
+        subtotal: Number(inv.subtotal),
+        tax_amount: Number(inv.tax_amount),
+        discount_amount: Number(inv.discount_amount),
+        total: Number(inv.total),
+        paid_amount: Number(inv.total),
+        currency: inv.currency,
+        lines: (inv.invoice_lines ?? []).map((l) => ({
+          product_id: l.product_id,
+          description: l.description,
+          quantity: Number(l.quantity),
+          unit_price: Number(l.unit_price),
+          discount: Number(l.discount),
+          tax_rate: Number(l.tax_rate),
+          subtotal: Number(l.subtotal),
+        })),
+      });
       toast.success('Invoice marked as paid');
-    } catch (e) {
+    } catch {
       toast.error('Failed to update invoice');
     }
   };
@@ -69,7 +109,7 @@ export default function InvoicesList({ variant = 'bills', title }: InvoicesListP
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{heading}</h1>
-          <Button onClick={() => navigate('/invoicing/new')}>
+          <Button onClick={() => navigate(`/invoicing/new?type=${type}`)}>
             <Plus className="h-4 w-4 mr-2" />
             New {heading.replace(/s$/, '')}
           </Button>
@@ -111,38 +151,42 @@ export default function InvoicesList({ variant = 'bills', title }: InvoicesListP
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredInvoices.map((inv) => (
-                    <TableRow key={inv.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{inv.number}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{inv.customerName}</TableCell>
-                      <TableCell>{inv.date}</TableCell>
-                      <TableCell>{inv.dueDate}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(inv.total)}</TableCell>
-                      <TableCell className="text-right">
-                        <span className={inv.amountDue > 0 ? 'text-destructive' : 'text-success'}>
-                          {formatCurrency(inv.amountDue)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusColors[inv.status]}>{inv.status}</Badge>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          {(inv.status === 'draft' || inv.status === 'overdue') && (
-                            <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleMarkPaid(inv.id); }}>
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              Paid
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredInvoices.map((inv) => {
+                    const total = Number(inv.total);
+                    const due = total - Number(inv.paid_amount);
+                    return (
+                      <TableRow key={inv.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{inv.reference}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{(inv.customer_id && customerMap[inv.customer_id]) || '—'}</TableCell>
+                        <TableCell>{inv.issue_date}</TableCell>
+                        <TableCell>{inv.due_date ?? ''}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(total)}</TableCell>
+                        <TableCell className="text-right">
+                          <span className={due > 0 ? 'text-destructive' : 'text-success'}>
+                            {formatCurrency(due)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusColors[inv.status]}>{inv.status}</Badge>
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
+                            {(inv.status === 'draft' || inv.status === 'overdue' || inv.status === 'sent') && (
+                              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleMarkPaid(inv); }}>
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                Paid
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </Tabs>
