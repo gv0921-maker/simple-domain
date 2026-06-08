@@ -363,6 +363,24 @@ export default function StockMoves() {
           </Table>
         </Card>
       </div>
+      {qcMove && (
+        <GoodsReceiptQCDialog
+          open={!!qcMove}
+          onOpenChange={(v) => { if (!v) setQcMove(null); }}
+          title="Goods Receipt QC"
+          description={`Inspect items on ${qcMove.reference} before adding to stock.`}
+          referenceType="purchase_order"
+          referenceId={qcMove.id}
+          lines={qcLines}
+          submittingLabel="Confirm QC & Validate"
+          onConfirmed={async () => {
+            const id = qcMove.id;
+            await validateMut.mutateAsync(id);
+            toast({ title: 'Receipt validated', description: 'QC recorded and stock updated.' });
+            setQcMove(null);
+          }}
+        />
+      )}
     </AppLayout>
   );
 }
