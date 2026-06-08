@@ -1362,3 +1362,120 @@ export async function generateSubscriptionReferenceRich(): Promise<string> {
     .ilike('reference', `SUB-${year}-%`);
   return `SUB-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`;
 }
+
+// ---------- Fiscal Positions ----------
+import type { FiscalPosition } from '@/lib/data/sales/types';
+
+function mapFiscalPosition(r: any): FiscalPosition {
+  return {
+    id: r.id,
+    name: r.name,
+    code: r.code,
+    countryCode: r.country_code ?? undefined,
+    taxMappings: Array.isArray(r.tax_mappings) ? r.tax_mappings : [],
+    isActive: !!r.is_active,
+  };
+}
+function rowFromFiscalPosition(fp: Partial<FiscalPosition> & { name: string; code: string }): any {
+  return {
+    name: fp.name,
+    code: fp.code,
+    country_code: fp.countryCode ?? null,
+    tax_mappings: fp.taxMappings ?? [],
+    is_active: fp.isActive ?? true,
+  };
+}
+
+export async function listFiscalPositions(): Promise<FiscalPosition[]> {
+  const { data, error } = await supabase
+    .from('sales_fiscal_positions' as any).select('*')
+    .order('name', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(mapFiscalPosition);
+}
+
+export async function saveFiscalPosition(fp: Partial<FiscalPosition> & { name: string; code: string }): Promise<FiscalPosition> {
+  const payload = rowFromFiscalPosition(fp);
+  if (fp.id) {
+    const { data, error } = await supabase
+      .from('sales_fiscal_positions' as any).update(payload).eq('id', fp.id).select('*').single();
+    if (error) throw error;
+    return mapFiscalPosition(data);
+  }
+  const { data, error } = await supabase
+    .from('sales_fiscal_positions' as any).insert(payload).select('*').single();
+  if (error) throw error;
+  return mapFiscalPosition(data);
+}
+
+export async function deleteFiscalPosition(id: string): Promise<void> {
+  const { error } = await supabase.from('sales_fiscal_positions' as any).delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Convert Quotation -> Sales Order (server-aware) ----------
+export async function convertQuotationToOrderRich(
+  quotationId: string,
+  userId: string,
+  userName: string,
+): Promise<SalesOrder | null> {
+  const q = await getQuotationRich(quotationId);
+  if (!q || q.status !== 'accepted') return null;
+
+  const reference = await generateOrderReferenceRich();
+  const now = new Date().toISOString();
+  const orderLines: SalesOrderLine[] = (q.lines ?? []).map((l) => ({
+    ...l,
+    id: crypto.randomUUID(),
+    deliveredQuantity: 0,
+    invoicedQuantity: 0,
+    reservedStock: false,
+  }));
+
+  const draft: Partial<SalesOrder> & { reference: string } = {
+    reference,
+    quotationId: q.id,
+    customerId: q.customerId,
+    customerName: q.customerName,
+    contactId: q.contactId,
+    contactName: q.contactName,
+    orderDate: now.split('T')[0],
+    salespersonId: q.salespersonId,
+    salespersonName: q.salespersonName,
+    salesTeam: q.salesTeam,
+    currency: q.currency,
+    pricelistId: q.pricelistId,
+    paymentTerms: q.paymentTerms,
+    lines: orderLines,
+    subtotal: q.subtotal,
+    discountAmount: q.discountAmount,
+    taxAmount: q.taxAmount,
+    total: q.total,
+    notes: q.notes,
+    status: 'estimate' as SalesOrderStatus,
+    deliveryStatus: 'pending',
+    invoiceStatus: 'not_invoiced',
+    activities: [{
+      id: crypto.randomUUID(),
+      userId,
+      userName,
+      action: 'Order created from quotation',
+      details: `Converted from ${q.reference}`,
+      timestamp: now,
+    }],
+    // Carry B2C address & totals if present
+    billingCustomerName: q.billingCustomerName,
+    totalUntaxed: q.totalUntaxed,
+    totalCGST: q.totalCGST,
+    totalSGST: q.totalSGST,
+    totalIGST: q.totalIGST,
+    totalGST: q.totalGST,
+    grandTotal: q.grandTotal,
+    gstType: q.gstType,
+  };
+
+  const saved = await saveSalesOrderRich(draft);
+  // Link the order id back onto the quotation
+  await saveQuotationRich({ ...q, convertedToOrderId: saved.id });
+  return saved;
+}

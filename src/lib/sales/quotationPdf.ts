@@ -1,8 +1,6 @@
 import type { Quotation } from '@/lib/services/sales/types';
-import { getTaxRules } from '@/lib/services/sales/storage';
 
 export function downloadQuotationPdf(quotation: Quotation) {
-  const taxRules = getTaxRules();
   const linesHtml = quotation.lines.map((line, i) =>
     `<tr><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${line.productName}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:right">${line.quantity}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:right">₹${line.unitPrice.toLocaleString('en-IN')}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:600">₹${line.total.toLocaleString('en-IN')}</td></tr>`
   ).join('');
