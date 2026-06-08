@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +48,9 @@ export function MobilePickingScreen({ stockMoveId, onComplete, onBack }: MobileP
   const validateMut = useValidateStockMove();
 
   // Sync local state with loaded move
-  if (loadedMove && !stockMove) setStockMove(loadedMove);
+  useEffect(() => {
+    if (loadedMove && !stockMove) setStockMove(loadedMove);
+  }, [loadedMove, stockMove]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [pickedLines, setPickedLines] = useState<Set<string>>(new Set());
