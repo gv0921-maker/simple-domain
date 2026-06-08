@@ -266,8 +266,12 @@ export default function SalesOrderForm() {
       const data = await persist(newStatus);
       toast({ title: isNew ? 'Order Created' : 'Order Updated', description: `${data.reference} saved.` });
       navigate('/sales/orders');
-    } catch (error) {
-      toast({ title: 'Error saving order', variant: 'destructive' });
+    } catch (error: any) {
+      toast({
+        title: 'Error saving order',
+        description: error?.message ?? String(error),
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
