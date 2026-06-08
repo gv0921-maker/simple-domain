@@ -34,7 +34,9 @@ import {
   History,
   Plus,
 } from 'lucide-react';
-import { useProduct, useSaveProduct, useDeleteProduct } from '@/hooks/inventory';
+import { useProduct, useSaveProduct, useDeleteProduct, useSerialsByProduct } from '@/hooks/inventory';
+import { useReservationsByProduct } from '@/hooks/inventory/reservations';
+import { useSalesOrders } from '@/hooks/sales';
 import type { Product, ProductVariant } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
