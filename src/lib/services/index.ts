@@ -4,7 +4,6 @@
 export * as crmService from './crm';
 export * as salesService from './sales';
 export * as inventoryService from './inventory';
-export * as accountingService from './accounting';
 export * as hrService from './hr';
 export * as manufacturingService from './manufacturing';
 export * as settingsService from './settings';
