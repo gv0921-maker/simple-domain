@@ -45,7 +45,9 @@ import {
   FileText,
   Package,
 } from 'lucide-react';
-import { getSalesOrders, deleteSalesOrder, saveSalesOrder } from '@/lib/services/sales/storage';
+import {
+  useSalesOrdersRich, useSaveSalesOrderRich, useDeleteSalesOrderRich,
+} from '@/hooks/sales';
 import type { SalesOrder, SalesOrderStatus } from '@/lib/services/sales/types';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
@@ -77,7 +79,9 @@ export default function SalesOrdersList() {
   const highlightId = searchParams.get('highlight');
   const { toast } = useToast();
   const { user } = useAuth();
-  const [orders, setOrders] = useState<SalesOrder[]>(() => getSalesOrders());
+  const { data: orders = [], refetch: refetchOrders } = useSalesOrdersRich();
+  const saveOrderMut = useSaveSalesOrderRich();
+  const deleteOrderMut = useDeleteSalesOrderRich();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<SalesOrderStatus | 'all'>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -109,7 +113,7 @@ export default function SalesOrdersList() {
       .reduce((sum, o) => sum + o.total, 0),
   }), [orders]);
 
-  const handleUpdateStatus = useCallback((orderId: string, status: SalesOrderStatus) => {
+  const handleUpdateStatus = useCallback(async (orderId: string, status: SalesOrderStatus) => {
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
@@ -143,25 +147,27 @@ export default function SalesOrdersList() {
       ];
     }
 
-    saveSalesOrder({ ...order, ...updates });
-    setOrders(getSalesOrders());
-    toast({ title: `Order ${status}` });
+    try {
+      await saveOrderMut.mutateAsync({ ...order, ...updates });
+      toast({ title: `Order ${status}` });
+    } catch (e: any) {
+      toast({ title: 'Update failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
     setConfirmDialogOpen(false);
-  }, [orders, user, toast]);
+  }, [orders, user, toast, saveOrderMut]);
 
-  const confirmDelete = useCallback(() => {
+  const confirmDelete = useCallback(async () => {
     if (orderToDelete) {
       try {
-        deleteSalesOrder(orderToDelete);
-        setOrders(getSalesOrders());
+        await deleteOrderMut.mutateAsync(orderToDelete);
         toast({ title: 'Order deleted' });
       } catch (error: any) {
-        toast({ title: error.message, variant: 'destructive' });
+        toast({ title: error?.message ?? String(error), variant: 'destructive' });
       }
     }
     setDeleteDialogOpen(false);
     setOrderToDelete(null);
-  }, [orderToDelete, toast]);
+  }, [orderToDelete, toast, deleteOrderMut]);
 
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
@@ -176,7 +182,7 @@ export default function SalesOrdersList() {
             <Plus className="h-4 w-4" />
             New Order
           </Button>
-          <SalesImportExport type="orders" onImportComplete={() => setOrders(getSalesOrders())} />
+          <SalesImportExport type="orders" onImportComplete={() => refetchOrders()} />
         </div>
 
         {/* Stats */}

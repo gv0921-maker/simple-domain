@@ -17,8 +17,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Save, XCircle, ShoppingCart } from 'lucide-react';
 import {
-  getSalesOrder, saveSalesOrder, generateOrderReference, getPricelists, getFiscalPositions,
+  getPricelists, getFiscalPositions,
 } from '@/lib/services/sales/storage';
+import { useSalesOrderRich, useSaveSalesOrderRich } from '@/hooks/sales';
+import { generateOrderReferenceRich } from '@/lib/services/sales/api';
 import type {
   SalesOrder, SalesOrderLine, SalesOrderStatus,
   GSTType, OrderDiscountType,
@@ -77,6 +79,9 @@ export default function SalesOrderForm() {
   const [pricelists] = useState(() => getPricelists());
   const [fiscalPositions] = useState(() => getFiscalPositions().filter((f) => f.isActive));
 
+  const { data: loadedOrder, isLoading: isLoadingOrder } = useSalesOrderRich(isNew ? undefined : id);
+  const saveOrderMut = useSaveSalesOrderRich();
+
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -111,18 +116,17 @@ export default function SalesOrderForm() {
 
   // Load existing order
   useEffect(() => {
-    if (!isNew && id) {
-      const o = getSalesOrder(id);
-      if (o) {
-        setFormData(o);
-        setLines(o.lines);
-      } else {
-        toast({ title: 'Order not found', variant: 'destructive' });
-        navigate('/sales/orders');
-      }
+    if (isNew) return;
+    if (isLoadingOrder) return;
+    if (loadedOrder) {
+      setFormData(loadedOrder);
+      setLines(loadedOrder.lines);
       setLoading(false);
+    } else {
+      toast({ title: 'Order not found', variant: 'destructive' });
+      navigate('/sales/orders');
     }
-  }, [id, isNew, navigate, toast]);
+  }, [isNew, isLoadingOrder, loadedOrder, navigate, toast]);
 
   // Auto-populate billing + delivery from selected contact (shared hook).
   const populateFromContact = useContactAutoPopulate(setFormData);
@@ -196,11 +200,12 @@ export default function SalesOrderForm() {
     return { ok: true };
   }, [formData, lines.length]);
 
-  const persist = useCallback((statusOverride?: SalesOrderStatus, extraActivityNote?: string) => {
+  const persist = useCallback(async (statusOverride?: SalesOrderStatus, extraActivityNote?: string) => {
     const newStatus = statusOverride || formData.status || 'estimate';
+    const reference = formData.reference || await generateOrderReferenceRich();
     const data: SalesOrder = {
       id: isNew ? crypto.randomUUID() : id!,
-      reference: formData.reference || generateOrderReference(),
+      reference,
       customerId: formData.customerId!,
       customerName: formData.customerName!,
       contactId: formData.contactId,
@@ -222,6 +227,8 @@ export default function SalesOrderForm() {
       deliveryStatus: formData.deliveryStatus || 'pending',
       confirmedAt: newStatus === 'confirmed' ? new Date().toISOString() : formData.confirmedAt,
       confirmedBy: newStatus === 'confirmed' ? user?.name : formData.confirmedBy,
+      lockedAt: newStatus === 'locked' ? new Date().toISOString() : formData.lockedAt,
+      lockedBy: newStatus === 'locked' ? user?.name : formData.lockedBy,
       activities: [
         ...(formData.activities || []),
         ...(extraActivityNote
@@ -242,9 +249,10 @@ export default function SalesOrderForm() {
     // Force computed totals & status to win over any stale spread copies.
     data.status = newStatus;
     data.lines = lines;
-    saveSalesOrder(data);
+    data.reference = reference;
+    await saveOrderMut.mutateAsync(data);
     return data;
-  }, [formData, lines, isNew, id, user]);
+  }, [formData, lines, isNew, id, user, saveOrderMut]);
 
   const handleSave = useCallback(async (newStatus?: SalesOrderStatus) => {
     const v = validate();
@@ -255,7 +263,7 @@ export default function SalesOrderForm() {
     }
     setSaving(true);
     try {
-      const data = persist(newStatus);
+      const data = await persist(newStatus);
       toast({ title: isNew ? 'Order Created' : 'Order Updated', description: `${data.reference} saved.` });
       navigate('/sales/orders');
     } catch (error) {
@@ -265,7 +273,7 @@ export default function SalesOrderForm() {
     }
   }, [validate, persist, isNew, toast, navigate]);
 
-  const handleStatusStepClick = useCallback((next: SalesOrderStatus) => {
+  const handleStatusStepClick = useCallback(async (next: SalesOrderStatus) => {
     const current = (formData.status || 'estimate') as SalesOrderStatus;
     if (current === next) return;
     if (!canTransition(current, next, userRole)) {
@@ -304,11 +312,15 @@ export default function SalesOrderForm() {
       }
     }
 
-    persist(next, note);
-    setFormData((prev) => ({ ...prev, status: next }));
-    toast({ title: 'Status updated', description: note });
+    try {
+      await persist(next, note);
+      setFormData((prev) => ({ ...prev, status: next }));
+      toast({ title: 'Status updated', description: note });
+    } catch (e: any) {
+      toast({ title: 'Status update failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
     // Phase 4: stock reservation on confirmed wired next.
-  }, [formData.status, userRole, validate, persist, toast]);
+  }, [formData, lines, userRole, validate, persist, toast]);
 
   const handleConfirmAction = useCallback(() => {
     if (confirmAction === 'cancel') handleSave('cancelled');

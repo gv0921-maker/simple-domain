@@ -241,3 +241,41 @@ export function useDeleteQuotationRich() {
     },
   });
 }
+
+// -------- Rich Sales Orders (full B2C model) --------
+import type { SalesOrder } from '@/lib/services/sales/types';
+
+export function useSalesOrdersRich() {
+  return useQuery({ queryKey: [...salesKeys.all, 'orders-rich'] as const, queryFn: api.listSalesOrdersRich });
+}
+export function useSalesOrderRich(id: string | undefined) {
+  return useQuery({
+    queryKey: [...salesKeys.all, 'order-rich', id ?? ''] as const,
+    queryFn: () => api.getSalesOrderRich(id!),
+    enabled: !!id && id !== 'new',
+  });
+}
+export function useSaveSalesOrderRich() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (o: Partial<SalesOrder> & { reference: string }) => api.saveSalesOrderRich(o),
+    onSuccess: (o) => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'orders-rich'] });
+      qc.invalidateQueries({ queryKey: salesKeys.orders() });
+      if (o?.id) {
+        qc.invalidateQueries({ queryKey: [...salesKeys.all, 'order-rich', o.id] });
+        qc.invalidateQueries({ queryKey: salesKeys.order(o.id) });
+      }
+    },
+  });
+}
+export function useDeleteSalesOrderRich() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.deleteSalesOrder,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'orders-rich'] });
+      qc.invalidateQueries({ queryKey: salesKeys.orders() });
+    },
+  });
+}
