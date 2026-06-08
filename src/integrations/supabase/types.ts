@@ -1082,13 +1082,17 @@ export type Database = {
         Row: {
           approval_notes: string | null
           approved_price: number | null
+          cgst_amount: number | null
           created_at: string
           description: string | null
           discount: number
+          final_amount: number | null
           id: string
+          igst_amount: number | null
           invoice_id: string
           product_id: string | null
           quantity: number
+          sgst_amount: number | null
           subtotal: number
           tax_rate: number
           unit_price: number
@@ -1097,13 +1101,17 @@ export type Database = {
         Insert: {
           approval_notes?: string | null
           approved_price?: number | null
+          cgst_amount?: number | null
           created_at?: string
           description?: string | null
           discount?: number
+          final_amount?: number | null
           id?: string
+          igst_amount?: number | null
           invoice_id: string
           product_id?: string | null
           quantity?: number
+          sgst_amount?: number | null
           subtotal?: number
           tax_rate?: number
           unit_price?: number
@@ -1112,13 +1120,17 @@ export type Database = {
         Update: {
           approval_notes?: string | null
           approved_price?: number | null
+          cgst_amount?: number | null
           created_at?: string
           description?: string | null
           discount?: number
+          final_amount?: number | null
           id?: string
+          igst_amount?: number | null
           invoice_id?: string
           product_id?: string | null
           quantity?: number
+          sgst_amount?: number | null
           subtotal?: number
           tax_rate?: number
           unit_price?: number
@@ -2316,6 +2328,7 @@ export type Database = {
           grand_total: number | null
           gst_type: string | null
           id: string
+          invoice_id: string | null
           invoice_ids: string[] | null
           invoice_status: string | null
           locked_at: string | null
@@ -2408,6 +2421,7 @@ export type Database = {
           grand_total?: number | null
           gst_type?: string | null
           id?: string
+          invoice_id?: string | null
           invoice_ids?: string[] | null
           invoice_status?: string | null
           locked_at?: string | null
@@ -2500,6 +2514,7 @@ export type Database = {
           grand_total?: number | null
           gst_type?: string | null
           id?: string
+          invoice_id?: string | null
           invoice_ids?: string[] | null
           invoice_status?: string | null
           locked_at?: string | null
