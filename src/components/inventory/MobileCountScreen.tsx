@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Sheet,
   SheetContent,
@@ -47,11 +47,12 @@ export function MobileCountScreen({ adjustmentId, locationId, onComplete, onBack
   const location = locations.find(l => l.id === locationId);
   
   const [adjustment, setAdjustment] = useState<InventoryAdjustment>(() => createNewAdjustment());
-  if (loadedAdjustment && adjustment.id === '' && adjustmentId) {
-    setAdjustment(loadedAdjustment);
-  }
+  useEffect(() => {
+    if (loadedAdjustment && adjustment.id === '' && adjustmentId) {
+      setAdjustment(loadedAdjustment);
+    }
+  }, [loadedAdjustment, adjustment.id, adjustmentId]);
   const [showScanner, setShowScanner] = useState(false);
-  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
 
   function createNewAdjustment(): InventoryAdjustment {
     return {
