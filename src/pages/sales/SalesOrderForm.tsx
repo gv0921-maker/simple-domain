@@ -485,6 +485,11 @@ export default function SalesOrderForm() {
           </Card>
         )}
 
+        {/* Pre-delivery QC — gates Generate Invoice */}
+        {!isNew && status === 'paid' && id && (
+          <PreDeliveryQCSection salesOrderId={id} orderReference={formData.reference} />
+        )}
+
         {/* Status chevrons */}
         {!isNew && (
           <Card className="max-w-4xl mx-auto w-full">
