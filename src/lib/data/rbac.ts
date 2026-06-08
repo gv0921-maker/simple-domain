@@ -1,7 +1,14 @@
-// Role-Based Access Control data management
+// Role-Based Access Control data management.
+//
+// This module preserves a SYNCHRONOUS read API (hasPermission, isSuperAdminUser,
+// getRoles, canAccessRoute, etc.) used by guards and hooks throughout the app.
+// Data is sourced from Supabase via hydrateRbacFromSupabase()/bootstrapRbac()
+// and kept in an in-memory cache. Mutations (saveRole, deleteRole, setUserRoles,
+// addAuditLog) update the cache immediately and write through to Supabase in the
+// background.
 
-import { getItem, setItem } from '../storage';
 import { getModuleTabIds, getModuleTabs } from './moduleTabs';
+import { supabase } from '@/integrations/supabase/client';
 
 export type PermissionLevel = 'none' | 'view' | 'create' | 'edit' | 'delete' | 'admin';
 export type RecordScope = 'own' | 'team' | 'department' | 'all';
@@ -173,7 +180,7 @@ export function canAccessRoute(userId: string, pathname: string): boolean {
   return hasTabAccess(userId, moduleId, tabId);
 }
 
-// Default roles
+// Default roles used as a fallback BEFORE Supabase hydration completes.
 const DEFAULT_ROLES: Role[] = [
   {
     id: 'super_admin',
@@ -281,62 +288,248 @@ const DEFAULT_ROLES: Role[] = [
   },
 ];
 
-const DEFAULT_USER_ROLES: UserRole[] = [
-  { userId: '1', roleIds: ['super_admin'] },
-  { userId: '2', roleIds: ['sales_manager'] },
-  { userId: '3', roleIds: ['warehouse_operator'] },
-];
+// =========================================================================
+// In-memory cache. Hydrated from Supabase on app boot via bootstrapRbac().
+// =========================================================================
+let _rolesCache: Role[] = [...DEFAULT_ROLES];
+let _userRolesCache: UserRole[] = [];
+let _auditCache: AuditLog[] = [];
+let _hydrated = false;
 
-// CRUD operations
+export function isRbacHydrated(): boolean {
+  return _hydrated;
+}
+
+// Map a Supabase app_roles row + permissions into a Role.
+function rowToRole(row: any, permRows: any[]): Role {
+  const permissions: Permission[] = permRows
+    .filter((p) => p.role_id === row.id)
+    .map((p) => ({
+      module: p.module,
+      level: p.level as PermissionLevel,
+      scope: (p.scope ?? 'all') as RecordScope,
+      canImport: !!p.can_import,
+      canExport: !!p.can_export,
+      canPrint: true,
+    }));
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? '',
+    isSystem: !!row.is_system,
+    permissions,
+    tabPermissions: [],
+    inheritsFrom: (row.inherits_from ?? []) as string[],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function hydrateRbacFromSupabase(): Promise<void> {
+  try {
+    const [rolesRes, permsRes, assignsRes, auditRes] = await Promise.all([
+      supabase.from('app_roles').select('*'),
+      supabase.from('app_role_permissions').select('*'),
+      supabase.from('app_user_role_assignments').select('*'),
+      supabase.from('app_audit_logs').select('*').order('created_at', { ascending: false }).limit(500),
+    ]);
+    if (rolesRes.error) throw rolesRes.error;
+    if (permsRes.error) throw permsRes.error;
+    if (assignsRes.error) throw assignsRes.error;
+
+    _rolesCache = (rolesRes.data ?? []).map((r) => rowToRole(r, permsRes.data ?? []));
+
+    // Group assignments per user
+    const byUser = new Map<string, string[]>();
+    for (const a of assignsRes.data ?? []) {
+      const arr = byUser.get(a.user_id) ?? [];
+      arr.push(a.role_id);
+      byUser.set(a.user_id, arr);
+    }
+    _userRolesCache = Array.from(byUser.entries()).map(([userId, roleIds]) => ({ userId, roleIds }));
+
+    if (!auditRes.error && auditRes.data) {
+      _auditCache = auditRes.data.map((row: any) => ({
+        id: row.id,
+        userId: row.user_id ?? '',
+        userName: row.user_name ?? 'System',
+        action: row.action as AuditLog['action'],
+        resource: row.resource,
+        resourceId: row.resource_id ?? undefined,
+        details: row.details ?? '',
+        ipAddress: row.ip_address ?? undefined,
+        timestamp: row.created_at,
+      }));
+    }
+
+    _hydrated = true;
+  } catch (e) {
+    // Keep defaults if hydration fails (e.g. unauthenticated)
+    console.warn('[rbac] hydration failed:', e);
+  }
+}
+
+/** Convenience: call once after a user logs in. */
+export async function bootstrapRbac(_userId?: string): Promise<void> {
+  await hydrateRbacFromSupabase();
+}
+
+// =========================================================================
+// Sync read API (cache-backed)
+// =========================================================================
 export function getRoles(): Role[] {
-  return getItem<Role[]>('roles', DEFAULT_ROLES);
+  return [..._rolesCache];
 }
 
 export function getRole(id: string): Role | undefined {
-  return getRoles().find((r) => r.id === id);
+  return _rolesCache.find((r) => r.id === id);
 }
 
+function isUuid(s: string): boolean {
+  return /^[0-9a-f-]{36}$/i.test(s);
+}
+
+/**
+ * Persist a role. Updates cache immediately, then write-through to Supabase
+ * in the background. Returns nothing (sync) to preserve the legacy contract.
+ */
 export function saveRole(role: Role): void {
-  const roles = getRoles();
-  const index = roles.findIndex((r) => r.id === role.id);
-  if (index >= 0) {
-    roles[index] = { ...role, updatedAt: new Date().toISOString() };
+  const isNew = !isUuid(role.id) || !_rolesCache.some((r) => r.id === role.id);
+  const now = new Date().toISOString();
+
+  if (isNew) {
+    const newId = isUuid(role.id) ? role.id : crypto.randomUUID();
+    const created: Role = { ...role, id: newId, createdAt: now, updatedAt: now };
+    _rolesCache = [..._rolesCache, created];
+
+    // Background insert
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_roles')
+          .insert({
+            id: newId,
+            name: role.name,
+            description: role.description ?? '',
+            is_system: false,
+            inherits_from: role.inheritsFrom ?? [],
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        if (role.permissions.length) {
+          const rows = role.permissions
+            .filter((p) => p.level !== 'none')
+            .map((p) => ({
+              role_id: data.id,
+              module: p.module,
+              level: p.level,
+              scope: p.scope === 'department' ? 'all' : (p.scope ?? 'all'),
+              can_import: !!p.canImport,
+              can_export: !!p.canExport,
+            }));
+          if (rows.length) {
+            await supabase.from('app_role_permissions').insert(rows);
+          }
+        }
+      } catch (e) {
+        console.warn('[rbac] saveRole insert failed:', e);
+      }
+    })();
   } else {
-    roles.push({ ...role, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    _rolesCache = _rolesCache.map((r) => (r.id === role.id ? { ...role, updatedAt: now } : r));
+
+    // Background update + replace permissions
+    void (async () => {
+      try {
+        await supabase
+          .from('app_roles')
+          .update({
+            name: role.name,
+            description: role.description ?? '',
+            inherits_from: role.inheritsFrom ?? [],
+          })
+          .eq('id', role.id);
+        await supabase.from('app_role_permissions').delete().eq('role_id', role.id);
+        if (role.permissions.length) {
+          const rows = role.permissions
+            .filter((p) => p.level !== 'none')
+            .map((p) => ({
+              role_id: role.id,
+              module: p.module,
+              level: p.level,
+              scope: p.scope === 'department' ? 'all' : (p.scope ?? 'all'),
+              can_import: !!p.canImport,
+              can_export: !!p.canExport,
+            }));
+          if (rows.length) {
+            await supabase.from('app_role_permissions').insert(rows);
+          }
+        }
+      } catch (e) {
+        console.warn('[rbac] saveRole update failed:', e);
+      }
+    })();
   }
-  setItem('roles', roles);
 }
 
 export function deleteRole(id: string): boolean {
   const role = getRole(id);
   if (role?.isSystem) return false;
-  const roles = getRoles().filter((r) => r.id !== id);
-  setItem('roles', roles);
+  _rolesCache = _rolesCache.filter((r) => r.id !== id);
+  if (isUuid(id)) {
+    void supabase.from('app_roles').delete().eq('id', id).then(({ error }) => {
+      if (error) console.warn('[rbac] deleteRole failed:', error);
+    });
+  }
   return true;
 }
 
 export function getUserRoles(): UserRole[] {
-  return getItem<UserRole[]>('userRoles', DEFAULT_USER_ROLES);
+  return _userRolesCache.map((ur) => ({ userId: ur.userId, roleIds: [...ur.roleIds] }));
 }
 
 export function getUserRole(userId: string): UserRole | undefined {
-  return getUserRoles().find((ur) => ur.userId === userId);
+  const found = _userRolesCache.find((ur) => ur.userId === userId);
+  return found ? { userId: found.userId, roleIds: [...found.roleIds] } : undefined;
 }
 
 export function setUserRoles(userId: string, roleIds: string[]): void {
-  const userRoles = getUserRoles();
-  const index = userRoles.findIndex((ur) => ur.userId === userId);
-  if (index >= 0) {
-    userRoles[index].roleIds = roleIds;
+  // Update cache immediately
+  const existing = _userRolesCache.findIndex((ur) => ur.userId === userId);
+  if (existing >= 0) {
+    _userRolesCache[existing] = { userId, roleIds: [...roleIds] };
   } else {
-    userRoles.push({ userId, roleIds });
+    _userRolesCache = [..._userRolesCache, { userId, roleIds: [...roleIds] }];
   }
-  setItem('userRoles', userRoles);
+
+  // Persist only for real auth uuids and uuid role ids
+  if (!isUuid(userId)) return;
+  const validRoleIds = roleIds.filter(isUuid);
+
+  void (async () => {
+    try {
+      await supabase.from('app_user_role_assignments').delete().eq('user_id', userId);
+      if (validRoleIds.length) {
+        await supabase.from('app_user_role_assignments').insert(
+          validRoleIds.map((rid) => ({ user_id: userId, role_id: rid }))
+        );
+      }
+    } catch (e) {
+      console.warn('[rbac] setUserRoles failed:', e);
+    }
+  })();
 }
 
 export function isSuperAdminUser(userId: string): boolean {
   const userRole = getUserRole(userId);
-  return Boolean(userRole?.roleIds.includes('super_admin'));
+  if (!userRole) return false;
+  // Match against new system role names AND legacy enum-style ids
+  if (userRole.roleIds.includes('super_admin')) return true;
+  return userRole.roleIds.some((rid) => {
+    const role = getRole(rid);
+    return role?.name === 'Super Admin';
+  });
 }
 
 // Permission checking
@@ -526,19 +719,34 @@ export function getAccessibleTabs(userId: string, moduleId: string): string[] {
   return moduleTabPerm.allowedTabs.filter((tabId) => allTabIds.includes(tabId));
 }
 
-// Audit logging
+// =========================================================================
+// Audit logging (cache-backed, Supabase write-through)
+// =========================================================================
 export function getAuditLogs(): AuditLog[] {
-  return getItem<AuditLog[]>('auditLogs', []);
+  return [..._auditCache];
 }
 
 export function addAuditLog(log: Omit<AuditLog, 'id' | 'timestamp'>): void {
-  const logs = getAuditLogs();
-  logs.unshift({
+  const entry: AuditLog = {
     ...log,
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
-  });
-  // Keep last 1000 logs
-  if (logs.length > 1000) logs.pop();
-  setItem('auditLogs', logs);
+  };
+  _auditCache = [entry, ..._auditCache].slice(0, 1000);
+
+  void (async () => {
+    try {
+      await supabase.from('app_audit_logs').insert({
+        user_id: log.userId || null,
+        user_name: log.userName || null,
+        action: log.action,
+        resource: log.resource,
+        resource_id: log.resourceId ?? null,
+        details: log.details ?? null,
+        ip_address: log.ipAddress ?? null,
+      });
+    } catch (e) {
+      console.warn('[rbac] addAuditLog failed:', e);
+    }
+  })();
 }

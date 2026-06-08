@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { bootstrapRbac } from '@/lib/data/rbac';
 
 export interface User {
   id: string;
@@ -42,6 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mapped = mapUser(session?.user);
       setUser(mapped);
       setIsAuthenticated(!!session);
+      if (mapped) {
+        // Fire-and-forget: hydrate RBAC cache after sign-in.
+        void bootstrapRbac(mapped.id);
+      }
     });
 
     // Then hydrate from existing session.
@@ -49,6 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mapped = mapUser(session?.user);
       setUser(mapped);
       setIsAuthenticated(!!session);
+      if (mapped) {
+        void bootstrapRbac(mapped.id);
+      }
     });
 
     return () => {

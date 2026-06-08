@@ -87,6 +87,148 @@ export type Database = {
           },
         ]
       }
+      app_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          ip_address: string | null
+          resource: string
+          resource_id: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          ip_address?: string | null
+          resource: string
+          resource_id?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          ip_address?: string | null
+          resource?: string
+          resource_id?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      app_role_permissions: {
+        Row: {
+          can_export: boolean
+          can_import: boolean
+          created_at: string
+          id: string
+          level: string
+          module: string
+          role_id: string
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          can_export?: boolean
+          can_import?: boolean
+          created_at?: string
+          id?: string
+          level?: string
+          module: string
+          role_id: string
+          scope?: string
+          updated_at?: string
+        }
+        Update: {
+          can_export?: boolean
+          can_import?: boolean
+          created_at?: string
+          id?: string
+          level?: string
+          module?: string
+          role_id?: string
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "app_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          inherits_from: string[]
+          is_system: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          inherits_from?: string[]
+          is_system?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          inherits_from?: string[]
+          is_system?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_user_role_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_user_role_assignments_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "app_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bom: {
         Row: {
           created_at: string
@@ -3295,6 +3437,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      is_app_admin: { Args: { _user_id: string }; Returns: boolean }
       portal_get_quotation: {
         Args: { _id: string; _token: string }
         Returns: Json
