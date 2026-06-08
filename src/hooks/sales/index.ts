@@ -5,7 +5,8 @@ import { salesKeys } from './keys';
 export * from './keys';
 export type {
   SbCustomer, SbQuotation, SbQuotationLine, SbSalesOrder, SbOrderLine,
-  SbPricelist, SbPricelistItem, SbSubscription,
+  SbPricelist, SbPricelistItem, SbSubscription, SbSubscriptionLine,
+  SbOrderActivity, SbQuotationVersion,
 } from '@/lib/services/sales/api';
 
 // -------- Customers --------
@@ -147,5 +148,58 @@ export function useDeleteSubscription() {
   return useMutation({
     mutationFn: api.deleteSubscription,
     onSuccess: () => { qc.invalidateQueries({ queryKey: salesKeys.subscriptions() }); },
+  });
+}
+
+// -------- Order Activities --------
+export function useOrderActivities(orderId: string | undefined) {
+  return useQuery({
+    queryKey: [...salesKeys.all, 'order-activities', orderId ?? ''] as const,
+    queryFn: () => api.listOrderActivities(orderId!),
+    enabled: !!orderId,
+  });
+}
+export function useAddOrderActivity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.addOrderActivity,
+    onSuccess: (a) => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'order-activities', a.orderId] });
+      qc.invalidateQueries({ queryKey: salesKeys.order(a.orderId) });
+    },
+  });
+}
+
+// -------- Quotation Versions --------
+export function useQuotationVersions(quotationId: string | undefined) {
+  return useQuery({
+    queryKey: [...salesKeys.all, 'quotation-versions', quotationId ?? ''] as const,
+    queryFn: () => api.listQuotationVersions(quotationId!),
+    enabled: !!quotationId,
+  });
+}
+export function useAddQuotationVersion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.addQuotationVersion,
+    onSuccess: (v) => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'quotation-versions', v.quotationId] });
+      qc.invalidateQueries({ queryKey: salesKeys.quotation(v.quotationId) });
+    },
+  });
+}
+
+// -------- Subscription save accepts lines now --------
+export function useSaveSubscriptionWithLines() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: {
+      subscription: Partial<api.SbSubscription>;
+      lines?: Array<Omit<api.SbSubscriptionLine, 'id' | 'subscriptionId'>>;
+    }) => api.saveSubscription(args.subscription, args.lines),
+    onSuccess: (s) => {
+      qc.invalidateQueries({ queryKey: salesKeys.subscriptions() });
+      if (s?.id) qc.invalidateQueries({ queryKey: salesKeys.subscription(s.id) });
+    },
   });
 }

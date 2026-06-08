@@ -30,31 +30,31 @@ import {
   Building,
   User,
 } from 'lucide-react';
-import { getContacts, type Contact } from '@/lib/services/sales';
-import { setItem } from '@/lib/storage';
+import { useCustomers, useDeleteCustomer } from '@/hooks/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CustomersList() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [contacts, setContacts] = useState<Contact[]>(getContacts());
+  const { data: customers = [], isLoading } = useCustomers();
+  const deleteMut = useDeleteCustomer();
   const [search, setSearch] = useState('');
 
-  const filteredContacts = useMemo(() => {
-    return contacts.filter(
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(
       (c) =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.email.toLowerCase().includes(search.toLowerCase()) ||
+        (c.email?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
         (c.company?.toLowerCase().includes(search.toLowerCase()) ?? false)
     );
-  }, [contacts, search]);
+  }, [customers, search]);
 
   const handleDelete = (id: string) => {
-    const updated = contacts.filter((c) => c.id !== id);
-    setItem('contacts', updated);
-    setContacts(updated);
-    toast({ title: 'Customer Deleted' });
+    deleteMut.mutate(id, {
+      onSuccess: () => toast({ title: 'Customer deleted' }),
+      onError: (e: any) => toast({ title: 'Delete failed', description: e?.message, variant: 'destructive' }),
+    });
   };
 
   return (
@@ -77,7 +77,7 @@ export default function CustomersList() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Customers</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contacts.length}</div>
+              <div className="text-2xl font-bold">{customers.length}</div>
             </CardContent>
           </Card>
           <Card className="animate-slide-up" style={{ animationDelay: '50ms' }}>
@@ -86,7 +86,7 @@ export default function CustomersList() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {new Set(contacts.filter((c) => c.company).map((c) => c.company)).size}
+                {new Set(customers.filter((c) => c.company).map((c) => c.company)).size}
               </div>
             </CardContent>
           </Card>
@@ -96,7 +96,7 @@ export default function CustomersList() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {contacts.filter((c) => c.tags.includes('VIP')).length}
+                {customers.filter((c) => c.tags.includes('VIP')).length}
               </div>
             </CardContent>
           </Card>
@@ -125,14 +125,14 @@ export default function CustomersList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredContacts.length === 0 ? (
+              {filteredCustomers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No customers found
+                    {isLoading ? 'Loading…' : 'No customers found'}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredContacts.map((contact, index) => (
+                filteredCustomers.map((contact, index) => (
                   <TableRow
                     key={contact.id}
                     className="animate-fade-in cursor-pointer hover:bg-muted/50"
@@ -146,17 +146,19 @@ export default function CustomersList() {
                         </div>
                         <div>
                           <p className="font-medium">{contact.name}</p>
-                          {contact.jobTitle && (
-                            <p className="text-xs text-muted-foreground">{contact.jobTitle}</p>
+                          {contact.contactPerson && (
+                            <p className="text-xs text-muted-foreground">{contact.contactPerson}</p>
                           )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        {contact.email}
-                      </div>
+                      {contact.email && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          {contact.email}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       {contact.phone && (

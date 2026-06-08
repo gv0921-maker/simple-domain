@@ -31,8 +31,7 @@ import {
   Pencil,
   Check,
 } from 'lucide-react';
-import { getPricelists, deletePricelist } from '@/lib/services/sales/storage';
-import type { Pricelist } from '@/lib/services/sales/types';
+import { usePricelists, useDeletePricelist } from '@/hooks/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -40,7 +39,8 @@ import { cn } from '@/lib/utils';
 export default function PricelistsPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [pricelists, setPricelists] = useState<Pricelist[]>(() => getPricelists());
+  const { data: pricelists = [] } = usePricelists();
+  const deleteMut = useDeletePricelist();
   const [search, setSearch] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pricelistToDelete, setPricelistToDelete] = useState<string | null>(null);
@@ -49,23 +49,20 @@ export default function PricelistsPage() {
     return pricelists.filter(
       (p) =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.code.toLowerCase().includes(search.toLowerCase())
+        (p.code?.toLowerCase().includes(search.toLowerCase()) ?? false)
     );
   }, [pricelists, search]);
 
   const confirmDelete = useCallback(() => {
     if (pricelistToDelete) {
-      try {
-        deletePricelist(pricelistToDelete);
-        setPricelists(getPricelists());
-        toast({ title: 'Pricelist deleted' });
-      } catch (error: any) {
-        toast({ title: error.message, variant: 'destructive' });
-      }
+      deleteMut.mutate(pricelistToDelete, {
+        onSuccess: () => toast({ title: 'Pricelist deleted' }),
+        onError: (e: any) => toast({ title: e?.message ?? 'Delete failed', variant: 'destructive' }),
+      });
     }
     setDeleteDialogOpen(false);
     setPricelistToDelete(null);
-  }, [pricelistToDelete, toast]);
+  }, [pricelistToDelete, toast, deleteMut]);
 
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
@@ -138,7 +135,7 @@ export default function PricelistsPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <CardDescription>{pricelist.code} • {pricelist.currency}</CardDescription>
+                <CardDescription>{pricelist.code ?? '—'} • {pricelist.currency}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2 mb-3">
@@ -153,21 +150,21 @@ export default function PricelistsPage() {
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {pricelist.rules.length} discount rule{pricelist.rules.length !== 1 ? 's' : ''}
+                  {(pricelist.items?.length ?? 0)} discount rule{(pricelist.items?.length ?? 0) !== 1 ? 's' : ''}
                 </div>
-                {pricelist.rules.length > 0 && (
+                {(pricelist.items?.length ?? 0) > 0 && (
                   <div className="mt-2 space-y-1">
-                    {pricelist.rules.slice(0, 3).map((rule) => (
+                    {pricelist.items!.slice(0, 3).map((rule) => (
                       <div key={rule.id} className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1">
-                        <span>Min qty: {rule.minQuantity}+</span>
+                        <span>Min qty: {rule.minQty}+</span>
                         <Badge variant="outline" className="text-success">
-                          -{rule.discountPercentage}%
+                          {rule.discountPercentage != null ? `-${rule.discountPercentage}%` : `₹${rule.price}`}
                         </Badge>
                       </div>
                     ))}
-                    {pricelist.rules.length > 3 && (
+                    {pricelist.items!.length > 3 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        +{pricelist.rules.length - 3} more rules
+                        +{pricelist.items!.length - 3} more rules
                       </p>
                     )}
                   </div>

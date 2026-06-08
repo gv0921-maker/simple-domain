@@ -701,44 +701,98 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          company: string | null
           contact_person: string | null
           created_at: string
           created_by: string | null
+          credit_limit: number | null
+          default_billing_address: string | null
+          default_delivery_address: string | null
+          default_payment_terms: string | null
+          default_pricelist_id: string | null
           email: string | null
+          fiscal_position_id: string | null
           gstin: string | null
           id: string
           is_active: boolean
           name: string
+          notes: string | null
           phone: string | null
+          portal_enabled: boolean
+          portal_token: string | null
+          salesperson_id: string | null
+          tags: string[]
+          type: string
           updated_at: string
         }
         Insert: {
           address?: string | null
+          company?: string | null
           contact_person?: string | null
           created_at?: string
           created_by?: string | null
+          credit_limit?: number | null
+          default_billing_address?: string | null
+          default_delivery_address?: string | null
+          default_payment_terms?: string | null
+          default_pricelist_id?: string | null
           email?: string | null
+          fiscal_position_id?: string | null
           gstin?: string | null
           id?: string
           is_active?: boolean
           name: string
+          notes?: string | null
           phone?: string | null
+          portal_enabled?: boolean
+          portal_token?: string | null
+          salesperson_id?: string | null
+          tags?: string[]
+          type?: string
           updated_at?: string
         }
         Update: {
           address?: string | null
+          company?: string | null
           contact_person?: string | null
           created_at?: string
           created_by?: string | null
+          credit_limit?: number | null
+          default_billing_address?: string | null
+          default_delivery_address?: string | null
+          default_payment_terms?: string | null
+          default_pricelist_id?: string | null
           email?: string | null
+          fiscal_position_id?: string | null
           gstin?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          notes?: string | null
           phone?: string | null
+          portal_enabled?: boolean
+          portal_token?: string | null
+          salesperson_id?: string | null
+          tags?: string[]
+          type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_default_pricelist_id_fkey"
+            columns: ["default_pricelist_id"]
+            isOneToOne: false
+            referencedRelation: "pricelists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_fiscal_position_id_fkey"
+            columns: ["fiscal_position_id"]
+            isOneToOne: false
+            referencedRelation: "sales_fiscal_positions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_adjustments: {
         Row: {
@@ -837,47 +891,142 @@ export type Database = {
           },
         ]
       }
+      order_activities: {
+        Row: {
+          action: string
+          details: string | null
+          id: string
+          order_id: string
+          timestamp: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          details?: string | null
+          id?: string
+          order_id: string
+          timestamp?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          details?: string | null
+          id?: string
+          order_id?: string
+          timestamp?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_activities_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_lines: {
         Row: {
+          barcode: string | null
+          cgst_amount: number | null
           created_at: string
+          customization: string | null
           delivered_qty: number
           description: string | null
           discount: number
+          discount_amount: number | null
+          discount_type: string
+          discount_value: number | null
+          final_amount: number | null
+          gst_rate: number | null
           id: string
+          igst_amount: number | null
+          invoiced_qty: number
+          net_amount: number | null
           order_id: string
+          per_line_discount_type: string | null
           product_id: string | null
+          product_name: string | null
           quantity: number
+          reserved_stock: boolean
+          sgst_amount: number | null
           subtotal: number
+          tax_amount: number
+          tax_ids: string[]
           tax_rate: number
+          total: number
           unit_price: number
+          units: number | null
           updated_at: string
         }
         Insert: {
+          barcode?: string | null
+          cgst_amount?: number | null
           created_at?: string
+          customization?: string | null
           delivered_qty?: number
           description?: string | null
           discount?: number
+          discount_amount?: number | null
+          discount_type?: string
+          discount_value?: number | null
+          final_amount?: number | null
+          gst_rate?: number | null
           id?: string
+          igst_amount?: number | null
+          invoiced_qty?: number
+          net_amount?: number | null
           order_id: string
+          per_line_discount_type?: string | null
           product_id?: string | null
+          product_name?: string | null
           quantity?: number
+          reserved_stock?: boolean
+          sgst_amount?: number | null
           subtotal?: number
+          tax_amount?: number
+          tax_ids?: string[]
           tax_rate?: number
+          total?: number
           unit_price?: number
+          units?: number | null
           updated_at?: string
         }
         Update: {
+          barcode?: string | null
+          cgst_amount?: number | null
           created_at?: string
+          customization?: string | null
           delivered_qty?: number
           description?: string | null
           discount?: number
+          discount_amount?: number | null
+          discount_type?: string
+          discount_value?: number | null
+          final_amount?: number | null
+          gst_rate?: number | null
           id?: string
+          igst_amount?: number | null
+          invoiced_qty?: number
+          net_amount?: number | null
           order_id?: string
+          per_line_discount_type?: string | null
           product_id?: string | null
+          product_name?: string | null
           quantity?: number
+          reserved_stock?: boolean
+          sgst_amount?: number | null
           subtotal?: number
+          tax_amount?: number
+          tax_ids?: string[]
           tax_rate?: number
+          total?: number
           unit_price?: number
+          units?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -899,30 +1048,42 @@ export type Database = {
       }
       pricelist_items: {
         Row: {
+          category_id: string | null
           created_at: string
+          discount_percentage: number | null
+          end_date: string | null
           id: string
           min_qty: number
           price: number
           pricelist_id: string
           product_id: string | null
+          start_date: string | null
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
+          discount_percentage?: number | null
+          end_date?: string | null
           id?: string
           min_qty?: number
           price?: number
           pricelist_id: string
           product_id?: string | null
+          start_date?: string | null
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
+          discount_percentage?: number | null
+          end_date?: string | null
           id?: string
           min_qty?: number
           price?: number
           pricelist_id?: string
           product_id?: string | null
+          start_date?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -944,39 +1105,56 @@ export type Database = {
       }
       pricelists: {
         Row: {
+          code: string | null
           created_at: string
           created_by: string | null
           currency: string
           end_date: string | null
           id: string
           is_active: boolean
+          is_default: boolean
           name: string
+          parent_pricelist_id: string | null
           start_date: string | null
           updated_at: string
         }
         Insert: {
+          code?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           end_date?: string | null
           id?: string
           is_active?: boolean
+          is_default?: boolean
           name: string
+          parent_pricelist_id?: string | null
           start_date?: string | null
           updated_at?: string
         }
         Update: {
+          code?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           end_date?: string | null
           id?: string
           is_active?: boolean
+          is_default?: boolean
           name?: string
+          parent_pricelist_id?: string | null
           start_date?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pricelists_parent_pricelist_id_fkey"
+            columns: ["parent_pricelist_id"]
+            isOneToOne: false
+            referencedRelation: "pricelists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -1072,42 +1250,96 @@ export type Database = {
       }
       quotation_lines: {
         Row: {
+          barcode: string | null
+          cgst_amount: number | null
           created_at: string
+          customization: string | null
           description: string | null
           discount: number
+          discount_amount: number | null
+          discount_type: string
+          discount_value: number | null
+          final_amount: number | null
+          gst_rate: number | null
           id: string
+          igst_amount: number | null
+          net_amount: number | null
+          per_line_discount_type: string | null
           product_id: string | null
+          product_name: string | null
           quantity: number
           quotation_id: string
+          sgst_amount: number | null
+          stock_available: number | null
           subtotal: number
+          tax_amount: number
+          tax_ids: string[]
           tax_rate: number
+          total: number
           unit_price: number
+          units: number | null
           updated_at: string
         }
         Insert: {
+          barcode?: string | null
+          cgst_amount?: number | null
           created_at?: string
+          customization?: string | null
           description?: string | null
           discount?: number
+          discount_amount?: number | null
+          discount_type?: string
+          discount_value?: number | null
+          final_amount?: number | null
+          gst_rate?: number | null
           id?: string
+          igst_amount?: number | null
+          net_amount?: number | null
+          per_line_discount_type?: string | null
           product_id?: string | null
+          product_name?: string | null
           quantity?: number
           quotation_id: string
+          sgst_amount?: number | null
+          stock_available?: number | null
           subtotal?: number
+          tax_amount?: number
+          tax_ids?: string[]
           tax_rate?: number
+          total?: number
           unit_price?: number
+          units?: number | null
           updated_at?: string
         }
         Update: {
+          barcode?: string | null
+          cgst_amount?: number | null
           created_at?: string
+          customization?: string | null
           description?: string | null
           discount?: number
+          discount_amount?: number | null
+          discount_type?: string
+          discount_value?: number | null
+          final_amount?: number | null
+          gst_rate?: number | null
           id?: string
+          igst_amount?: number | null
+          net_amount?: number | null
+          per_line_discount_type?: string | null
           product_id?: string | null
+          product_name?: string | null
           quantity?: number
           quotation_id?: string
+          sgst_amount?: number | null
+          stock_available?: number | null
           subtotal?: number
+          tax_amount?: number
+          tax_ids?: string[]
           tax_rate?: number
+          total?: number
           unit_price?: number
+          units?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1127,54 +1359,299 @@ export type Database = {
           },
         ]
       }
+      quotation_versions: {
+        Row: {
+          change_notes: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          quotation_id: string
+          version: number
+        }
+        Insert: {
+          change_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          id?: string
+          quotation_id: string
+          version: number
+        }
+        Update: {
+          change_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          quotation_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_versions_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotations: {
         Row: {
+          accepted_at: string | null
+          billing_address_line_1: string | null
+          billing_address_line_2: string | null
+          billing_cargo_elevator: boolean | null
+          billing_city: string | null
+          billing_customer_name: string | null
+          billing_floor_number: number | null
+          billing_gstin: string | null
+          billing_location_type: string | null
+          billing_name: string | null
+          billing_office_cargo_elevator: boolean | null
+          billing_office_floor_number: number | null
+          billing_office_staircase_height: number | null
+          billing_office_staircase_width: number | null
+          billing_phone_1: string | null
+          billing_phone_2: string | null
+          billing_road_available_for_tempo: boolean | null
+          billing_staircase_height: number | null
+          billing_staircase_width: number | null
+          billing_state: string | null
+          billing_zip: string | null
+          contact_id: string | null
+          contact_name: string | null
+          converted_to_order_id: string | null
           created_at: string
           created_by: string | null
           currency: string
+          current_version: number
           customer_id: string | null
+          customer_name: string | null
           date: string
+          delivery_address_line_1: string | null
+          delivery_address_line_2: string | null
+          delivery_cargo_elevator: boolean | null
+          delivery_city: string | null
+          delivery_floor_number: number | null
+          delivery_gstin: string | null
+          delivery_location_type: string | null
+          delivery_name: string | null
+          delivery_office_cargo_elevator: boolean | null
+          delivery_office_floor_number: number | null
+          delivery_office_staircase_height: number | null
+          delivery_office_staircase_width: number | null
+          delivery_road_available_for_tempo: boolean | null
+          delivery_same_as_billing: boolean | null
+          delivery_staircase_height: number | null
+          delivery_staircase_width: number | null
+          delivery_state: string | null
+          delivery_zip: string | null
+          discount_amount: number
           expiry_date: string | null
+          global_discount: number
+          global_discount_type: string
+          grand_total: number | null
+          gst_type: string | null
           id: string
           notes: string | null
+          opportunity_id: string | null
+          order_discount_amount: number | null
+          order_discount_type: string | null
+          order_discount_value: number | null
+          payment_terms: string | null
+          points_earned: number | null
+          points_redeemed: number | null
+          pricelist_id: string | null
+          redemption_amount: number | null
           reference: string
+          sales_team: string | null
+          salesperson_id: string | null
+          salesperson_name: string | null
+          sent_at: string | null
           status: string
           subtotal: number
           tax_amount: number
+          terms_and_conditions: string | null
           total: number
+          total_cgst: number | null
+          total_gst: number | null
+          total_igst: number | null
+          total_sgst: number | null
+          total_untaxed: number | null
           updated_at: string
+          valid_until: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          billing_address_line_1?: string | null
+          billing_address_line_2?: string | null
+          billing_cargo_elevator?: boolean | null
+          billing_city?: string | null
+          billing_customer_name?: string | null
+          billing_floor_number?: number | null
+          billing_gstin?: string | null
+          billing_location_type?: string | null
+          billing_name?: string | null
+          billing_office_cargo_elevator?: boolean | null
+          billing_office_floor_number?: number | null
+          billing_office_staircase_height?: number | null
+          billing_office_staircase_width?: number | null
+          billing_phone_1?: string | null
+          billing_phone_2?: string | null
+          billing_road_available_for_tempo?: boolean | null
+          billing_staircase_height?: number | null
+          billing_staircase_width?: number | null
+          billing_state?: string | null
+          billing_zip?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          converted_to_order_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          current_version?: number
           customer_id?: string | null
+          customer_name?: string | null
           date?: string
+          delivery_address_line_1?: string | null
+          delivery_address_line_2?: string | null
+          delivery_cargo_elevator?: boolean | null
+          delivery_city?: string | null
+          delivery_floor_number?: number | null
+          delivery_gstin?: string | null
+          delivery_location_type?: string | null
+          delivery_name?: string | null
+          delivery_office_cargo_elevator?: boolean | null
+          delivery_office_floor_number?: number | null
+          delivery_office_staircase_height?: number | null
+          delivery_office_staircase_width?: number | null
+          delivery_road_available_for_tempo?: boolean | null
+          delivery_same_as_billing?: boolean | null
+          delivery_staircase_height?: number | null
+          delivery_staircase_width?: number | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
+          discount_amount?: number
           expiry_date?: string | null
+          global_discount?: number
+          global_discount_type?: string
+          grand_total?: number | null
+          gst_type?: string | null
           id?: string
           notes?: string | null
+          opportunity_id?: string | null
+          order_discount_amount?: number | null
+          order_discount_type?: string | null
+          order_discount_value?: number | null
+          payment_terms?: string | null
+          points_earned?: number | null
+          points_redeemed?: number | null
+          pricelist_id?: string | null
+          redemption_amount?: number | null
           reference: string
+          sales_team?: string | null
+          salesperson_id?: string | null
+          salesperson_name?: string | null
+          sent_at?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
+          terms_and_conditions?: string | null
           total?: number
+          total_cgst?: number | null
+          total_gst?: number | null
+          total_igst?: number | null
+          total_sgst?: number | null
+          total_untaxed?: number | null
           updated_at?: string
+          valid_until?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          billing_address_line_1?: string | null
+          billing_address_line_2?: string | null
+          billing_cargo_elevator?: boolean | null
+          billing_city?: string | null
+          billing_customer_name?: string | null
+          billing_floor_number?: number | null
+          billing_gstin?: string | null
+          billing_location_type?: string | null
+          billing_name?: string | null
+          billing_office_cargo_elevator?: boolean | null
+          billing_office_floor_number?: number | null
+          billing_office_staircase_height?: number | null
+          billing_office_staircase_width?: number | null
+          billing_phone_1?: string | null
+          billing_phone_2?: string | null
+          billing_road_available_for_tempo?: boolean | null
+          billing_staircase_height?: number | null
+          billing_staircase_width?: number | null
+          billing_state?: string | null
+          billing_zip?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          converted_to_order_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          current_version?: number
           customer_id?: string | null
+          customer_name?: string | null
           date?: string
+          delivery_address_line_1?: string | null
+          delivery_address_line_2?: string | null
+          delivery_cargo_elevator?: boolean | null
+          delivery_city?: string | null
+          delivery_floor_number?: number | null
+          delivery_gstin?: string | null
+          delivery_location_type?: string | null
+          delivery_name?: string | null
+          delivery_office_cargo_elevator?: boolean | null
+          delivery_office_floor_number?: number | null
+          delivery_office_staircase_height?: number | null
+          delivery_office_staircase_width?: number | null
+          delivery_road_available_for_tempo?: boolean | null
+          delivery_same_as_billing?: boolean | null
+          delivery_staircase_height?: number | null
+          delivery_staircase_width?: number | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
+          discount_amount?: number
           expiry_date?: string | null
+          global_discount?: number
+          global_discount_type?: string
+          grand_total?: number | null
+          gst_type?: string | null
           id?: string
           notes?: string | null
+          opportunity_id?: string | null
+          order_discount_amount?: number | null
+          order_discount_type?: string | null
+          order_discount_value?: number | null
+          payment_terms?: string | null
+          points_earned?: number | null
+          points_redeemed?: number | null
+          pricelist_id?: string | null
+          redemption_amount?: number | null
           reference?: string
+          sales_team?: string | null
+          salesperson_id?: string | null
+          salesperson_name?: string | null
+          sent_at?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
+          terms_and_conditions?: string | null
           total?: number
+          total_cgst?: number | null
+          total_gst?: number | null
+          total_igst?: number | null
+          total_sgst?: number | null
+          total_untaxed?: number | null
           updated_at?: string
+          valid_until?: string | null
         }
         Relationships: [
           {
@@ -1182,6 +1659,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_pricelist_id_fkey"
+            columns: ["pricelist_id"]
+            isOneToOne: false
+            referencedRelation: "pricelists"
             referencedColumns: ["id"]
           },
         ]
@@ -1333,51 +1817,267 @@ export type Database = {
       }
       sales_orders: {
         Row: {
+          billing_address: string | null
+          billing_address_line_1: string | null
+          billing_address_line_2: string | null
+          billing_cargo_elevator: boolean | null
+          billing_city: string | null
+          billing_customer_name: string | null
+          billing_floor_number: number | null
+          billing_gstin: string | null
+          billing_location_type: string | null
+          billing_name: string | null
+          billing_office_cargo_elevator: boolean | null
+          billing_office_floor_number: number | null
+          billing_office_staircase_height: number | null
+          billing_office_staircase_width: number | null
+          billing_phone_1: string | null
+          billing_phone_2: string | null
+          billing_road_available_for_tempo: boolean | null
+          billing_staircase_height: number | null
+          billing_staircase_width: number | null
+          billing_state: string | null
+          billing_zip: string | null
+          commitment_date: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          contact_id: string | null
+          contact_name: string | null
           created_at: string
           created_by: string | null
+          currency: string
           customer_id: string | null
+          customer_name: string | null
+          delivery_address: string | null
+          delivery_address_line_1: string | null
+          delivery_address_line_2: string | null
+          delivery_cargo_elevator: boolean | null
+          delivery_city: string | null
           delivery_date: string | null
+          delivery_floor_number: number | null
+          delivery_gstin: string | null
+          delivery_location_type: string | null
+          delivery_name: string | null
+          delivery_office_cargo_elevator: boolean | null
+          delivery_office_floor_number: number | null
+          delivery_office_staircase_height: number | null
+          delivery_office_staircase_width: number | null
+          delivery_road_available_for_tempo: boolean | null
+          delivery_same_as_billing: boolean | null
+          delivery_staircase_height: number | null
+          delivery_staircase_width: number | null
+          delivery_state: string | null
+          delivery_status: string | null
+          delivery_zip: string | null
+          discount_amount: number
+          fiscal_position_id: string | null
+          grand_total: number | null
+          gst_type: string | null
           id: string
+          invoice_ids: string[]
+          invoice_status: string | null
+          locked_at: string | null
+          locked_by: string | null
           notes: string | null
           order_date: string
+          order_discount_amount: number | null
+          order_discount_type: string | null
+          order_discount_value: number | null
+          payment_terms: string | null
+          points_earned: number | null
+          points_redeemed: number | null
+          pricelist_id: string | null
           quotation_id: string | null
+          redemption_amount: number | null
           reference: string
+          sales_team: string | null
+          salesperson_id: string | null
+          salesperson_name: string | null
           status: string
           subtotal: number
           tax_amount: number
           total: number
+          total_cgst: number | null
+          total_gst: number | null
+          total_igst: number | null
+          total_sgst: number | null
+          total_untaxed: number | null
           updated_at: string
         }
         Insert: {
+          billing_address?: string | null
+          billing_address_line_1?: string | null
+          billing_address_line_2?: string | null
+          billing_cargo_elevator?: boolean | null
+          billing_city?: string | null
+          billing_customer_name?: string | null
+          billing_floor_number?: number | null
+          billing_gstin?: string | null
+          billing_location_type?: string | null
+          billing_name?: string | null
+          billing_office_cargo_elevator?: boolean | null
+          billing_office_floor_number?: number | null
+          billing_office_staircase_height?: number | null
+          billing_office_staircase_width?: number | null
+          billing_phone_1?: string | null
+          billing_phone_2?: string | null
+          billing_road_available_for_tempo?: boolean | null
+          billing_staircase_height?: number | null
+          billing_staircase_width?: number | null
+          billing_state?: string | null
+          billing_zip?: string | null
+          commitment_date?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string | null
+          customer_name?: string | null
+          delivery_address?: string | null
+          delivery_address_line_1?: string | null
+          delivery_address_line_2?: string | null
+          delivery_cargo_elevator?: boolean | null
+          delivery_city?: string | null
           delivery_date?: string | null
+          delivery_floor_number?: number | null
+          delivery_gstin?: string | null
+          delivery_location_type?: string | null
+          delivery_name?: string | null
+          delivery_office_cargo_elevator?: boolean | null
+          delivery_office_floor_number?: number | null
+          delivery_office_staircase_height?: number | null
+          delivery_office_staircase_width?: number | null
+          delivery_road_available_for_tempo?: boolean | null
+          delivery_same_as_billing?: boolean | null
+          delivery_staircase_height?: number | null
+          delivery_staircase_width?: number | null
+          delivery_state?: string | null
+          delivery_status?: string | null
+          delivery_zip?: string | null
+          discount_amount?: number
+          fiscal_position_id?: string | null
+          grand_total?: number | null
+          gst_type?: string | null
           id?: string
+          invoice_ids?: string[]
+          invoice_status?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_date?: string
+          order_discount_amount?: number | null
+          order_discount_type?: string | null
+          order_discount_value?: number | null
+          payment_terms?: string | null
+          points_earned?: number | null
+          points_redeemed?: number | null
+          pricelist_id?: string | null
           quotation_id?: string | null
+          redemption_amount?: number | null
           reference: string
+          sales_team?: string | null
+          salesperson_id?: string | null
+          salesperson_name?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
           total?: number
+          total_cgst?: number | null
+          total_gst?: number | null
+          total_igst?: number | null
+          total_sgst?: number | null
+          total_untaxed?: number | null
           updated_at?: string
         }
         Update: {
+          billing_address?: string | null
+          billing_address_line_1?: string | null
+          billing_address_line_2?: string | null
+          billing_cargo_elevator?: boolean | null
+          billing_city?: string | null
+          billing_customer_name?: string | null
+          billing_floor_number?: number | null
+          billing_gstin?: string | null
+          billing_location_type?: string | null
+          billing_name?: string | null
+          billing_office_cargo_elevator?: boolean | null
+          billing_office_floor_number?: number | null
+          billing_office_staircase_height?: number | null
+          billing_office_staircase_width?: number | null
+          billing_phone_1?: string | null
+          billing_phone_2?: string | null
+          billing_road_available_for_tempo?: boolean | null
+          billing_staircase_height?: number | null
+          billing_staircase_width?: number | null
+          billing_state?: string | null
+          billing_zip?: string | null
+          commitment_date?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string | null
+          customer_name?: string | null
+          delivery_address?: string | null
+          delivery_address_line_1?: string | null
+          delivery_address_line_2?: string | null
+          delivery_cargo_elevator?: boolean | null
+          delivery_city?: string | null
           delivery_date?: string | null
+          delivery_floor_number?: number | null
+          delivery_gstin?: string | null
+          delivery_location_type?: string | null
+          delivery_name?: string | null
+          delivery_office_cargo_elevator?: boolean | null
+          delivery_office_floor_number?: number | null
+          delivery_office_staircase_height?: number | null
+          delivery_office_staircase_width?: number | null
+          delivery_road_available_for_tempo?: boolean | null
+          delivery_same_as_billing?: boolean | null
+          delivery_staircase_height?: number | null
+          delivery_staircase_width?: number | null
+          delivery_state?: string | null
+          delivery_status?: string | null
+          delivery_zip?: string | null
+          discount_amount?: number
+          fiscal_position_id?: string | null
+          grand_total?: number | null
+          gst_type?: string | null
           id?: string
+          invoice_ids?: string[]
+          invoice_status?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_date?: string
+          order_discount_amount?: number | null
+          order_discount_type?: string | null
+          order_discount_value?: number | null
+          payment_terms?: string | null
+          points_earned?: number | null
+          points_redeemed?: number | null
+          pricelist_id?: string | null
           quotation_id?: string | null
+          redemption_amount?: number | null
           reference?: string
+          sales_team?: string | null
+          salesperson_id?: string | null
+          salesperson_name?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
           total?: number
+          total_cgst?: number | null
+          total_gst?: number | null
+          total_igst?: number | null
+          total_sgst?: number | null
+          total_untaxed?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1386,6 +2086,20 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_fiscal_position_id_fkey"
+            columns: ["fiscal_position_id"]
+            isOneToOne: false
+            referencedRelation: "sales_fiscal_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_pricelist_id_fkey"
+            columns: ["pricelist_id"]
+            isOneToOne: false
+            referencedRelation: "pricelists"
             referencedColumns: ["id"]
           },
           {
@@ -1678,44 +2392,128 @@ export type Database = {
           },
         ]
       }
-      subscriptions: {
+      subscription_lines: {
         Row: {
-          billing_period: string
           created_at: string
-          created_by: string | null
-          customer_id: string | null
+          discount: number
           id: string
-          next_billing_date: string | null
-          price: number
           product_id: string | null
-          start_date: string
-          status: string
+          product_name: string | null
+          quantity: number
+          subscription_id: string
+          unit_price: number
           updated_at: string
         }
         Insert: {
-          billing_period?: string
           created_at?: string
-          created_by?: string | null
-          customer_id?: string | null
+          discount?: number
           id?: string
-          next_billing_date?: string | null
-          price?: number
           product_id?: string | null
-          start_date?: string
-          status?: string
+          product_name?: string | null
+          quantity?: number
+          subscription_id: string
+          unit_price?: number
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          discount?: number
+          id?: string
+          product_id?: string | null
+          product_name?: string | null
+          quantity?: number
+          subscription_id?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_lines_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          billing_cycle: string
+          billing_period: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string | null
+          customer_name: string | null
+          end_date: string | null
+          id: string
+          last_order_id: string | null
+          next_billing_date: string | null
+          order_history: string[]
+          payment_terms: string | null
+          price: number
+          product_id: string | null
+          reference: string | null
+          start_date: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
           billing_period?: string
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string | null
+          customer_name?: string | null
+          end_date?: string | null
           id?: string
+          last_order_id?: string | null
           next_billing_date?: string | null
+          order_history?: string[]
+          payment_terms?: string | null
           price?: number
           product_id?: string | null
+          reference?: string | null
           start_date?: string
           status?: string
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          billing_period?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          end_date?: string | null
+          id?: string
+          last_order_id?: string | null
+          next_billing_date?: string | null
+          order_history?: string[]
+          payment_terms?: string | null
+          price?: number
+          product_id?: string | null
+          reference?: string | null
+          start_date?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total?: number
           updated_at?: string
         }
         Relationships: [

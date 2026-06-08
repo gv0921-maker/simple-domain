@@ -23,8 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ArrowLeft, Plus, Trash2, Percent } from 'lucide-react';
-import { getPricelists, savePricelist } from '@/lib/services/sales/storage';
-import type { Pricelist, PricelistRule } from '@/lib/services/sales/types';
+import { usePricelist, useSavePricelist, type SbPricelistItem } from '@/hooks/sales';
 import { useProducts } from '@/hooks/inventory';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +41,8 @@ export default function PricelistForm() {
   const { toast } = useToast();
   const { data: products = [] } = useProducts();
   const isEdit = !!id;
+  const { data: existing } = usePricelist(id);
+  const saveMut = useSavePricelist();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -50,7 +51,8 @@ export default function PricelistForm() {
     isActive: true,
     isDefault: false,
   });
-  const [rules, setRules] = useState<PricelistRule[]>([]);
+  type LocalRule = Omit<SbPricelistItem, 'id' | 'pricelistId'> & { tmpId: string };
+  const [rules, setRules] = useState<LocalRule[]>([]);
   const [newRule, setNewRule] = useState({
     productId: '',
     minQuantity: 1,
@@ -58,23 +60,26 @@ export default function PricelistForm() {
   });
 
   useEffect(() => {
-    if (id) {
-      const pricelists = getPricelists();
-      const pricelist = pricelists.find(p => p.id === id);
-      if (pricelist) {
-        setFormData({
-          name: pricelist.name,
-          code: pricelist.code,
-          currency: pricelist.currency,
-          isActive: pricelist.isActive,
-          isDefault: pricelist.isDefault,
-        });
-        setRules(pricelist.rules);
-      } else {
-        navigate('/sales/pricelists');
-      }
+    if (existing) {
+      setFormData({
+        name: existing.name,
+        code: existing.code ?? '',
+        currency: existing.currency,
+        isActive: existing.isActive,
+        isDefault: existing.isDefault,
+      });
+      setRules((existing.items ?? []).map(i => ({
+        tmpId: i.id,
+        productId: i.productId,
+        price: i.price,
+        minQty: i.minQty,
+        categoryId: i.categoryId,
+        discountPercentage: i.discountPercentage,
+        startDate: i.startDate,
+        endDate: i.endDate,
+      })));
     }
-  }, [id, navigate]);
+  }, [existing]);
 
   const handleAddRule = useCallback(() => {
     if (newRule.minQuantity < 1 || newRule.discountPercentage < 0) {
@@ -82,10 +87,14 @@ export default function PricelistForm() {
       return;
     }
     setRules(prev => [...prev, {
-      id: crypto.randomUUID(),
-      productId: newRule.productId || undefined,
-      minQuantity: newRule.minQuantity,
+      tmpId: crypto.randomUUID(),
+      productId: newRule.productId || null,
+      price: 0,
+      minQty: newRule.minQuantity,
+      categoryId: null,
       discountPercentage: newRule.discountPercentage,
+      startDate: null,
+      endDate: null,
     }]);
     setNewRule({ productId: '', minQuantity: 1, discountPercentage: 0 });
   }, [newRule, toast]);
@@ -95,24 +104,27 @@ export default function PricelistForm() {
       toast({ title: 'Please fill required fields', variant: 'destructive' });
       return;
     }
-
-    const existing = id ? getPricelists().find(p => p.id === id) : undefined;
-    const pricelistData: Pricelist = {
-      id: existing?.id || crypto.randomUUID(),
-      name: formData.name,
-      code: formData.code,
-      currency: formData.currency,
-      isActive: formData.isActive,
-      isDefault: formData.isDefault,
-      rules,
-      createdAt: existing?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    savePricelist(pricelistData);
-    toast({ title: isEdit ? 'Pricelist updated' : 'Pricelist created' });
-    navigate('/sales/pricelists');
-  }, [formData, rules, id, isEdit, toast, navigate]);
+    saveMut.mutate(
+      {
+        pricelist: {
+          ...(id ? { id } : {}),
+          name: formData.name,
+          code: formData.code,
+          currency: formData.currency,
+          isActive: formData.isActive,
+          isDefault: formData.isDefault,
+        },
+        items: rules.map(({ tmpId, ...rest }) => rest),
+      },
+      {
+        onSuccess: () => {
+          toast({ title: isEdit ? 'Pricelist updated' : 'Pricelist created' });
+          navigate('/sales/pricelists');
+        },
+        onError: (e: any) => toast({ title: e?.message ?? 'Save failed', variant: 'destructive' }),
+      },
+    );
+  }, [formData, rules, id, isEdit, toast, navigate, saveMut]);
 
   return (
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
@@ -185,7 +197,7 @@ export default function PricelistForm() {
               <Select value={newRule.productId} onValueChange={(v) => setNewRule({ ...newRule, productId: v })}>
                 <SelectTrigger className="flex-1"><SelectValue placeholder="All products" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Products</SelectItem>
+                  <SelectItem value="__all__">All Products</SelectItem>
                   {products.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
@@ -227,18 +239,18 @@ export default function PricelistForm() {
                   </TableRow>
                 ) : (
                   rules.map(rule => (
-                    <TableRow key={rule.id}>
+                    <TableRow key={rule.tmpId}>
                       <TableCell>
                         {rule.productId
                           ? products.find(p => p.id === rule.productId)?.name || 'Unknown'
                           : 'All Products'}
                       </TableCell>
-                      <TableCell className="text-right">{rule.minQuantity}+</TableCell>
+                      <TableCell className="text-right">{rule.minQty}+</TableCell>
                       <TableCell className="text-right">
-                        <Badge variant="outline" className="text-success">-{rule.discountPercentage}%</Badge>
+                        <Badge variant="outline" className="text-success">-{rule.discountPercentage ?? 0}%</Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => setRules(prev => prev.filter(r => r.id !== rule.id))} className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" onClick={() => setRules(prev => prev.filter(r => r.tmpId !== rule.tmpId))} className="h-8 w-8 text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>

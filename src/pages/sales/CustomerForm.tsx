@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { getContacts, saveContact, type Contact } from '@/lib/services/sales';
+import { useCustomer, useSaveCustomer } from '@/hooks/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,61 +15,59 @@ export default function CustomerForm() {
   const { id } = useParams();
   const { toast } = useToast();
   const isEdit = !!id;
+  const { data: existing } = useCustomer(id);
+  const saveMut = useSaveCustomer();
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     company: '',
-    jobTitle: '',
+    contactPerson: '',
     address: '',
     notes: '',
   });
 
   useEffect(() => {
-    if (id) {
-      const contacts = getContacts();
-      const contact = contacts.find(c => c.id === id);
-      if (contact) {
-        setFormData({
-          name: contact.name,
-          email: contact.email,
-          phone: contact.phone || '',
-          company: contact.company || '',
-          jobTitle: contact.jobTitle || '',
-          address: contact.address || '',
-          notes: contact.notes || '',
-        });
-      } else {
-        navigate('/sales/customers');
-      }
+    if (existing) {
+      setFormData({
+        name: existing.name,
+        email: existing.email ?? '',
+        phone: existing.phone ?? '',
+        company: existing.company ?? '',
+        contactPerson: existing.contactPerson ?? '',
+        address: existing.address ?? '',
+        notes: existing.notes ?? '',
+      });
     }
-  }, [id, navigate]);
+  }, [existing]);
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.email) {
-      toast({ title: 'Name and email are required', variant: 'destructive' });
+    if (!formData.name) {
+      toast({ title: 'Name is required', variant: 'destructive' });
       return;
     }
 
-    const existingContact = id ? getContacts().find(c => c.id === id) : undefined;
-    const contactData: Contact = {
-      id: existingContact?.id || '',
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      company: formData.company,
-      jobTitle: formData.jobTitle,
-      address: formData.address,
-      tags: existingContact?.tags || [],
-      notes: formData.notes,
-      createdAt: existingContact?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    saveContact(contactData);
-    toast({ title: isEdit ? 'Customer updated' : 'Customer created' });
-    navigate('/sales/customers');
+    saveMut.mutate(
+      {
+        ...(id ? { id } : {}),
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        contactPerson: formData.contactPerson || null,
+        address: formData.address || null,
+        notes: formData.notes || null,
+        isActive: true,
+      },
+      {
+        onSuccess: () => {
+          toast({ title: isEdit ? 'Customer updated' : 'Customer created' });
+          navigate('/sales/customers');
+        },
+        onError: (e: any) => toast({ title: 'Save failed', description: e?.message, variant: 'destructive' }),
+      },
+    );
   };
 
   return (
@@ -103,7 +101,7 @@ export default function CustomerForm() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Email *</Label>
+                <Label>Email</Label>
                 <Input
                   type="email"
                   value={formData.email}
@@ -128,10 +126,10 @@ export default function CustomerForm() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label>Job Title</Label>
+              <Label>Contact Person</Label>
               <Input
-                value={formData.jobTitle}
-                onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                value={formData.contactPerson}
+                onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -146,7 +144,9 @@ export default function CustomerForm() {
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => navigate('/sales/customers')}>Cancel</Button>
-          <Button onClick={handleSubmit}>{isEdit ? 'Update' : 'Create'} Customer</Button>
+          <Button onClick={handleSubmit} disabled={saveMut.isPending}>
+            {saveMut.isPending ? 'Saving…' : isEdit ? 'Update' : 'Create'} Customer
+          </Button>
         </div>
       </div>
     </AppLayout>
