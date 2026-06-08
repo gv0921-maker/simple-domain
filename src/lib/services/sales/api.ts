@@ -6,6 +6,12 @@
 // legacy exports until every consumer is moved over.
 
 import { supabase } from '@/integrations/supabase/client';
+import type {
+  Quotation, QuotationLine, QuotationVersion,
+  SalesOrder, SalesOrderLine, OrderActivity,
+  Subscription, SubscriptionLine,
+  QuotationStatus, SalesOrderStatus,
+} from '@/lib/data/sales/types';
 
 // ---------- Row shapes (DB-aligned) ----------
 export interface SbCustomer {
