@@ -1080,6 +1080,8 @@ export type Database = {
       }
       invoice_lines: {
         Row: {
+          approval_notes: string | null
+          approved_price: number | null
           created_at: string
           description: string | null
           discount: number
@@ -1093,6 +1095,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approval_notes?: string | null
+          approved_price?: number | null
           created_at?: string
           description?: string | null
           discount?: number
@@ -1106,6 +1110,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approval_notes?: string | null
+          approved_price?: number | null
           created_at?: string
           description?: string | null
           discount?: number
@@ -1146,6 +1152,7 @@ export type Database = {
           issue_date: string
           notes: string | null
           paid_amount: number
+          price_approval_status: string
           reference: string
           sales_order_id: string | null
           status: string
@@ -1165,6 +1172,7 @@ export type Database = {
           issue_date?: string
           notes?: string | null
           paid_amount?: number
+          price_approval_status?: string
           reference: string
           sales_order_id?: string | null
           status?: string
@@ -1184,6 +1192,7 @@ export type Database = {
           issue_date?: string
           notes?: string | null
           paid_amount?: number
+          price_approval_status?: string
           reference?: string
           sales_order_id?: string | null
           status?: string
@@ -1593,6 +1602,7 @@ export type Database = {
           created_at: string
           default_location_id: string | null
           description: string | null
+          factory_eligible: boolean
           id: string
           image_url: string | null
           is_active: boolean
@@ -1609,6 +1619,7 @@ export type Database = {
           updated_at: string
           variants: Json
           volume: number | null
+          warranty_eligible: boolean
           weight: number | null
         }
         Insert: {
@@ -1620,6 +1631,7 @@ export type Database = {
           created_at?: string
           default_location_id?: string | null
           description?: string | null
+          factory_eligible?: boolean
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1636,6 +1648,7 @@ export type Database = {
           updated_at?: string
           variants?: Json
           volume?: number | null
+          warranty_eligible?: boolean
           weight?: number | null
         }
         Update: {
@@ -1647,6 +1660,7 @@ export type Database = {
           created_at?: string
           default_location_id?: string | null
           description?: string | null
+          factory_eligible?: boolean
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1663,6 +1677,7 @@ export type Database = {
           updated_at?: string
           variants?: Json
           volume?: number | null
+          warranty_eligible?: boolean
           weight?: number | null
         }
         Relationships: [
