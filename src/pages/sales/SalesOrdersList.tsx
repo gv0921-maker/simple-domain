@@ -61,6 +61,7 @@ const STATUS_CONFIG: Record<SalesOrderStatus, { label: string; className: string
   estimate: { label: 'Estimate', className: 'bg-muted text-muted-foreground', icon: FileText },
   confirmed: { label: 'Confirmed', className: 'bg-success/20 text-success border-success', icon: CheckCircle },
   paid: { label: 'Paid', className: 'bg-success/20 text-success border-success', icon: CheckCircle },
+  invoiced: { label: 'Invoiced', className: 'bg-primary/20 text-primary border-primary', icon: FileText },
   ready_to_pick: { label: 'Ready to Pick', className: 'bg-info/20 text-info border-info', icon: ShoppingCart },
   dispatched: { label: 'Dispatched', className: 'bg-primary/20 text-primary border-primary', icon: ShoppingCart },
   delivered: { label: 'Delivered', className: 'bg-success/20 text-success border-success', icon: CheckCircle },
