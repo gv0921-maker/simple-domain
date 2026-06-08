@@ -28,6 +28,8 @@ import {
 import { cn } from '@/lib/utils';
 import { canAccessRoute } from '@/lib/services/settings';
 import { isSuperAdminUser } from '@/lib/data/rbac';
+import { usePendingPriceApprovalsCount } from '@/hooks/invoicing';
+import { Badge } from '@/components/ui/badge';
 
 interface TopNavProps {
   title?: string;
@@ -39,6 +41,8 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isSuper = user ? isSuperAdminUser(user.id) : false;
+  const { data: pendingApprovals = 0 } = usePendingPriceApprovalsCount(isSuper);
 
   const mobileNavItems = [
     { label: 'Home', href: '/', icon: Home },
@@ -162,7 +166,12 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
               <>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  <span className="flex-1">Settings</span>
+                  {isSuper && pendingApprovals > 0 && (
+                    <Badge variant="destructive" className="ml-2 h-5 px-1.5 text-[10px]">
+                      {pendingApprovals}
+                    </Badge>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>

@@ -72,8 +72,8 @@ import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 import InvoicesList from "@/pages/invoicing/InvoicesList";
 import InvoiceForm from "@/pages/invoicing/InvoiceForm";
 import BillsList from "@/pages/invoicing/BillsList";
-import MinimumBillsList from "@/pages/invoicing/MinimumBillsList";
-import KHBillsList from "@/pages/invoicing/KHBillsList";
+import WarrantyBillsList from "@/pages/invoicing/WarrantyBillsList";
+import FactoryBillsList from "@/pages/invoicing/FactoryBillsList";
 import PaymentsList from "@/pages/invoicing/PaymentsList";
 
 // Settings pages
@@ -88,6 +88,7 @@ import CRMPipelinesSettings from "@/pages/settings/CRMPipelinesSettings";
 import CRMBackupSettings from "@/pages/settings/CRMBackupSettings";
 import CRMDataSchema from "@/pages/settings/CRMDataSchema";
 import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
+import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 
 import NotFound from "@/pages/NotFound";
 
@@ -170,6 +171,7 @@ const App = () => (
             <Route path="/settings/crm-backup" element={<ProtectedRoute><CRMBackupSettings /></ProtectedRoute>} />
             <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
+            <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
 
             {/* Placeholder routes */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
@@ -202,8 +204,8 @@ const App = () => (
             {/* Invoices module */}
             <Route path="/invoicing" element={<ProtectedRoute><BillsList /></ProtectedRoute>} />
             <Route path="/invoicing/bills" element={<ProtectedRoute><BillsList /></ProtectedRoute>} />
-            <Route path="/invoicing/minimum-bills" element={<ProtectedRoute><MinimumBillsList /></ProtectedRoute>} />
-            <Route path="/invoicing/kh-bills" element={<ProtectedRoute><KHBillsList /></ProtectedRoute>} />
+            <Route path="/invoicing/warranty-bills" element={<ProtectedRoute><WarrantyBillsList /></ProtectedRoute>} />
+            <Route path="/invoicing/factory-bills" element={<ProtectedRoute><FactoryBillsList /></ProtectedRoute>} />
             <Route path="/invoicing/payments" element={<ProtectedRoute><PaymentsList /></ProtectedRoute>} />
             <Route path="/invoicing/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
             <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />

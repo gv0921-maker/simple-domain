@@ -1,8 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export type InvoiceType = 'regular' | 'kh' | 'minimum';
+export type InvoiceType = 'regular' | 'warranty' | 'factory';
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-export type PaymentMethod = 'cash' | 'bank_transfer' | 'cheque' | 'card';
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'cheque' | 'card' | 'upi';
+export type PriceApprovalStatus = 'not_required' | 'pending' | 'approved' | 'rejected';
 
 export interface InvoiceLine {
   id: string;
@@ -14,6 +15,8 @@ export interface InvoiceLine {
   discount: number;
   tax_rate: number;
   subtotal: number;
+  approved_price?: number | null;
+  approval_notes?: string | null;
 }
 
 export interface Invoice {
@@ -32,6 +35,7 @@ export interface Invoice {
   total: number;
   paid_amount: number;
   currency: string;
+  price_approval_status: PriceApprovalStatus;
   invoice_lines?: InvoiceLine[];
 }
 
@@ -50,7 +54,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const asUuid = (v: string | null | undefined) => (v && UUID_RE.test(v) ? v : null);
 
 function makeReference(type: InvoiceType): string {
-  const prefix = type === 'kh' ? 'KH' : type === 'minimum' ? 'MIN' : 'INV';
+  const prefix = type === 'factory' ? 'FAC' : type === 'warranty' ? 'WAR' : 'INV';
   const y = new Date().getFullYear();
   return `${prefix}/${y}/${Date.now().toString().slice(-6)}`;
 }
@@ -90,6 +94,7 @@ export interface SaveInvoiceInput {
   total: number;
   paid_amount?: number;
   currency?: string;
+  price_approval_status?: PriceApprovalStatus;
   lines: Array<Omit<InvoiceLine, 'id' | 'invoice_id'> & { id?: string }>;
 }
 
@@ -109,6 +114,7 @@ export async function saveInvoice(input: SaveInvoiceInput): Promise<Invoice> {
     total: input.total,
     paid_amount: input.paid_amount ?? 0,
     currency: input.currency ?? 'INR',
+    price_approval_status: input.price_approval_status ?? 'not_required',
   };
 
   let invoiceId = input.id;
@@ -132,6 +138,8 @@ export async function saveInvoice(input: SaveInvoiceInput): Promise<Invoice> {
       discount: l.discount ?? 0,
       tax_rate: l.tax_rate ?? 0,
       subtotal: l.subtotal,
+      approved_price: l.approved_price ?? null,
+      approval_notes: l.approval_notes ?? null,
     }));
     const { error: lineErr } = await supabase.from('invoice_lines').insert(rows);
     if (lineErr) throw lineErr;
@@ -170,6 +178,8 @@ export async function saveInvoiceLine(
     discount: line.discount ?? 0,
     tax_rate: line.tax_rate ?? 0,
     subtotal: line.subtotal,
+    approved_price: line.approved_price ?? null,
+    approval_notes: line.approval_notes ?? null,
   };
   if (line.id) {
     const { data, error } = await supabase
@@ -228,5 +238,48 @@ export async function savePayment(input: SavePaymentInput): Promise<Payment> {
 
 export async function deletePayment(id: string): Promise<void> {
   const { error } = await supabase.from('payments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// -------- Price approvals --------
+export async function fetchPendingPriceApprovals(): Promise<Invoice[]> {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*, invoice_lines(*)')
+    .eq('price_approval_status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Invoice[];
+}
+
+export async function fetchPendingPriceApprovalsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('invoices')
+    .select('id', { count: 'exact', head: true })
+    .eq('price_approval_status', 'pending');
+  if (error) return 0;
+  return count ?? 0;
+}
+
+export async function setInvoicePriceApproval(
+  invoiceId: string,
+  status: PriceApprovalStatus,
+): Promise<void> {
+  const { error } = await supabase
+    .from('invoices')
+    .update({ price_approval_status: status })
+    .eq('id', invoiceId);
+  if (error) throw error;
+}
+
+export async function updateInvoiceLineApproval(
+  lineId: string,
+  approved_price: number | null,
+  approval_notes: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from('invoice_lines')
+    .update({ approved_price, approval_notes })
+    .eq('id', lineId);
   if (error) throw error;
 }

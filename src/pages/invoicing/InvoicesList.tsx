@@ -27,20 +27,20 @@ const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
 };
 
 interface InvoicesListProps {
-  variant?: 'bills' | 'minimum' | 'kh';
+  variant?: 'bills' | 'warranty' | 'factory';
   title?: string;
 }
 
 const variantLabels: Record<string, string> = {
   bills: 'Bills',
-  minimum: 'Minimum Bills',
-  kh: 'KH Bills',
+  warranty: 'Warranty Bills',
+  factory: 'Factory Bills',
 };
 
 const variantToType: Record<NonNullable<InvoicesListProps['variant']>, InvoiceType> = {
   bills: 'regular',
-  minimum: 'minimum',
-  kh: 'kh',
+  warranty: 'warranty',
+  factory: 'factory',
 };
 
 export default function InvoicesList({ variant = 'bills', title }: InvoicesListProps = {}) {

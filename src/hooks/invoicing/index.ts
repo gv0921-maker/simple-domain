@@ -4,7 +4,7 @@ import { invoicingKeys } from './keys';
 
 export { invoicingKeys };
 export type {
-  Invoice, InvoiceLine, Payment, InvoiceType, InvoiceStatus,
+  Invoice, InvoiceLine, Payment, InvoiceType, InvoiceStatus, PriceApprovalStatus,
   PaymentMethod, SaveInvoiceInput, SavePaymentInput,
 } from '@/lib/services/invoicing/api';
 
@@ -74,5 +74,37 @@ export function useDeletePayment() {
   return useMutation({
     mutationFn: (id: string) => api.deletePayment(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: invoicingKeys.payments() }),
+  });
+}
+
+// -------- Price approvals --------
+export const usePendingPriceApprovals = () =>
+  useQuery({
+    queryKey: [...invoicingKeys.all, 'price-approvals'] as const,
+    queryFn: api.fetchPendingPriceApprovals,
+  });
+
+export const usePendingPriceApprovalsCount = (enabled = true) =>
+  useQuery({
+    queryKey: [...invoicingKeys.all, 'price-approvals', 'count'] as const,
+    queryFn: api.fetchPendingPriceApprovalsCount,
+    enabled,
+  });
+
+export function useSetInvoicePriceApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { invoiceId: string; status: api.PriceApprovalStatus }) =>
+      api.setInvoicePriceApproval(vars.invoiceId, vars.status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invoicingKeys.all }),
+  });
+}
+
+export function useUpdateInvoiceLineApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { lineId: string; approved_price: number | null; approval_notes: string | null }) =>
+      api.updateInvoiceLineApproval(vars.lineId, vars.approved_price, vars.approval_notes),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invoicingKeys.all }),
   });
 }

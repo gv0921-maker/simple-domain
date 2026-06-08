@@ -30,6 +30,8 @@ export interface Product {
   weight?: number;
   volume?: number;
   imageUrl?: string;
+  warrantyEligible?: boolean;
+  factoryEligible?: boolean;
   createdAt: string;
   updatedAt: string;
 }
