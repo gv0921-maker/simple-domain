@@ -1,112 +1,112 @@
+# Sales Module — Supabase Migration (Phase 2)
 
-## Sales module — Supabase migration (Phase 1)
+## Goal
+Re-point all sales pages from legacy `localStorage` storage to the Supabase-backed `@/hooks/sales` layer with **zero feature loss**. Skip CRM-backed and already-Supabase pages. Delete legacy storage once the build is clean.
 
-- Added 8 Sales tables (customers, quotations, quotation_lines, sales_orders, order_lines, pricelists, pricelist_items, subscriptions) with RLS: authenticated read all; sales_rep can write own rows; sales_manager / admin can write all.
-- New async API at `src/lib/services/sales/api.ts` (mappers + CRUD + nested lines/items).
-- New TanStack Query hooks at `src/hooks/sales/` (use{Customers,Quotations,SalesOrders,Pricelists,Subscriptions} + save/delete mutations).
-- Legacy localStorage exports under `@/lib/services/sales` and `@/lib/data/sales/storage` are kept intact so existing pages keep compiling. Pages will be migrated in a follow-up step (similar to inventory).
-# Inventory → Supabase Migration
+## Scope
 
-## Important constraint you should know about
+### Pages to migrate (14)
+SalesOverview, CustomersList, CustomerForm, QuotationsList, QuotationForm, SalesOrdersList, SalesOrderForm, SubscriptionsList, SubscriptionForm, PricelistsPage, PricelistForm, SalesReports, CustomerPortal, CustomerPortalQuotation.
 
-Your request says "keep the same function signatures so no page components need to change." That isn't physically possible: the current functions are **synchronous** (`getProducts(): Product[]` reads localStorage), and Supabase queries are **asynchronous** (return Promises). Every call site has to either become `await`-ed or move to a TanStack Query hook.
+### Skipped (already correct)
+- `OpportunitiesList`, `SalesPipeline`, `LeadDetail` — already on `@/hooks/crm`.
+- `FiscalPositionsPage`, `PromotionsPage` — already on their own Supabase tables (`sales_fiscal_positions`, `sales_seasonal_promotions`).
 
-The plan below takes the same approach already used for CRM: introduce async services + `@/hooks/inventory/*` query hooks, then update pages to consume those hooks. This is more work than your message implied — please confirm you want me to proceed on that basis before I start, or pick a smaller scope.
+## Step 1 — Schema expansion (migration)
 
-## Database schema (single migration)
+Add the missing columns so no rich field is dropped. Pure `ALTER TABLE ADD COLUMN` (nullable / sensible defaults) — no data loss, no policy changes.
 
-12 tables (you listed 7; lots/serials/adjustments/barcode/valuation are required for "everything inventory-related"):
+### `customers`
+- `type text default 'individual'` (individual | company)
+- `company text`, `default_billing_address text`, `default_delivery_address text`
+- `default_pricelist_id uuid`, `default_payment_terms text`, `fiscal_position_id uuid references sales_fiscal_positions(id)`
+- `salesperson_id text`, `credit_limit numeric(14,2)`
+- `portal_enabled boolean default false`, `portal_token text`
+- `tags text[] default '{}'`, `notes text`
 
-```text
-products              warehouses           warehouse_locations
-stock_moves           stock_move_lines     transfers
-transfer_lines        reorder_rules        lots
-serial_numbers        inventory_adjustments   adjustment_lines
-```
+### `quotations`
+- B2C address fields: all 40+ billing/delivery columns (`billing_customer_name`, `billing_phone_1/2`, `billing_address_line_1/2`, `billing_city/state/zip`, `billing_location_type`, `billing_road_available_for_tempo bool`, `billing_floor_number int`, `billing_cargo_elevator bool`, `billing_staircase_width/height int`, `billing_gstin`, `billing_office_*` variants; same for delivery; `delivery_same_as_billing bool`)
+- B2C summary: `total_untaxed`, `total_cgst`, `total_sgst`, `total_igst`, `total_gst`, `grand_total`, `gst_type text`, `order_discount_type text`, `order_discount_value numeric`, `order_discount_amount numeric`, `points_redeemed int`, `points_earned int`, `redemption_amount numeric`
+- Workflow: `customer_name text`, `contact_id uuid`, `contact_name text`, `opportunity_id uuid`, `valid_until date`, `salesperson_id text`, `salesperson_name text`, `sales_team text`, `pricelist_id uuid references pricelists(id)`, `payment_terms text`, `global_discount numeric default 0`, `global_discount_type text default 'percentage'`, `discount_amount numeric default 0`, `terms_and_conditions text`, `sent_at timestamptz`, `accepted_at timestamptz`, `converted_to_order_id uuid`, `current_version int default 1`
 
-Highlights:
-- `id uuid pk default gen_random_uuid()`, `created_at`/`updated_at timestamptz` everywhere with the existing `update_updated_at_column` trigger.
-- Snake_case columns (matches Supabase types generator); service layer maps to/from the camelCase TS types.
-- `products.barcode` unique-when-not-null; secondary barcodes kept as `text[]`.
-- `warehouse_locations.parent_location_id` self-FK; `warehouse_locations.warehouse_id → warehouses` cascade.
-- `stock_move_lines.stock_move_id → stock_moves` cascade; `transfer_lines.transfer_id → transfers` cascade; `adjustment_lines.adjustment_id → inventory_adjustments` cascade.
-- All FKs to `products` are `on delete restrict` so we don't silently break history.
-- Enums implemented as `text` + `CHECK` constraints (matches the rest of your DB style; safer than pg enums to evolve).
+### `quotation_lines`
+- `product_name text`, `discount_type text default 'percentage'`, `tax_ids text[] default '{}'` (replaces single `tax_rate` for multi-tax workflows; keep `tax_rate` for back-compat), `tax_amount numeric default 0`, `total numeric default 0`, `stock_available numeric`
+- B2C line fields: `barcode`, `customization`, `units numeric`, `net_amount numeric`, `gst_rate numeric`, `cgst_amount numeric`, `sgst_amount numeric`, `igst_amount numeric`, `per_line_discount_type text`, `discount_value numeric`, `discount_amount numeric`, `final_amount numeric`
 
-### RLS (admin-only mutations)
+### `quotation_versions` (new table)
+- `id`, `quotation_id uuid references quotations(id) on delete cascade`, `version int`, `data jsonb`, `created_at`, `created_by uuid`, `change_notes text`
+- RLS mirrors `quotations` (read-all authenticated, write follows parent ownership).
 
-For every table:
-```sql
-ALTER TABLE ... ENABLE ROW LEVEL SECURITY;
+### `sales_orders`
+- Same B2C address + summary columns as `quotations`.
+- `customer_name`, `contact_id`, `contact_name`, `commitment_date date`, `salesperson_id/name`, `sales_team`, `currency text default 'INR'`, `pricelist_id`, `payment_terms`, `fiscal_position_id uuid references sales_fiscal_positions(id)`, `discount_amount numeric default 0`
+- Workflow: `locked_at timestamptz`, `locked_by text`, `confirmed_at timestamptz`, `confirmed_by text`, `delivery_status text`, `invoice_status text`, `invoice_ids text[] default '{}'`, `delivery_address text`, `billing_address text`
 
-CREATE POLICY "read_all_authenticated" ON ... FOR SELECT TO authenticated USING (true);
-CREATE POLICY "admin_insert" ON ... FOR INSERT TO authenticated WITH CHECK (public.is_admin());
-CREATE POLICY "admin_update" ON ... FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
-CREATE POLICY "admin_delete" ON ... FOR DELETE TO authenticated USING (public.is_admin());
-```
-Reuses the `public.is_admin()` helper added in the CRM RLS migration. Per your answer "Admin only", `sales_manager` etc. cannot mutate inventory.
+### `order_lines`
+- Mirror new `quotation_lines` columns: `product_name`, `discount_type`, `tax_ids text[]`, `tax_amount`, `total`, `invoiced_qty numeric default 0`, `reserved_stock bool default false`, plus all B2C line fields.
 
-Grants in the same migration:
-```sql
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated;
-GRANT ALL ON public.<table> TO service_role;
-```
+### `order_activities` (new table)
+- `id`, `order_id uuid references sales_orders(id) on delete cascade`, `user_id text`, `user_name text`, `action text`, `details text`, `timestamp timestamptz default now()`
+- RLS: read-all authenticated, insert allowed for any authenticated user with `sales_rep`/`sales_manager`/`admin`.
 
-## Service layer rewrite (`src/lib/services/inventory/`)
+### `pricelists`
+- `code text`, `is_default bool default false`, `parent_pricelist_id uuid references pricelists(id)`
 
-- Delete the legacy re-export shims; put real async implementations here. `src/lib/data/inventory/` keeps the type file only (`types.ts`) so existing imports of types continue to work; `storage.ts` is removed.
-- Every function becomes `async` and returns a Promise. Function names are preserved (`getProducts`, `saveProduct`, `validateStockMove`, …) so search-and-replace is mechanical.
-- A `mapRow*` helper per table converts snake_case rows ↔ camelCase TS types.
-- `validateStockMove`, `approveAdjustment`, and `updateProductStock` execute their multi-row writes as RPC calls to new SECURITY DEFINER functions (`inv_validate_stock_move`, `inv_approve_adjustment`) so stock math is atomic instead of two round-trips.
-- `getUserInventoryPermissions` / `hasInventoryPermission` become thin wrappers around `is_admin()` (everyone else is read-only) and keep the localStorage role-config (`DEFAULT_INVENTORY_ROLES`) only for the Settings UI display.
+### `pricelist_items`
+- `category_id uuid`, `discount_percentage numeric`, `start_date date`, `end_date date`
+- Rename concept: `pricelist_items` already stores `price`+`min_qty` — keep that, add optional discount/date for rules-style use.
 
-## Hooks layer (new) — `src/hooks/inventory/`
+### `subscriptions`
+- `reference text unique`, `customer_name text`, `billing_cycle text default 'monthly'` (replaces simple `billing_period`, keep both), `end_date date`, `subtotal numeric default 0`, `tax_amount numeric default 0`, `total numeric default 0`, `currency text default 'INR'`, `payment_terms text`, `last_order_id uuid`, `order_history text[] default '{}'`
 
-Same pattern as `src/hooks/crm`:
-- Query hooks: `useProducts`, `useProduct(id)`, `useWarehouses`, `useLocations(warehouseId?)`, `useStockMoves(filters)`, `useTransfers`, `useReorderRules`, `useLots(productId?)`, `useSerials(productId?)`, `useAdjustments`, `useStockValuation`.
-- Mutation hooks: `useSaveProduct`, `useDeleteProduct`, `useValidateStockMove`, `useApproveAdjustment`, etc. — each invalidates the relevant query keys.
-- Centralised query key factory in `src/hooks/inventory/keys.ts`.
+### `subscription_lines` (new table)
+- `id`, `subscription_id uuid references subscriptions(id) on delete cascade`, `product_id uuid`, `product_name text`, `quantity numeric`, `unit_price numeric`, `discount numeric default 0`
+- RLS mirrors `subscriptions`.
 
-## Page updates
+### Grants
+Every new table gets `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated; GRANT ALL ... TO service_role;` followed by `ALTER TABLE ... ENABLE RLS` and policies (same role pattern as Phase 1).
 
-Inventory pages currently call sync storage functions directly. They will be switched to the hooks above. Affected files (already mapped):
+## Step 2 — API + hooks expansion
 
-```
-src/pages/inventory/InventoryOverview.tsx
-src/pages/inventory/ProductsList.tsx
-src/pages/inventory/ProductDetail.tsx
-src/pages/inventory/ProductScanLookup.tsx
-src/pages/inventory/OperationsList.tsx
-src/pages/inventory/StockMoves.tsx
-src/pages/inventory/StockDashboard.tsx
-src/pages/inventory/TransferForm.tsx
-src/pages/inventory/TransferDetail.tsx
-src/pages/inventory/WarehousesList.tsx
-src/pages/inventory/WarehouseLocations.tsx
-src/pages/inventory/InventoryAdjustments.tsx
-src/pages/inventory/InventoryConfiguration.tsx
-src/pages/inventory/InventoryReporting.tsx
-src/pages/inventory/ReorderRules.tsx
-src/pages/inventory/ReorderRuleForm.tsx
-src/pages/inventory/BarcodeOperations.tsx
-src/pages/inventory/BarcodeLabels.tsx
-src/components/inventory/MobilePickingScreen.tsx
-src/components/inventory/MobileCountScreen.tsx
-src/components/inventory/BarcodeScanner.tsx
-```
+Extend `src/lib/services/sales/api.ts`:
+- Update `SbQuotation`, `SbSalesOrder`, `SbSubscription` interfaces and mappers to include every new field.
+- Add nested fetch for `quotation_versions`, `order_activities`, `subscription_lines`.
+- Add new mutations: `addOrderActivity`, `addQuotationVersion`, `saveSubscriptionLines`.
 
-Each page gets: loading state via the hook's `isLoading`, error toast on mutation failure, and `useAuth()` to disable mutation UI when not admin.
+Extend `src/hooks/sales/index.ts`:
+- Add `useAddOrderActivity`, `useAddQuotationVersion`, `useTaxRules` (keep static defaults until tax_rules table exists).
 
-## Out of scope (call out, don't do)
+## Step 3 — Page migration (14 pages)
 
-- No data migration from localStorage (you chose "start empty"). I'll leave the old `erp_inventory_*` keys untouched in the browser; nothing reads them after this change.
-- Reorder rules will only flag low stock at read time; auto-creating purchase orders stays manual.
-- Lot/serial expiry alerts and stock-valuation FIFO/LIFO layers stay computed client-side (no `valuation_layers` table) since you didn't list it. Easy to add later.
+For each page: replace `getX()/saveX()/deleteX()` calls with `useX()/useSaveX()/useDeleteX()`. Pattern (mirrors inventory):
+- List pages: `const { data = [], isLoading } = useX()` + `useDeleteX()` mutation.
+- Form pages: `useX(id)` for load + `useSaveX()` for create/update; show toast on `onSuccess`/`onError`.
+- Detail pages: same pattern as form pages.
 
-## Deliverables order
+Order of migration (least → most coupled):
+1. `CustomersList`, `CustomerForm`
+2. `PricelistsPage`, `PricelistForm`
+3. `SubscriptionsList`, `SubscriptionForm`
+4. `QuotationsList`, `QuotationForm`
+5. `SalesOrdersList`, `SalesOrderForm`
+6. `SalesOverview`, `SalesReports` (aggregates from the lists above)
+7. `CustomerPortal`, `CustomerPortalQuotation` (public-facing — must keep auth flow as-is; if portal is anonymous, may need a public RPC; flag if blocked).
 
-1. Migration (tables + RLS + grants + 2 RPCs) — surfaced for your approval.
-2. After approval: rewrite `src/lib/services/inventory/`, add `src/hooks/inventory/`, then update each page.
-3. Sanity-check build, fix any type fallout from the snake/camel mapping.
+## Step 4 — Delete legacy
 
-Reply **proceed** and I'll start with the migration. If you'd rather keep this smaller (e.g. only the 7 tables you originally named, no lots/serials/adjustments), say so and I'll trim it.
+After build is clean and grep confirms no remaining imports:
+- `rm src/lib/services/sales/storage.ts`
+- `rm src/lib/data/sales.ts`
+- `rm src/lib/data/sales/storage.ts` and `src/lib/data/sales/index.ts` if unreferenced
+- Audit `src/lib/sales/*` for direct localStorage reads; convert `promotionStorage.ts` and `companySettings.ts` to Supabase-backed if they're imported by surviving code, or delete if not.
+- Update `src/lib/services/sales/index.ts` to re-export only from `./api` and validators.
+
+## Step 5 — Verify
+- `tsc --noEmit` clean.
+- `rg "getQuotations\\(|getSalesOrders\\(|getCustomers\\(|getPricelists\\(|getSubscriptions\\(" src/` returns zero hits.
+- Manually sanity-check `CustomerPortal` flow since it may be anonymous.
+
+## Risks / Open items
+- **Customer portal**: if it serves anonymous users, RLS will block reads. May need a dedicated public RPC or a `portal_token` lookup edge function — will surface as a blocker during Step 3.7 rather than guess now.
+- **TaxRules**: not part of this migration's table set. Will keep using the existing static defaults from `companySettings`/legacy storage in `salesApi` until a future migration adds a `tax_rules` table.
+- This will take several turns; I'll work through it sequentially and report at each major checkpoint (schema migration, hooks ready, each batch of pages, deletes).
