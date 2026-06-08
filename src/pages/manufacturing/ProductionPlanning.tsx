@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getWorkOrders, getWorkCenters, WorkOrder } from '@/lib/services/manufacturing';
+import { getWorkOrders, getWorkCenters, WorkOrder, type WorkCenter } from '@/lib/services/manufacturing';
 import { Calendar, ChevronLeft, ChevronRight, Clock, AlertTriangle } from 'lucide-react';
 
 export default function ProductionPlanning() {
-  const workOrders = getWorkOrders();
-  const workCenters = getWorkCenters();
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
+  useEffect(() => {
+    (async () => {
+      const [wo, wc] = await Promise.all([getWorkOrders(), getWorkCenters()]);
+      setWorkOrders(wo); setWorkCenters(wc);
+    })();
+  }, []);
   const [view, setView] = useState<'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
 
