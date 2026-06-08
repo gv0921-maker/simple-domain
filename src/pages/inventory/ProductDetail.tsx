@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -81,6 +82,8 @@ export default function ProductDetail() {
     trackLots: false,
     trackSerials: false,
     variants: [],
+    warrantyEligible: false,
+    factoryEligible: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
