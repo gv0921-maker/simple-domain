@@ -100,6 +100,8 @@ export default function SalesOrderForm() {
   const [confirmAction, setConfirmAction] = useState<'cancel' | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const generateInvoiceMut = useGenerateInvoiceFromOrder();
+  const { data: deliveryQC } = useDeliveryQC(!isNew ? id : undefined);
+  const qcPassed = deliveryQC?.status === 'passed';
   const billingRef = useRef<HTMLDivElement | null>(null);
 
   const [formData, setFormData] = useState<Partial<SalesOrder>>({
