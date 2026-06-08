@@ -94,7 +94,7 @@ export default function SalesOrderForm() {
     orderDate: new Date().toISOString().split('T')[0],
     deliveryDate: addDays(new Date(), 7).toISOString().split('T')[0],
     currency: 'INR',
-    pricelistId: 'pl_standard',
+    pricelistId: undefined,
     paymentTerms: 'net30',
     notes: '',
     status: 'estimate',

@@ -96,7 +96,7 @@ export default function QuotationForm() {
     quotationDate: new Date().toISOString().split('T')[0],
     validUntil: addDays(new Date(), 30).toISOString().split('T')[0],
     currency: 'INR',
-    pricelistId: 'pl_standard',
+    pricelistId: undefined,
     paymentTerms: 'net30',
     notes: '',
     termsAndConditions: 'Standard terms and conditions apply. Prices are valid for 30 days from the quotation date.',
