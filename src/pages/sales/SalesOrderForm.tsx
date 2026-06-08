@@ -17,9 +17,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Save, XCircle, ShoppingCart } from 'lucide-react';
 import {
-  getPricelists, getFiscalPositions,
-} from '@/lib/services/sales/storage';
-import { useSalesOrderRich, useSaveSalesOrderRich } from '@/hooks/sales';
+  useSalesOrderRich, useSaveSalesOrderRich, usePricelists, useFiscalPositions,
+} from '@/hooks/sales';
 import { generateOrderReferenceRich } from '@/lib/services/sales/api';
 import type {
   SalesOrder, SalesOrderLine, SalesOrderStatus,
@@ -76,8 +75,9 @@ export default function SalesOrderForm() {
   const isNew = id === 'new' || !id;
   const studio = useStudioConfig('sales', 'Sales Order');
 
-  const [pricelists] = useState(() => getPricelists());
-  const [fiscalPositions] = useState(() => getFiscalPositions().filter((f) => f.isActive));
+  const { data: pricelists = [] } = usePricelists();
+  const { data: allFiscalPositions = [] } = useFiscalPositions();
+  const fiscalPositions = useMemo(() => allFiscalPositions.filter((f) => f.isActive), [allFiscalPositions]);
 
   const { data: loadedOrder, isLoading: isLoadingOrder } = useSalesOrderRich(isNew ? undefined : id);
   const saveOrderMut = useSaveSalesOrderRich();

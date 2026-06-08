@@ -13,20 +13,17 @@ import {
   Calendar,
   Users,
 } from 'lucide-react';
-import {
-  getSalesOrders,
-  getContacts,
-} from '@/lib/services/sales';
-import { getQuotations } from '@/lib/services/sales/storage';
+import { useQuotationsRich, useSalesOrdersRich } from '@/hooks/sales';
+import { useContacts } from '@/hooks/crm';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { SimpleBarChart } from '@/components/dashboard/SimpleBarChart';
 import { format, parseISO, isThisMonth } from 'date-fns';
 
 export default function SalesOverview() {
   const navigate = useNavigate();
-  const [orders] = useState(() => getSalesOrders());
-  const [quotations] = useState(() => getQuotations());
-  const [contacts] = useState(() => getContacts());
+  const { data: orders = [] } = useSalesOrdersRich();
+  const { data: quotations = [] } = useQuotationsRich();
+  const { data: contacts = [] } = useContacts();
 
   const stats = useMemo(() => {
     const monthlyOrders = orders.filter((o) =>

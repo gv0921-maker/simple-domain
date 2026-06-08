@@ -302,22 +302,30 @@ export default function QuotationForm() {
     }
   }, [formData, lines, isNew, id, user, toast, navigate, validate, saveQuotationMut]);
 
-  const handleConfirmAction = useCallback(() => {
+  const handleConfirmAction = useCallback(async () => {
     switch (confirmAction) {
       case 'send': handleSave('sent'); break;
       case 'accept': handleSave('accepted'); break;
       case 'cancel': handleSave('cancelled'); break;
       case 'convert': {
-        const order = convertQuotationToOrder(id!, user?.id || '1', user?.name || 'System');
-        if (order) {
-          toast({ title: 'Order Created', description: `${order.reference} created` });
-          navigate('/sales/orders');
+        try {
+          const order = await convertMut.mutateAsync({
+            quotationId: id!,
+            userId: user?.id || '1',
+            userName: user?.name || 'System',
+          });
+          if (order) {
+            toast({ title: 'Order Created', description: `${order.reference} created` });
+            navigate('/sales/orders');
+          }
+        } catch (e: any) {
+          toast({ title: 'Conversion failed', description: e?.message ?? String(e), variant: 'destructive' });
         }
         break;
       }
     }
     setConfirmDialogOpen(false);
-  }, [confirmAction, handleSave, id, user, toast, navigate]);
+  }, [confirmAction, handleSave, id, user, toast, navigate, convertMut]);
 
   const isEditable = formData.status === 'draft';
 

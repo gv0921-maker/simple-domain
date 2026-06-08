@@ -35,8 +35,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
-import { getQuotations, getSalesOrders, getSubscriptions } from '@/lib/services/sales/storage';
-import { getContacts } from '@/lib/services/sales';
+import { useQuotationsRich, useSalesOrdersRich, useSubscriptions } from '@/hooks/sales';
+import { useContacts } from '@/hooks/crm';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { SimpleBarChart } from '@/components/dashboard/SimpleBarChart';
@@ -45,10 +45,10 @@ import { cn } from '@/lib/utils';
 
 export default function SalesReports() {
   const { toast } = useToast();
-  const [quotations] = useState(() => getQuotations());
-  const [orders] = useState(() => getSalesOrders());
-  const [subscriptions] = useState(() => getSubscriptions());
-  const [contacts] = useState(() => getContacts());
+  const { data: quotations = [] } = useQuotationsRich();
+  const { data: orders = [] } = useSalesOrdersRich();
+  const { data: subscriptions = [] } = useSubscriptions();
+  const { data: contacts = [] } = useContacts();
   const [dateRange, setDateRange] = useState('this_month');
   const [selectedReport, setSelectedReport] = useState('overview');
 
