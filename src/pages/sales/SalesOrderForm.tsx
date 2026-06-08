@@ -56,6 +56,7 @@ const STATUS_CONFIG: Record<SalesOrderStatus, { label: string; className: string
   draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },
   estimate: { label: 'Estimate', className: 'bg-muted text-muted-foreground' },
   confirmed: { label: 'Confirmed', className: 'bg-success/20 text-success border-success' },
+  paid: { label: 'Paid', className: 'bg-success/20 text-success border-success' },
   ready_to_pick: { label: 'Ready to Pick', className: 'bg-info/20 text-info border-info' },
   dispatched: { label: 'Dispatched', className: 'bg-primary/20 text-primary border-primary' },
   delivered: { label: 'Delivered', className: 'bg-success/20 text-success border-success' },
