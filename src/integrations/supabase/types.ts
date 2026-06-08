@@ -3136,6 +3136,7 @@ export type Database = {
         | "readonly"
         | "warehouse_operator"
         | "super_admin"
+        | "accountant"
       contact_status: "active" | "archived"
       contact_type: "individual" | "company"
       lead_priority: "low" | "medium" | "high" | "urgent"
@@ -3293,6 +3294,7 @@ export const Constants = {
         "readonly",
         "warehouse_operator",
         "super_admin",
+        "accountant",
       ],
       contact_status: ["active", "archived"],
       contact_type: ["individual", "company"],
