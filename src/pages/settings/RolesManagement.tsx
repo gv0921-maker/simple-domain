@@ -62,6 +62,7 @@ import {
   type RecordScope,
 } from '@/lib/services/settings';
 import { MODULE_TABS, getModuleTabIds } from '@/lib/services/settings';
+import { useRoles } from '@/hooks/settings';
 
 const RECORD_SCOPE_OPTIONS: { id: RecordScope | 'none'; label: string; description: string }[] = [
   { id: 'none', label: 'None', description: 'No access to records' },
@@ -85,7 +86,12 @@ const PERMISSION_LEVELS: { id: PermissionLevel; label: string; color: string }[]
 
 export default function RolesManagement() {
   const { toast } = useToast();
+  const { data: fetchedRoles } = useRoles();
   const [roles, setRoles] = useState<Role[]>(() => getRoles());
+
+  useEffect(() => {
+    if (fetchedRoles) setRoles(fetchedRoles);
+  }, [fetchedRoles]);
   const [search, setSearch] = useState('');
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());

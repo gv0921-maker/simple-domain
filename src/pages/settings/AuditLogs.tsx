@@ -29,7 +29,8 @@ import {
   LogIn,
   LogOut,
 } from 'lucide-react';
-import { getAuditLogs, type AuditLog } from '@/lib/services/settings';
+import type { AuditLog } from '@/lib/services/settings';
+import { useAuditLogs } from '@/hooks/settings';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
@@ -43,15 +44,13 @@ const ACTION_ICONS: Record<string, React.ReactNode> = {
   permission_change: <Shield className="h-4 w-4 text-primary" />,
 };
 
-// Audit logs loaded from storage
-const DEMO_LOGS: AuditLog[] = [];
-
 export default function AuditLogs() {
   const [search, setSearch] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('all');
+  const { data: rawLogs = [] } = useAuditLogs(500);
 
-  const logs = useMemo(() => {
-    let result = DEMO_LOGS;
+  const logs = useMemo<AuditLog[]>(() => {
+    let result: AuditLog[] = rawLogs;
 
     if (search) {
       result = result.filter(
@@ -67,7 +66,7 @@ export default function AuditLogs() {
     }
 
     return result;
-  }, [search, actionFilter]);
+  }, [rawLogs, search, actionFilter]);
 
   return (
     <AppLayout title="Settings" moduleNav={SETTINGS_NAV}>

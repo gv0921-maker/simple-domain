@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { DEMO_USERS, type User } from '@/lib/storage';
 import { getRoles, getUserRole, setUserRoles, type Role } from '@/lib/services/settings';
+import { useRoles, useUserRoleAssignments } from '@/hooks/settings';
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
 import { useToast } from '@/hooks/use-toast';
 
@@ -60,7 +61,16 @@ export default function UsersManagement() {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [inactiveUserIds, setInactiveUserIds] = useState<string[]>([]);
+  const { data: fetchedRoles } = useRoles();
+  const { data: fetchedAssignments } = useUserRoleAssignments();
   const [roles, setRoles] = useState<Role[]>(() => getRoles());
+
+  useEffect(() => {
+    if (fetchedRoles) setRoles(fetchedRoles);
+  }, [fetchedRoles]);
+  // The fetchedAssignments query keeps the rbac cache in sync via the hook layer,
+  // so getUserRole(...) below reads up-to-date data.
+  useEffect(() => { /* assignments side-effect — cache hydration handled by bootstrap */ }, [fetchedAssignments]);
 
   const filteredUsers = users.filter(
     (u) =>
