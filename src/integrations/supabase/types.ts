@@ -2880,7 +2880,13 @@ export type Database = {
         | "task"
         | "note"
         | "follow_up"
-      app_role: "admin" | "sales_manager" | "sales_rep" | "readonly"
+      app_role:
+        | "admin"
+        | "sales_manager"
+        | "sales_rep"
+        | "readonly"
+        | "warehouse_operator"
+        | "super_admin"
       contact_status: "active" | "archived"
       contact_type: "individual" | "company"
       lead_priority: "low" | "medium" | "high" | "urgent"
@@ -3031,7 +3037,14 @@ export const Constants = {
   public: {
     Enums: {
       activity_type: ["call", "email", "meeting", "task", "note", "follow_up"],
-      app_role: ["admin", "sales_manager", "sales_rep", "readonly"],
+      app_role: [
+        "admin",
+        "sales_manager",
+        "sales_rep",
+        "readonly",
+        "warehouse_operator",
+        "super_admin",
+      ],
       contact_status: ["active", "archived"],
       contact_type: ["individual", "company"],
       lead_priority: ["low", "medium", "high", "urgent"],
