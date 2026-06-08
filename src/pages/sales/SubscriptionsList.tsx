@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -24,19 +24,25 @@ import {
   Search,
   Plus,
   MoreHorizontal,
-  Trash2,
   RefreshCw,
   Calendar,
   Play,
   Pause,
   XCircle,
   Eye,
-  DollarSign,
 } from 'lucide-react';
-import { getSubscriptions, saveSubscription } from '@/lib/services/sales/storage';
-import { renewSubscription, autoRenewDueSubscriptions } from '@/lib/sales/automation';
+import {
+  useSubscriptions,
+  useSaveSubscriptionWithLines,
+  useSaveSalesOrder,
+  type SbSubscription,
+} from '@/hooks/sales';
+import { generateOrderReferenceRich } from '@/lib/services/sales/api';
+import { addMonths, addQuarters, addYears, parseISO } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Subscription, SubscriptionStatus, BillingCycle } from '@/lib/services/sales/types';
+
+type SubscriptionStatus = 'draft' | 'active' | 'paused' | 'cancelled';
+type BillingCycle = 'monthly' | 'quarterly' | 'yearly';
 
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
@@ -61,15 +67,17 @@ export default function SubscriptionsList() {
   const { toast } = useToast();
   
   const { user } = useAuth();
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => getSubscriptions());
+  const { data: subscriptions = [] } = useSubscriptions();
+  const saveSubscriptionMut = useSaveSubscriptionWithLines();
+  const saveSalesOrderMut = useSaveSalesOrder();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatus | 'all'>('all');
 
   const filteredSubscriptions = useMemo(() => {
     return subscriptions.filter((s) => {
       const matchesSearch =
-        s.reference.toLowerCase().includes(search.toLowerCase()) ||
-        s.customerName.toLowerCase().includes(search.toLowerCase());
+        (s.reference ?? '').toLowerCase().includes(search.toLowerCase()) ||
+        (s.customerName ?? '').toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -97,31 +105,89 @@ export default function SubscriptionsList() {
       }, 0),
   }), [subscriptions]);
 
-  const handleUpdateStatus = useCallback((id: string, status: SubscriptionStatus) => {
+  const handleUpdateStatus = useCallback(async (id: string, status: SubscriptionStatus) => {
     const sub = subscriptions.find((s) => s.id === id);
     if (!sub) return;
-
-    saveSubscription({ ...sub, status });
-    setSubscriptions(getSubscriptions());
-    toast({ title: `Subscription ${status}` });
-  }, [subscriptions, toast]);
-
-  const handleRenew = useCallback((id: string) => {
-    const order = renewSubscription(id, user?.id || '1', user?.name || 'System');
-    if (order) {
-      setSubscriptions(getSubscriptions());
-      toast({ title: 'Subscription renewed', description: `${order.reference} created` });
-      navigate(`/sales/orders/${order.id}`);
-    } else {
-      toast({ title: 'Renewal failed', description: 'Subscription must be active', variant: 'destructive' });
+    try {
+      await saveSubscriptionMut.mutateAsync({ subscription: { ...sub, status } });
+      toast({ title: `Subscription ${status}` });
+    } catch (e: any) {
+      toast({ title: 'Update failed', description: e?.message ?? String(e), variant: 'destructive' });
     }
-  }, [navigate, toast, user]);
+  }, [subscriptions, toast, saveSubscriptionMut]);
 
-  const handleRenewAllDue = useCallback(() => {
-    const n = autoRenewDueSubscriptions(user?.id || '1', user?.name || 'System');
-    setSubscriptions(getSubscriptions());
+  const nextDate = (cycle: string, from: Date): Date => {
+    if (cycle === 'monthly') return addMonths(from, 1);
+    if (cycle === 'quarterly') return addQuarters(from, 1);
+    return addYears(from, 1);
+  };
+
+  const renewOne = useCallback(async (sub: SbSubscription) => {
+    if (sub.status !== 'active') return null;
+    const reference = await generateOrderReferenceRich();
+    const subLines = sub.lines ?? [];
+    const orderLines = subLines.map((l) => ({
+      productId: l.productId,
+      description: l.productName,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice,
+      discount: l.discount || 0,
+      taxRate: 0,
+      subtotal: l.unitPrice * l.quantity,
+      deliveredQty: 0,
+    }));
+    const saved = await saveSalesOrderMut.mutateAsync({
+      order: {
+        reference,
+        customerId: sub.customerId,
+        orderDate: new Date().toISOString().slice(0, 10),
+        status: 'draft',
+        subtotal: sub.subtotal,
+        taxAmount: sub.taxAmount,
+        total: sub.total,
+        notes: `Renewal from ${sub.reference ?? ''}`,
+      },
+      lines: orderLines,
+    });
+    const advanced = sub.nextBillingDate
+      ? nextDate(sub.billingCycle, parseISO(sub.nextBillingDate)).toISOString().slice(0, 10)
+      : sub.nextBillingDate;
+    await saveSubscriptionMut.mutateAsync({
+      subscription: {
+        ...sub,
+        lastOrderId: saved.id,
+        orderHistory: [...(sub.orderHistory ?? []), saved.id],
+        nextBillingDate: advanced,
+      },
+    });
+    return saved;
+  }, [saveSalesOrderMut, saveSubscriptionMut]);
+
+  const handleRenew = useCallback(async (id: string) => {
+    const sub = subscriptions.find((s) => s.id === id);
+    if (!sub) return;
+    try {
+      const order = await renewOne(sub);
+      if (order) {
+        toast({ title: 'Subscription renewed', description: `${order.reference} created` });
+        navigate(`/sales/orders/${order.id}`);
+      } else {
+        toast({ title: 'Renewal failed', description: 'Subscription must be active', variant: 'destructive' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Renewal failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
+  }, [subscriptions, navigate, toast, renewOne]);
+
+  const handleRenewAllDue = useCallback(async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const due = subscriptions.filter((s) => s.status === 'active' && s.nextBillingDate && s.nextBillingDate <= today);
+    let n = 0;
+    for (const sub of due) {
+      try { if (await renewOne(sub)) n++; } catch { /* skip */ }
+    }
     toast({ title: n > 0 ? `Renewed ${n} subscription${n > 1 ? 's' : ''}` : 'No subscriptions are due' });
-  }, [toast, user]);
+  }, [subscriptions, toast, renewOne]);
 
   const today = new Date().toISOString().split('T')[0];
   const dueCount = subscriptions.filter((s) => s.status === 'active' && s.nextBillingDate && s.nextBillingDate <= today).length;
@@ -248,16 +314,16 @@ export default function SubscriptionsList() {
                         {sub.reference}
                       </div>
                     </TableCell>
-                    <TableCell>{sub.customerName}</TableCell>
+                    <TableCell>{sub.customerName ?? ''}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {BILLING_CYCLE_CONFIG[sub.billingCycle].label}
+                        {BILLING_CYCLE_CONFIG[sub.billingCycle as BillingCycle]?.label ?? sub.billingCycle}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <Calendar className="h-3 w-3 text-muted-foreground" />
-                        {format(parseISO(sub.nextBillingDate), 'MMM d, yyyy')}
+                        {sub.nextBillingDate ? format(parseISO(sub.nextBillingDate), 'MMM d, yyyy') : '—'}
                         {sub.status === 'active' && sub.nextBillingDate <= today && (
                           <Badge variant="outline" className="ml-1 text-[10px] text-warning-foreground border-warning bg-warning/10">
                             Due
@@ -272,8 +338,8 @@ export default function SubscriptionsList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={cn('font-normal', STATUS_CONFIG[sub.status].className)}>
-                        {STATUS_CONFIG[sub.status].label}
+                      <Badge className={cn('font-normal', STATUS_CONFIG[sub.status as SubscriptionStatus]?.className ?? '')}>
+                        {STATUS_CONFIG[sub.status as SubscriptionStatus]?.label ?? sub.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
