@@ -675,9 +675,9 @@ const NOrUndef = (v: any): number | undefined =>
   v === null || v === undefined ? undefined : Number(v);
 const SOrUndef = (v: any): string | undefined =>
   v === null || v === undefined ? undefined : (v as string);
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const uuidOrNull = (v: unknown): string | null =>
-  typeof v === 'string' && UUID_RE.test(v) ? v : null;
+  typeof v === 'string' && UUID_RE.test(v.trim()) ? v.trim() : null;
 
 // ----- Quotation Lines -----
 function mapQuotationLineRich(r: any): QuotationLine {

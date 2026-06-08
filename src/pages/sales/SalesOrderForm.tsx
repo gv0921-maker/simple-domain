@@ -66,6 +66,8 @@ const STATUS_CONFIG: Record<SalesOrderStatus, { label: string; className: string
 const formatINR = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(n || 0);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function SalesOrderForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -134,6 +136,12 @@ export default function SalesOrderForm() {
 
   // Clear stale return context (>30 min) on mount.
   useEffect(() => { clearStaleSalesReturnContext(); }, []);
+
+  useEffect(() => {
+    if (formData.pricelistId && !UUID_RE.test(formData.pricelistId)) {
+      setFormData((prev) => ({ ...prev, pricelistId: undefined }));
+    }
+  }, [formData.pricelistId]);
 
   // Restore form state when returning from "Create New Contact" flow.
   const restoredRef = useRef(false);

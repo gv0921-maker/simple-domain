@@ -64,6 +64,8 @@ const STATUS_CONFIG: Record<QuotationStatus, { label: string; className: string 
 const formatINR = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(n || 0);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function QuotationForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -144,6 +146,12 @@ export default function QuotationForm() {
     if (isNew && urlCustomerId) handleCustomerChange(urlCustomerId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isNew, urlCustomerId]);
+
+  useEffect(() => {
+    if (formData.pricelistId && !UUID_RE.test(formData.pricelistId)) {
+      setFormData((prev) => ({ ...prev, pricelistId: undefined }));
+    }
+  }, [formData.pricelistId]);
 
   // Clear stale return context (>30 min) on mount.
   useEffect(() => { clearStaleSalesReturnContext(); }, []);
