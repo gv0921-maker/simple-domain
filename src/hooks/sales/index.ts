@@ -279,3 +279,42 @@ export function useDeleteSalesOrderRich() {
     },
   });
 }
+
+// -------- Fiscal Positions --------
+import type { FiscalPosition } from '@/lib/data/sales/types';
+
+export function useFiscalPositions() {
+  return useQuery({
+    queryKey: [...salesKeys.all, 'fiscal-positions'] as const,
+    queryFn: api.listFiscalPositions,
+  });
+}
+export function useSaveFiscalPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (fp: Partial<FiscalPosition> & { name: string; code: string }) => api.saveFiscalPosition(fp),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: [...salesKeys.all, 'fiscal-positions'] }); },
+  });
+}
+export function useDeleteFiscalPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.deleteFiscalPosition,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: [...salesKeys.all, 'fiscal-positions'] }); },
+  });
+}
+
+// -------- Convert Quotation -> Sales Order --------
+export function useConvertQuotationToOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { quotationId: string; userId: string; userName: string }) =>
+      api.convertQuotationToOrderRich(args.quotationId, args.userId, args.userName),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'quotations-rich'] });
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'orders-rich'] });
+      qc.invalidateQueries({ queryKey: salesKeys.quotations() });
+      qc.invalidateQueries({ queryKey: salesKeys.orders() });
+    },
+  });
+}
