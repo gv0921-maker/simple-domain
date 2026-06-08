@@ -675,6 +675,9 @@ const NOrUndef = (v: any): number | undefined =>
   v === null || v === undefined ? undefined : Number(v);
 const SOrUndef = (v: any): string | undefined =>
   v === null || v === undefined ? undefined : (v as string);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const uuidOrNull = (v: unknown): string | null =>
+  typeof v === 'string' && UUID_RE.test(v) ? v : null;
 
 // ----- Quotation Lines -----
 function mapQuotationLineRich(r: any): QuotationLine {
@@ -709,7 +712,7 @@ function mapQuotationLineRich(r: any): QuotationLine {
 function rowFromQuotationLine(l: QuotationLine, quotationId: string): any {
   return {
     quotation_id: quotationId,
-    product_id: l.productId || null,
+    product_id: uuidOrNull(l.productId),
     product_name: l.productName ?? null,
     description: l.description ?? null,
     quantity: l.quantity ?? 0,
@@ -889,19 +892,19 @@ function mapQuotationRich(r: any): Quotation {
 function rowFromQuotation(q: Partial<Quotation> & { reference: string }): any {
   return {
     reference: q.reference,
-    customer_id: q.customerId || null,
+    customer_id: uuidOrNull(q.customerId),
     customer_name: q.customerName ?? null,
-    contact_id: q.contactId ?? null,
+    contact_id: uuidOrNull(q.contactId),
     contact_name: q.contactName ?? null,
-    opportunity_id: q.opportunityId ?? null,
+    opportunity_id: uuidOrNull(q.opportunityId),
     date: q.quotationDate ?? new Date().toISOString().slice(0, 10),
     valid_until: q.validUntil ?? null,
     expiry_date: q.validUntil ?? null,
-    salesperson_id: q.salespersonId ?? null,
+    salesperson_id: uuidOrNull(q.salespersonId),
     salesperson_name: q.salespersonName ?? null,
     sales_team: q.salesTeam ?? null,
     currency: q.currency ?? 'INR',
-    pricelist_id: q.pricelistId ?? null,
+    pricelist_id: uuidOrNull(q.pricelistId),
     payment_terms: q.paymentTerms ?? null,
     global_discount: q.globalDiscount ?? 0,
     global_discount_type: q.globalDiscountType ?? 'percentage',
