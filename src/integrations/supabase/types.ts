@@ -3402,6 +3402,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_write_inventory: { Args: never; Returns: boolean }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
