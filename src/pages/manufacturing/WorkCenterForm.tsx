@@ -8,13 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { getWorkCenters, createWorkCenter, updateWorkCenter, type WorkCenter } from '@/lib/services/manufacturing';
+import { useWorkCenters, useSaveWorkCenter } from '@/hooks/manufacturing';
+import type { WorkCenter } from '@/lib/services/manufacturing/api';
 import { toast } from 'sonner';
 
 export default function WorkCenterForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
+  const { data: workCenters = [] } = useWorkCenters();
+  const saveWC = useSaveWorkCenter();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -26,37 +29,39 @@ export default function WorkCenterForm() {
 
   useEffect(() => {
     if (!id) return;
-    (async () => {
-      const centers = await getWorkCenters();
-      const wc = centers.find(w => w.id === id);
-      if (wc) {
-        setFormData({
-          name: wc.name,
-          code: wc.code,
-          capacity: wc.capacity,
-          costPerHour: wc.costPerHour,
-          isActive: wc.isActive,
-        });
-      } else {
-        navigate('/manufacturing/work-centers');
-      }
-    })();
-  }, [id, navigate]);
+    const wc = workCenters.find(w => w.id === id);
+    if (wc) {
+      setFormData({
+        name: wc.name,
+        code: wc.code,
+        capacity: wc.capacity,
+        costPerHour: wc.costPerHour,
+        isActive: wc.isActive,
+      });
+    }
+  }, [id, workCenters]);
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.code) {
       toast.error('Please fill in required fields');
       return;
     }
-
-    if (isEdit && id) {
-      await updateWorkCenter(id, formData);
-      toast.success('Work center updated');
-    } else {
-      await createWorkCenter(formData);
-      toast.success('Work center created');
+    try {
+      const payload: WorkCenter = {
+        id: id ?? '',
+        name: formData.name,
+        code: formData.code,
+        capacity: formData.capacity,
+        costPerHour: formData.costPerHour,
+        isActive: formData.isActive,
+        currentLoad: 0,
+      };
+      await saveWC.mutateAsync(payload);
+      toast.success(isEdit ? 'Work center updated' : 'Work center created');
+      navigate('/manufacturing/work-centers');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to save work center');
     }
-    navigate('/manufacturing/work-centers');
   };
 
   return (
