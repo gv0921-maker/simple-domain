@@ -1434,7 +1434,9 @@ export async function convertQuotationToOrderRich(
   userName: string,
 ): Promise<SalesOrder | null> {
   const q = await getQuotationRich(quotationId);
-  if (!q || q.status !== 'accepted') return null;
+  if (!q) return null;
+  if (q.status !== 'sent' && q.status !== 'accepted') return null;
+  if (q.convertedToOrderId) return null;
 
   const reference = await generateOrderReferenceRich();
   const now = new Date().toISOString();
@@ -1466,7 +1468,7 @@ export async function convertQuotationToOrderRich(
     taxAmount: q.taxAmount,
     total: q.total,
     notes: q.notes,
-    status: 'estimate' as SalesOrderStatus,
+    status: 'confirmed' as SalesOrderStatus,
     deliveryStatus: 'pending',
     invoiceStatus: 'not_invoiced',
     activities: [{
@@ -1489,7 +1491,7 @@ export async function convertQuotationToOrderRich(
   };
 
   const saved = await saveSalesOrderRich(draft);
-  // Link the order id back onto the quotation
-  await saveQuotationRich({ ...q, convertedToOrderId: saved.id });
+  // Link the order id back onto the quotation and mark it converted
+  await saveQuotationRich({ ...q, convertedToOrderId: saved.id, status: 'converted' });
   return saved;
 }
