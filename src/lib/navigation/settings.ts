@@ -8,6 +8,7 @@ export const SETTINGS_NAV = [
   { label: 'CRM Backup', href: '/settings/crm-backup' },
   { label: 'Data Schema', href: '/settings/data-schema' },
   { label: 'Accessibility', href: '/settings/accessibility' },
+  { label: 'Price Approvals', href: '/settings/price-approvals' },
   { label: 'Audit Logs', href: '/settings/audit' },
   { label: 'Backups', href: '/settings/backups' },
 ];

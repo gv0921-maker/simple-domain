@@ -44,6 +44,8 @@ function mapProduct(r: Row<any>): Product {
     weight: r.weight != null ? Number(r.weight) : undefined,
     volume: r.volume != null ? Number(r.volume) : undefined,
     imageUrl: r.image_url ?? undefined,
+    warrantyEligible: !!r.warranty_eligible,
+    factoryEligible: !!r.factory_eligible,
     createdAt: toISO(r.created_at)!,
     updatedAt: toISO(r.updated_at)!,
   };
@@ -71,6 +73,8 @@ function productToRow(p: Partial<Product>): any {
   if (p.weight !== undefined) out.weight = p.weight ?? null;
   if (p.volume !== undefined) out.volume = p.volume ?? null;
   if (p.imageUrl !== undefined) out.image_url = p.imageUrl || null;
+  if (p.warrantyEligible !== undefined) out.warranty_eligible = !!p.warrantyEligible;
+  if (p.factoryEligible !== undefined) out.factory_eligible = !!p.factoryEligible;
   return out;
 }
 
