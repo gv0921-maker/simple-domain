@@ -29,6 +29,9 @@ import {
 } from '@/lib/services/crm';
 import { useSaveContact, useContacts } from '@/hooks/crm/useCRMQueries';
 import { useToast } from '@/hooks/use-toast';
+import { upsertCustomerFromContact } from '@/lib/sales/customerCrmSync';
+import { useQueryClient } from '@tanstack/react-query';
+import { salesKeys } from '@/hooks/sales/keys';
 
 interface ContactFormDialogProps {
   open: boolean;
@@ -43,6 +46,7 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
   const studio = useStudioConfig('crm', 'New Contact');
   const saveContactMutation = useSaveContact();
   const { data: allContacts = [] } = useContacts();
+  const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
     type: 'individual' as ContactType,
@@ -124,6 +128,14 @@ export function ContactFormDialog({ open, onOpenChange, contact, onSave }: Conta
       ...(contact || {}),
       ...formData,
     });
+
+    // Mirror to `customers` so this person is selectable in Sales forms.
+    try {
+      await upsertCustomerFromContact(savedContact);
+      queryClient.invalidateQueries({ queryKey: salesKeys.customers() });
+    } catch (e: any) {
+      toast({ title: 'Customer sync failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
 
     toast({
       title: isEdit ? 'Contact Updated' : 'Contact Created',

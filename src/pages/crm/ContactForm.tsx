@@ -34,6 +34,9 @@ import {
   readSalesReturnContext,
   clearSalesReturnContext,
 } from '@/lib/sales/contactPopulation';
+import { upsertCustomerFromContact, buildCustomerPopulationFields } from '@/lib/sales/customerCrmSync';
+import { useQueryClient } from '@tanstack/react-query';
+import { salesKeys } from '@/hooks/sales/keys';
 
 type EmailEntry = { email: string; type: string };
 type PhoneEntry = { phone: string; type: string };
@@ -53,6 +56,7 @@ export default function ContactForm() {
 
   const { data: allContactsData = [], isFetching } = useContacts();
   const saveContactMutation = useSaveContact();
+  const queryClient = useQueryClient();
 
   const [searchParams] = useSearchParams();
   const parsedReturn = (() => {
@@ -247,6 +251,61 @@ export default function ContactForm() {
     }, {
       onSuccess: (saved) => {
         toast({ title: isEdit ? 'Contact updated' : 'Contact created' });
+
+        // Mirror to `customers` so this person is selectable in Sales forms.
+        upsertCustomerFromContact(saved)
+          .then((cust) => {
+            queryClient.invalidateQueries({ queryKey: salesKeys.customers() });
+
+            // When invoked from a Sales form, return there with the
+            // freshly-synced customer pre-selected (must be a customers.id).
+            if (returnToSales) {
+              const ctx = readSalesReturnContext();
+              clearSalesReturnContext();
+              const populated = cust
+                ? buildCustomerPopulationFields(cust)
+                : buildContactPopulationFields(saved);
+              const target = ctx?.returnTo || '/sales/quotations/new';
+              navigate(target, {
+                state: {
+                  restoredFormData: { ...(ctx?.formData || {}), ...populated },
+                  newCustomerId: cust?.id,
+                },
+              });
+              return;
+            }
+
+            if (action === 'new') {
+              setFormData({
+                type: 'individual', firstName: '', lastName: '',
+                companyName: '', jobTitle: '', website: '', gstin: '',
+                notes: '', tags: [], parentContactId: '',
+                salesperson: '', salesTeam: '', paymentTerms: '', priceList: '', purchasePaymentTerms: '',
+              });
+              setEmails([{ email: '', type: 'Work' }]);
+              setPhones([{ phone: '', type: 'Work' }]);
+              setBilling(emptyAddress('billing'));
+              setShipping(emptyAddress('shipping'));
+              setSameAsBilling(true);
+              setCustomFields([]);
+            } else if (parsedReturn?.returnTo) {
+              const returnData = encodeURIComponent(JSON.stringify({
+                ...parsedReturn.opportunityData,
+                contactId: saved.id,
+              }));
+              navigate(`${parsedReturn.returnTo}?restoredData=${returnData}`);
+            } else {
+              navigate('/crm/contacts');
+            }
+          })
+          .catch((e) => {
+            toast({
+              title: 'Customer sync failed',
+              description: e?.message ?? String(e),
+              variant: 'destructive',
+            });
+          });
+        return;
 
         // When invoked from a Sales form, always return there — even on
         // "Save & New" — instead of creating yet another blank contact.

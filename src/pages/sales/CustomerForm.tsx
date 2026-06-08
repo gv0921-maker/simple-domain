@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,27 @@ import { ArrowLeft } from 'lucide-react';
 import { useCustomer, useSaveCustomer } from '@/hooks/sales';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
+import {
+  upsertContactFromCustomer,
+  buildCustomerPopulationFields,
+} from '@/lib/sales/customerCrmSync';
+import {
+  readSalesReturnContext,
+  clearSalesReturnContext,
+} from '@/lib/sales/contactPopulation';
+import { useQueryClient } from '@tanstack/react-query';
+import { crmKeys } from '@/hooks/crm/useCRMQueries';
 
 export default function CustomerForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const returnToSales = searchParams.get('returnTo') === 'sales_form';
   const { toast } = useToast();
   const isEdit = !!id;
   const { data: existing } = useCustomer(id);
   const saveMut = useSaveCustomer();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -61,9 +74,34 @@ export default function CustomerForm() {
         isActive: true,
       },
       {
-        onSuccess: () => {
+        onSuccess: (saved) => {
           toast({ title: isEdit ? 'Customer updated' : 'Customer created' });
-          navigate('/sales/customers');
+          // Mirror to crm_contacts so the same person shows up in CRM too.
+          upsertContactFromCustomer(saved)
+            .catch((e) => {
+              toast({
+                title: 'CRM sync failed',
+                description: e?.message ?? String(e),
+                variant: 'destructive',
+              });
+            })
+            .finally(() => {
+              queryClient.invalidateQueries({ queryKey: crmKeys.contacts() });
+              if (returnToSales) {
+                const ctx = readSalesReturnContext();
+                clearSalesReturnContext();
+                const populated = buildCustomerPopulationFields(saved);
+                const target = ctx?.returnTo || '/sales/quotations/new';
+                navigate(target, {
+                  state: {
+                    restoredFormData: { ...(ctx?.formData || {}), ...populated },
+                    newCustomerId: saved.id,
+                  },
+                });
+                return;
+              }
+              navigate('/sales/customers');
+            });
         },
         onError: (e: any) => toast({ title: 'Save failed', description: e?.message, variant: 'destructive' }),
       },
