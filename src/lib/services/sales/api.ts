@@ -954,7 +954,14 @@ export async function saveQuotationRich(q: Partial<Quotation> & { reference: str
   const payload = rowFromQuotation(q);
   let qid = q.id;
   if (qid) {
-    const { error } = await supabase.from('quotations' as any).update(payload).eq('id', qid);
+    // Upsert by id so a client-generated UUID for a brand-new quotation
+    // still produces an INSERT instead of a no-op UPDATE (which would leave
+    // child line inserts pointing at a non-existent parent → FK 409).
+    payload.id = qid;
+    payload.created_by = payload.created_by ?? uid;
+    const { error } = await supabase
+      .from('quotations' as any)
+      .upsert(payload, { onConflict: 'id' });
     if (error) throw error;
   } else {
     payload.created_by = uid;
@@ -1197,7 +1204,11 @@ export async function saveSalesOrderRich(o: Partial<SalesOrder> & { reference: s
   const payload = rowFromSalesOrder(o);
   let oid = o.id;
   if (oid) {
-    const { error } = await supabase.from('sales_orders' as any).update(payload).eq('id', oid);
+    payload.id = oid;
+    payload.created_by = payload.created_by ?? uid;
+    const { error } = await supabase
+      .from('sales_orders' as any)
+      .upsert(payload, { onConflict: 'id' });
     if (error) throw error;
   } else {
     payload.created_by = uid;
