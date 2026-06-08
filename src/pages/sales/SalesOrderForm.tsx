@@ -18,6 +18,11 @@ import {
 import { ArrowLeft, Save, XCircle, ShoppingCart, CreditCard, FileText, CheckCircle2 } from 'lucide-react';
 import { RecordPaymentDialog } from '@/components/sales/RecordPaymentDialog';
 import { useGenerateInvoiceFromOrder } from '@/hooks/invoicing';
+import { useDeliveryQC } from '@/hooks/qc';
+import { PreDeliveryQCSection } from '@/components/sales/PreDeliveryQCSection';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   useSalesOrderRich, useSaveSalesOrderRich, usePricelists, useFiscalPositions,
 } from '@/hooks/sales';
