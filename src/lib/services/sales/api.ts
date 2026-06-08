@@ -1465,8 +1465,6 @@ export async function convertQuotationToOrderRich(
     }],
     // Carry B2C address & totals if present
     billingCustomerName: q.billingCustomerName,
-    billingAddress: q.billingAddress,
-    deliveryAddress: q.deliveryAddress,
     totalUntaxed: q.totalUntaxed,
     totalCGST: q.totalCGST,
     totalSGST: q.totalSGST,
