@@ -184,6 +184,7 @@ export default function OpportunityDetail() {
   useActivitiesRealtime(id);
   const { data: linkedContact } = useContact(opportunity?.contactId);
   const { data: allContacts = [] } = useContacts();
+  const { data: allStockMoves = [] } = useStockMoves();
 
   // Cross-module related records (same contact across Sales, Inventory, etc.)
   const relatedRecords = useMemo(() => {
@@ -213,7 +214,7 @@ export default function OpportunityDetail() {
       });
     } catch { /* noop */ }
     return { quotations, salesOrders, stockMoves };
-  }, [opportunity?.contactId, opportunity?.contactName]);
+  }, [opportunity?.contactId, opportunity?.contactName, allStockMoves]);
 
   // refreshChatter now invalidates the React Query cache instead of calling
   // localStorage helpers directly. The hooks above re-render automatically.
