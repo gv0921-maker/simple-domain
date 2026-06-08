@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import { getWorkOrders, createWorkOrder, updateWorkOrder, getBOMs, getWorkCenters, type WorkOrder, type BillOfMaterials, type WorkCenter } from '@/lib/services/manufacturing';
+import { useWorkOrder, useSaveWorkOrder, useBOMs, useWorkCenters } from '@/hooks/manufacturing';
+import { useProducts } from '@/hooks/inventory';
+import type { WorkOrder } from '@/lib/services/manufacturing/api';
 import { toast } from 'sonner';
 
 export default function WorkOrderForm() {
@@ -16,14 +18,11 @@ export default function WorkOrderForm() {
   const { id } = useParams();
   const isEdit = !!id;
 
-  const [boms, setBoms] = useState<BillOfMaterials[]>([]);
-  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
-  useEffect(() => {
-    (async () => {
-      const [b, wc] = await Promise.all([getBOMs(), getWorkCenters()]);
-      setBoms(b); setWorkCenters(wc);
-    })();
-  }, []);
+  const { data: boms = [] } = useBOMs();
+  const { data: workCenters = [] } = useWorkCenters();
+  const { data: products = [] } = useProducts();
+  const { data: existing } = useWorkOrder(id);
+  const saveWO = useSaveWorkOrder();
 
   const [formData, setFormData] = useState({
     bomId: '',
@@ -35,24 +34,32 @@ export default function WorkOrderForm() {
   });
 
   useEffect(() => {
-    if (!id) return;
-    (async () => {
-      const orders = await getWorkOrders();
-      const wo = orders.find(w => w.id === id);
-      if (wo) {
-        setFormData({
-          bomId: wo.bomId,
-          quantity: wo.quantity,
-          priority: wo.priority,
-          scheduledStart: wo.scheduledStart,
-          scheduledEnd: wo.scheduledEnd,
-          workCenterId: wo.workCenterId,
-        });
-      } else {
-        navigate('/manufacturing/work-orders');
-      }
-    })();
-  }, [id, navigate]);
+    if (!existing) return;
+    setFormData({
+      bomId: existing.bomId,
+      quantity: existing.quantity,
+      priority: existing.priority,
+      scheduledStart: existing.scheduledStart,
+      scheduledEnd: existing.scheduledEnd,
+      workCenterId: existing.workCenterId,
+    });
+  }, [existing]);
+
+  // BOM component preview — sourced from real products in the catalog
+  const selectedBom = useMemo(() => boms.find(b => b.id === formData.bomId), [boms, formData.bomId]);
+  const componentsPreview = useMemo(() => {
+    if (!selectedBom) return [];
+    return selectedBom.lines.map(l => {
+      const p = products.find(pr => pr.id === l.productId);
+      return {
+        id: l.id,
+        productId: l.productId,
+        productName: p?.name ?? l.productName ?? 'Unknown component',
+        quantity: l.quantity * (formData.quantity || 1),
+        uom: l.uom,
+      };
+    });
+  }, [selectedBom, products, formData.quantity]);
 
   const handleSubmit = async () => {
     const bom = boms.find(b => b.id === formData.bomId);
@@ -61,26 +68,30 @@ export default function WorkOrderForm() {
       toast.error('Please select BOM and Work Center');
       return;
     }
-
-    if (isEdit && id) {
-      await updateWorkOrder(id, {
-        ...formData,
+    try {
+      const payload: WorkOrder = {
+        id: id ?? '',
+        name: existing?.name ?? '',
         productId: bom.productId,
         productName: bom.productName,
+        bomId: bom.id,
+        quantity: formData.quantity,
+        status: existing?.status ?? 'draft',
+        scheduledStart: formData.scheduledStart,
+        scheduledEnd: formData.scheduledEnd,
+        actualStart: existing?.actualStart,
+        actualEnd: existing?.actualEnd,
+        workCenterId: wc.id,
         workCenterName: wc.name,
-      });
-      toast.success('Work order updated');
-    } else {
-      await createWorkOrder({
-        ...formData,
-        productId: bom.productId,
-        productName: bom.productName,
-        workCenterName: wc.name,
-        status: 'draft',
-      });
-      toast.success('Work order created');
+        progress: existing?.progress ?? 0,
+        priority: formData.priority,
+      };
+      await saveWO.mutateAsync(payload);
+      toast.success(isEdit ? 'Work order updated' : 'Work order created');
+      navigate('/manufacturing/work-orders');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to save work order');
     }
-    navigate('/manufacturing/work-orders');
   };
 
   return (
@@ -116,6 +127,17 @@ export default function WorkOrderForm() {
                 </SelectContent>
               </Select>
             </div>
+            {componentsPreview.length > 0 && (
+              <div className="rounded border bg-muted/30 p-3 space-y-1">
+                <div className="text-sm font-medium mb-1">Required Components</div>
+                {componentsPreview.map(c => (
+                  <div key={c.id} className="flex justify-between text-sm">
+                    <span>{c.productName}</span>
+                    <span className="text-muted-foreground">{c.quantity} {c.uom}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="grid gap-2">
               <Label>Work Center *</Label>
               <Select value={formData.workCenterId} onValueChange={(v) => setFormData({ ...formData, workCenterId: v })}>

@@ -10,14 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { getBOMs, createBOM, updateBOM, deleteBOM, BillOfMaterials, BOMLine } from '@/lib/services/manufacturing';
+import { useBOMs, useSaveBOM, useDeleteBOM } from '@/hooks/manufacturing';
+import { useProducts } from '@/hooks/inventory';
+import type { BillOfMaterials, BOMLine } from '@/lib/services/manufacturing/api';
 import { Plus, Search, Trash2, Edit, Layers, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function BOMList() {
-  const [boms, setBOMs] = useState<BillOfMaterials[]>([]);
-  const refresh = async () => setBOMs(await getBOMs());
-  useEffect(() => { refresh(); }, []);
+  const { data: boms = [] } = useBOMs();
+  const { data: products = [] } = useProducts();
+  const saveBOMMut = useSaveBOM();
+  const deleteBOMMut = useDeleteBOM();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBOM, setEditingBOM] = useState<BillOfMaterials | null>(null);
@@ -32,7 +35,7 @@ export default function BOMList() {
     lines: [] as BOMLine[],
   });
 
-  const [newLine, setNewLine] = useState({ productName: '', quantity: 1, uom: 'Units' });
+  const [newLine, setNewLine] = useState({ productId: '', quantity: 1, uom: 'Units' });
 
   const filteredBOMs = boms.filter(bom =>
     bom.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,18 +70,19 @@ export default function BOMList() {
   };
 
   const handleAddLine = () => {
-    if (!newLine.productName) return;
+    const product = products.find(p => p.id === newLine.productId);
+    if (!product) return;
     setFormData({
       ...formData,
       lines: [...formData.lines, {
         id: `L-${Date.now()}`,
-        productId: `COMP-${Date.now()}`,
-        productName: newLine.productName,
+        productId: product.id,
+        productName: product.name,
         quantity: newLine.quantity,
         uom: newLine.uom,
       }],
     });
-    setNewLine({ productName: '', quantity: 1, uom: 'Units' });
+    setNewLine({ productId: '', quantity: 1, uom: 'Units' });
   };
 
   const handleRemoveLine = (lineId: string) => {
@@ -89,34 +93,38 @@ export default function BOMList() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.productName) {
-      toast.error('Please fill in required fields');
+    if (!formData.name || !formData.productId) {
+      toast.error('Please select a product and enter a BOM name');
       return;
     }
-
-    if (editingBOM) {
-      await updateBOM(editingBOM.id, formData);
-      toast.success('BOM updated');
-    } else {
-      await createBOM({
-        ...formData,
-        productId: `PROD-${Date.now()}`,
+    try {
+      await saveBOMMut.mutateAsync({
+        id: editingBOM?.id ?? '',
+        name: formData.name,
+        productId: formData.productId,
+        productName: formData.productName,
+        quantity: formData.quantity,
+        uom: formData.uom,
+        status: formData.status,
+        lines: formData.lines,
+        createdAt: editingBOM?.createdAt ?? new Date().toISOString(),
       });
-      toast.success('BOM created');
+      toast.success(editingBOM ? 'BOM updated' : 'BOM created');
+      setDialogOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to save BOM');
     }
-    await refresh();
-    setDialogOpen(false);
   };
 
   const handleDelete = async (id: string) => {
-    await deleteBOM(id);
-    await refresh();
+    await deleteBOMMut.mutateAsync(id);
     toast.success('BOM deleted');
   };
 
   const handleStatusChange = async (id: string, status: BillOfMaterials['status']) => {
-    await updateBOM(id, { status });
-    await refresh();
+    const bom = boms.find(b => b.id === id);
+    if (!bom) return;
+    await saveBOMMut.mutateAsync({ ...bom, status });
     toast.success(`BOM ${status}`);
   };
 
@@ -227,12 +235,21 @@ export default function BOMList() {
                 />
               </div>
               <div>
-                <Label>Product Name</Label>
-                <Input
-                  value={formData.productName}
-                  onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                  placeholder=""
-                />
+                <Label>Product</Label>
+                <Select
+                  value={formData.productId}
+                  onValueChange={(v) => {
+                    const p = products.find(pr => pr.id === v);
+                    setFormData({ ...formData, productId: v, productName: p?.name ?? '' });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
+                  <SelectContent>
+                    {products.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -269,12 +286,17 @@ export default function BOMList() {
             <div className="border-t pt-4">
               <Label className="mb-2 block">Components</Label>
               <div className="flex gap-2 mb-4">
-                <Input
-                  placeholder=""
-                  value={newLine.productName}
-                  onChange={(e) => setNewLine({ ...newLine, productName: e.target.value })}
-                  className="flex-1"
-                />
+                <Select
+                  value={newLine.productId}
+                  onValueChange={(v) => setNewLine({ ...newLine, productId: v })}
+                >
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select component" /></SelectTrigger>
+                  <SelectContent>
+                    {products.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input
                   type="number"
                   placeholder=""

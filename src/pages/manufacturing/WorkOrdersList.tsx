@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
-import { getWorkOrders, deleteWorkOrder, updateWorkOrder, type WorkOrder } from '@/lib/services/manufacturing';
+import { useWorkOrders, useDeleteWorkOrder, useSaveWorkOrder } from '@/hooks/manufacturing';
+import type { WorkOrder } from '@/lib/services/manufacturing/api';
 import { Plus, Search, Filter, Trash2, Edit, Play, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,9 +31,9 @@ const priorityColors: Record<string, 'default' | 'secondary' | 'destructive' | '
 
 export default function WorkOrdersList() {
   const navigate = useNavigate();
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
-  const refresh = async () => setWorkOrders(await getWorkOrders());
-  useEffect(() => { refresh(); }, []);
+  const { data: workOrders = [] } = useWorkOrders();
+  const deleteWO = useDeleteWorkOrder();
+  const saveWO = useSaveWorkOrder();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -44,18 +45,19 @@ export default function WorkOrdersList() {
   });
 
   const handleDelete = async (id: string) => {
-    await deleteWorkOrder(id);
-    await refresh();
+    await deleteWO.mutateAsync(id);
     toast.success('Work order deleted');
   };
 
   const handleStatusChange = async (id: string, newStatus: WorkOrder['status']) => {
-    await updateWorkOrder(id, { 
+    const wo = workOrders.find(w => w.id === id);
+    if (!wo) return;
+    await saveWO.mutateAsync({
+      ...wo,
       status: newStatus,
-      ...(newStatus === 'in_progress' ? { actualStart: new Date().toISOString().split('T')[0] } : {}),
-      ...(newStatus === 'done' ? { actualEnd: new Date().toISOString().split('T')[0], progress: 100 } : {}),
+      ...(newStatus === 'in_progress' ? { actualStart: new Date().toISOString() } : {}),
+      ...(newStatus === 'done' ? { actualEnd: new Date().toISOString(), progress: 100 } : {}),
     });
-    await refresh();
     toast.success(`Work order ${newStatus.replace('_', ' ')}`);
   };
 
