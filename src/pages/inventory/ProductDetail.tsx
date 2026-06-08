@@ -664,6 +664,12 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {!isNew && id && (
+            <TabsContent value="qc" className="space-y-6 animate-fade-in">
+              <QCHistoryList productId={id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </AppLayout>
