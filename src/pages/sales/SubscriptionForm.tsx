@@ -8,24 +8,29 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import { getContacts } from '@/lib/services/sales';
-import { getSubscriptions, saveSubscription } from '@/lib/services/sales/storage';
-import type { Subscription, BillingCycle } from '@/lib/services/sales/types';
+import {
+  useCustomers,
+  useSubscription,
+  useSaveSubscriptionWithLines,
+  type SbSubscription,
+  type SbSubscriptionLine,
+} from '@/hooks/sales';
+import { generateSubscriptionReferenceRich } from '@/lib/services/sales/api';
+type BillingCycle = 'monthly' | 'quarterly' | 'yearly';
 import { useProducts } from '@/hooks/inventory';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import { addMonths, addQuarters, addYears } from 'date-fns';
 
 export default function SubscriptionForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
-  const { user } = useAuth();
   const isEdit = !!id;
 
-  const [contacts] = useState(() => getContacts());
+  const { data: customers = [] } = useCustomers();
   const { data: products = [] } = useProducts();
-  const [editingSub, setEditingSub] = useState<Subscription | null>(null);
+  const { data: editingSub } = useSubscription(id);
+  const saveSubMut = useSaveSubscriptionWithLines();
 
   const [formData, setFormData] = useState({
     customerId: '',
@@ -36,23 +41,17 @@ export default function SubscriptionForm() {
   });
 
   useEffect(() => {
-    if (id) {
-      const subs = getSubscriptions();
-      const sub = subs.find(s => s.id === id);
-      if (sub) {
-        setEditingSub(sub);
-        setFormData({
-          customerId: sub.customerId,
-          billingCycle: sub.billingCycle,
-          productId: sub.lines[0]?.productId || '',
-          quantity: sub.lines[0]?.quantity || 1,
-          unitPrice: sub.lines[0]?.unitPrice || 0,
-        });
-      } else {
-        navigate('/sales/subscriptions');
-      }
+    if (editingSub) {
+      const first = editingSub.lines?.[0];
+      setFormData({
+        customerId: editingSub.customerId ?? '',
+        billingCycle: (editingSub.billingCycle as BillingCycle) || 'monthly',
+        productId: first?.productId ?? '',
+        quantity: first?.quantity ?? 1,
+        unitPrice: first?.unitPrice ?? 0,
+      });
     }
-  }, [id, navigate]);
+  }, [editingSub]);
 
   const handleProductChange = useCallback((productId: string) => {
     const product = products.find((p) => p.id === productId);
@@ -65,15 +64,15 @@ export default function SubscriptionForm() {
   const taxAmount = subtotal * 0.18;
   const total = subtotal + taxAmount;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.customerId || !formData.productId) {
       toast({ title: 'Please fill all required fields', variant: 'destructive' });
       return;
     }
 
-    const contact = contacts.find((c) => c.id === formData.customerId);
+    const customer = customers.find((c) => c.id === formData.customerId);
     const product = products.find((p) => p.id === formData.productId);
-    if (!contact || !product) return;
+    if (!customer || !product) return;
 
     const getNextBillingDate = (cycle: BillingCycle, fromDate: Date) => {
       switch (cycle) {
@@ -84,38 +83,44 @@ export default function SubscriptionForm() {
     };
 
     const now = new Date();
-    const allSubs = getSubscriptions();
+    const reference = editingSub?.reference || await generateSubscriptionReferenceRich();
+    const customerName = customer.company ? `${customer.name} - ${customer.company}` : customer.name;
 
-    const subData: Subscription = {
-      id: editingSub?.id || crypto.randomUUID(),
-      reference: editingSub?.reference || `SUB-${now.getFullYear()}-${String(allSubs.length + 1).padStart(4, '0')}`,
+    const subscription: Partial<SbSubscription> = {
+      id: editingSub?.id,
+      reference,
       customerId: formData.customerId,
-      customerName: contact.company ? `${contact.name} - ${contact.company}` : contact.name,
+      customerName,
       status: editingSub?.status || 'draft',
       billingCycle: formData.billingCycle,
+      billingPeriod: editingSub?.billingPeriod || formData.billingCycle,
+      price: formData.unitPrice,
+      productId: formData.productId,
       startDate: editingSub?.startDate || now.toISOString().split('T')[0],
       nextBillingDate: editingSub?.nextBillingDate || getNextBillingDate(formData.billingCycle, now).toISOString().split('T')[0],
-      lines: [{
-        id: crypto.randomUUID(),
-        productId: formData.productId,
-        productName: product.name,
-        quantity: formData.quantity,
-        unitPrice: formData.unitPrice,
-        discount: 0,
-      }],
+      endDate: editingSub?.endDate ?? null,
       subtotal,
       taxAmount,
       total,
       currency: 'INR',
-      orderHistory: editingSub?.orderHistory || [],
-      createdBy: editingSub?.createdBy || user?.name || 'System',
-      createdAt: editingSub?.createdAt || now.toISOString(),
-      updatedAt: now.toISOString(),
+      paymentTerms: editingSub?.paymentTerms ?? null,
+      lastOrderId: editingSub?.lastOrderId ?? null,
+      orderHistory: editingSub?.orderHistory ?? [],
     };
-
-    saveSubscription(subData);
-    toast({ title: editingSub ? 'Subscription updated' : 'Subscription created' });
-    navigate('/sales/subscriptions');
+    const lines: Array<Omit<SbSubscriptionLine, 'id' | 'subscriptionId'>> = [{
+      productId: formData.productId,
+      productName: product.name,
+      quantity: formData.quantity,
+      unitPrice: formData.unitPrice,
+      discount: 0,
+    }];
+    try {
+      await saveSubMut.mutateAsync({ subscription, lines });
+      toast({ title: editingSub ? 'Subscription updated' : 'Subscription created' });
+      navigate('/sales/subscriptions');
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
   };
 
   return (
@@ -147,7 +152,7 @@ export default function SubscriptionForm() {
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {contacts.map((c) => (
+                  {customers.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name} {c.company && `- ${c.company}`}
                     </SelectItem>
