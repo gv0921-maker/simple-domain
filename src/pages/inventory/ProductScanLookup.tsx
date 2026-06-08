@@ -21,8 +21,8 @@ import {
   ExternalLink,
   Search,
 } from 'lucide-react';
-import { getProducts, getProductByBarcode, getStockMoves, getLotsByProduct, getSerialsByProduct } from '@/lib/services/inventory/storage';
-import type { Product, StockMove } from '@/lib/services/inventory/types';
+import { useProducts, useStockMoves } from '@/hooks/inventory';
+import type { Product, StockMove } from '@/lib/services/inventory';
 import { BARCODE_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -45,6 +45,8 @@ export default function ProductScanLookup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { data: allProducts = [] } = useProducts();
+  const { data: allMoves = [] } = useStockMoves();
   const [inputValue, setInputValue] = useState('');
   const [foundProduct, setFoundProduct] = useState<Product | null>(null);
   const [recentMoves, setRecentMoves] = useState<StockMove[]>([]);
@@ -55,13 +57,13 @@ export default function ProductScanLookup() {
     if (!trimmed) return;
 
     // Search by barcode first, then SKU, then name
-    let product = getProductByBarcode(trimmed);
+    let product: Product | null =
+      allProducts.find(p => p.barcode === trimmed || p.barcodes?.includes(trimmed)) || null;
     if (!product) {
-      const allProducts = getProducts();
       product = allProducts.find(p => p.sku.toLowerCase() === trimmed.toLowerCase()) || null;
-      if (!product) {
-        product = allProducts.find(p => p.name.toLowerCase().includes(trimmed.toLowerCase())) || null;
-      }
+    }
+    if (!product) {
+      product = allProducts.find(p => p.name.toLowerCase().includes(trimmed.toLowerCase())) || null;
     }
 
     setScanHistory(prev => [{ barcode: trimmed, product, time: new Date() }, ...prev.slice(0, 19)]);
@@ -69,7 +71,7 @@ export default function ProductScanLookup() {
     if (product) {
       setFoundProduct(product);
       // Get recent stock moves for this product
-      const moves = getStockMoves().filter(m => m.lines.some(l => l.productId === product!.id)).slice(0, 5);
+      const moves = allMoves.filter(m => m.lines.some(l => l.productId === product!.id)).slice(0, 5);
       setRecentMoves(moves);
       toast({ title: 'Product Found', description: product.name });
     } else {
@@ -301,7 +303,7 @@ export default function ProductScanLookup() {
                   <div
                     key={i}
                     className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50"
-                    onClick={() => entry.product && (setFoundProduct(entry.product), setRecentMoves(getStockMoves().filter(m => m.lines.some(l => l.productId === entry.product!.id)).slice(0, 5)))}
+                    onClick={() => entry.product && (setFoundProduct(entry.product), setRecentMoves(allMoves.filter(m => m.lines.some(l => l.productId === entry.product!.id)).slice(0, 5)))}
                   >
                     <div className="flex items-center gap-2">
                       {entry.product ? <Package className="h-4 w-4 text-primary" /> : <AlertTriangle className="h-4 w-4 text-destructive" />}

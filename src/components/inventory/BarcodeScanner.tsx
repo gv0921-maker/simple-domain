@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Keyboard
 } from 'lucide-react';
-import { getProductByBarcode, getLocationByBarcode } from '@/lib/services/inventory/storage';
+import { useProducts, useLocations } from '@/hooks/inventory';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +50,8 @@ export function BarcodeScanner({
   const [isProcessing, setIsProcessing] = useState(false);
   const [useCameraMode, setUseCameraMode] = useState(mode === 'camera');
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
+  const { data: allProducts = [] } = useProducts();
+  const { data: allLocations = [] } = useLocations();
 
   // Auto-focus input on mount
   useEffect(() => {
@@ -63,7 +65,7 @@ export function BarcodeScanner({
     setIsProcessing(true);
     
     // Check if it's a product barcode
-    const product = getProductByBarcode(value);
+    const product = allProducts.find(p => p.barcode === value || p.barcodes?.includes(value));
     if (product) {
       const result: ScanResult = {
         barcode: value,
@@ -83,7 +85,7 @@ export function BarcodeScanner({
     }
 
     // Check if it's a location barcode
-    const location = getLocationByBarcode(value);
+    const location = allLocations.find(l => l.barcode === value);
     if (location) {
       const result: ScanResult = {
         barcode: value,
@@ -117,7 +119,7 @@ export function BarcodeScanner({
     });
     setIsProcessing(false);
     setInputValue('');
-  }, [onScan, toast]);
+  }, [onScan, toast, allProducts, allLocations]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputValue.trim()) {

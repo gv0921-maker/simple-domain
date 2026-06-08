@@ -25,14 +25,8 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { BarcodeScanner } from './BarcodeScanner';
-import { 
-  getStockMove, 
-  saveStockMove, 
-  validateStockMove,
-  getProduct,
-  getLocation,
-} from '@/lib/services/inventory/storage';
-import type { StockMove, StockMoveLine } from '@/lib/services/inventory/types';
+import { useStockMove, useSaveStockMove, useValidateStockMove, useProducts } from '@/hooks/inventory';
+import type { StockMove, StockMoveLine } from '@/lib/services/inventory';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +41,14 @@ export function MobilePickingScreen({ stockMoveId, onComplete, onBack }: MobileP
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [stockMove, setStockMove] = useState<StockMove | undefined>(() => getStockMove(stockMoveId));
+  const { data: loadedMove } = useStockMove(stockMoveId);
+  const [stockMove, setStockMove] = useState<StockMove | undefined>(undefined);
+  const { data: products = [] } = useProducts();
+  const saveMoveMut = useSaveStockMove();
+  const validateMut = useValidateStockMove();
+
+  // Sync local state with loaded move
+  if (loadedMove && !stockMove) setStockMove(loadedMove);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [pickedLines, setPickedLines] = useState<Set<string>>(new Set());
@@ -60,7 +61,7 @@ export function MobilePickingScreen({ stockMoveId, onComplete, onBack }: MobileP
     if (!currentLine || !stockMove) return;
 
     if (type === 'product') {
-      const product = getProduct(currentLine.productId);
+      const product = products.find(p => p.id === currentLine.productId);
       if (product?.barcode === barcode || product?.barcodes?.includes(barcode)) {
         // Correct product scanned
         markLinePicked(currentLine.id);
@@ -91,7 +92,7 @@ export function MobilePickingScreen({ stockMoveId, onComplete, onBack }: MobileP
       if (line) {
         line.doneQty = line.demandQty;
       }
-      saveStockMove(updatedMove);
+      saveMoveMut.mutate(updatedMove);
       setStockMove(updatedMove);
     }
 
@@ -106,12 +107,13 @@ export function MobilePickingScreen({ stockMoveId, onComplete, onBack }: MobileP
 
   const handleValidate = () => {
     if (stockMove && user) {
-      validateStockMove(stockMove.id, user.id, user.name);
-      toast({
-        title: 'Picking Complete',
-        description: `${stockMove.reference} has been validated`,
+      validateMut.mutate(stockMove.id, {
+        onSuccess: () => {
+          toast({ title: 'Picking Complete', description: `${stockMove.reference} has been validated` });
+          onComplete?.();
+        },
+        onError: (e: any) => toast({ title: 'Validation failed', description: e?.message, variant: 'destructive' }),
       });
-      onComplete?.();
     }
   };
 

@@ -19,7 +19,8 @@ import {
   Barcode,
   ListFilter,
 } from 'lucide-react';
-import { getTransfer, updateTransferStatus, type InventoryTransfer, type TransferStatus } from '@/lib/services/inventory';
+import { useTransfer, useSaveTransfer } from '@/hooks/inventory';
+import type { InventoryTransfer, TransferStatus } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -43,18 +44,9 @@ export default function TransferDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [transfer, setTransfer] = useState<InventoryTransfer | null>(null);
-
-  useEffect(() => {
-    if (id) {
-      const data = getTransfer(id);
-      if (data) {
-        setTransfer(data);
-      } else {
-        navigate('/inventory');
-      }
-    }
-  }, [id, navigate]);
+  const { data: loadedTransfer, isLoading } = useTransfer(id);
+  const saveMut = useSaveTransfer();
+  const transfer = loadedTransfer ?? null;
 
   if (!transfer) {
     return (
@@ -68,11 +60,18 @@ export default function TransferDetail() {
 
   const handleStatusChange = (newStatus: string) => {
     if (!user) return;
-    updateTransferStatus(transfer.id, newStatus as TransferStatus, user.id, user.name);
-    setTransfer(getTransfer(transfer.id)!);
-    toast({
-      title: 'Status updated',
-      description: `Transfer status changed to ${newStatus}`,
+    if (!transfer) return;
+    const updated: InventoryTransfer = {
+      ...transfer,
+      status: newStatus as TransferStatus,
+      activities: [
+        ...transfer.activities,
+        { id: crypto.randomUUID(), userId: user.id, userName: user.name, action: `Status changed to ${newStatus}`, timestamp: new Date().toISOString() },
+      ],
+    };
+    saveMut.mutate(updated, {
+      onSuccess: () => toast({ title: 'Status updated', description: `Transfer status changed to ${newStatus}` }),
+      onError: (e: any) => toast({ title: 'Update failed', description: e?.message, variant: 'destructive' }),
     });
   };
 

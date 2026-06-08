@@ -23,14 +23,8 @@ import {
   Save,
 } from 'lucide-react';
 import { BarcodeScanner } from './BarcodeScanner';
-import { 
-  getProduct,
-  getLocation,
-  getAdjustment,
-  saveAdjustment,
-  getProducts,
-} from '@/lib/services/inventory/storage';
-import type { InventoryAdjustment, AdjustmentLine } from '@/lib/services/inventory/types';
+import { useProducts, useLocations, useAdjustment, useSaveAdjustment } from '@/hooks/inventory';
+import type { InventoryAdjustment, AdjustmentLine } from '@/lib/services/inventory';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,14 +40,16 @@ export function MobileCountScreen({ adjustmentId, locationId, onComplete, onBack
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const location = getLocation(locationId);
+  const { data: locations = [] } = useLocations();
+  const { data: products = [] } = useProducts();
+  const { data: loadedAdjustment } = useAdjustment(adjustmentId);
+  const saveMut = useSaveAdjustment();
+  const location = locations.find(l => l.id === locationId);
   
-  const [adjustment, setAdjustment] = useState<InventoryAdjustment>(() => {
-    if (adjustmentId) {
-      return getAdjustment(adjustmentId) || createNewAdjustment();
-    }
-    return createNewAdjustment();
-  });
+  const [adjustment, setAdjustment] = useState<InventoryAdjustment>(() => createNewAdjustment());
+  if (loadedAdjustment && adjustment.id === '' && adjustmentId) {
+    setAdjustment(loadedAdjustment);
+  }
   const [showScanner, setShowScanner] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
 
@@ -74,9 +70,8 @@ export function MobileCountScreen({ adjustmentId, locationId, onComplete, onBack
 
   const handleScan = (barcode: string, type: 'product' | 'location' | 'unknown') => {
     if (type === 'product') {
-      // Find or create adjustment line for this product
-      const product = getProduct(barcode) || 
-        [...new Array(10)].map((_, i) => getProduct(String(i + 1))).find(p => p?.barcode === barcode);
+      const product = products.find(p => p.id === barcode) ||
+        products.find(p => p.barcode === barcode || p.barcodes?.includes(barcode));
       
       if (product) {
         const existingLine = adjustment.lines.find(l => l.productId === product.id);
@@ -139,22 +134,22 @@ export function MobileCountScreen({ adjustmentId, locationId, onComplete, onBack
   };
 
   const handleSave = () => {
-    saveAdjustment(adjustment);
-    toast({
-      title: 'Count Saved',
-      description: `${adjustment.lines.length} items counted`,
+    saveMut.mutate(adjustment, {
+      onSuccess: () => {
+        toast({ title: 'Count Saved', description: `${adjustment.lines.length} items counted` });
+        onComplete?.();
+      },
     });
-    onComplete?.();
   };
 
   const handleSubmit = () => {
     const updated = { ...adjustment, status: 'pending_approval' as const };
-    saveAdjustment(updated);
-    toast({
-      title: 'Count Submitted',
-      description: 'Waiting for approval',
+    saveMut.mutate(updated, {
+      onSuccess: () => {
+        toast({ title: 'Count Submitted', description: 'Waiting for approval' });
+        onComplete?.();
+      },
     });
-    onComplete?.();
   };
 
   const totalDifference = adjustment.lines.reduce((sum, l) => sum + l.difference, 0);

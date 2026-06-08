@@ -28,14 +28,11 @@ import {
   Trash2,
   Calendar,
 } from 'lucide-react';
-import {
-  getTransfer,
-  saveTransfer,
-  getProducts,
-  getWarehouses,
-  type InventoryTransfer,
-  type StockMove,
-  type TransferStatus,
+import { useTransfer, useSaveTransfer, useProducts, useWarehouses } from '@/hooks/inventory';
+import type {
+  InventoryTransfer,
+  LegacyStockMove,
+  TransferStatus,
 } from '@/lib/services/inventory';
 import { getItem } from '@/lib/storage';
 import { INVENTORY_NAV } from '@/lib/navigation';
@@ -65,8 +62,10 @@ export default function TransferForm() {
   const isNew = id === 'new';
   const studio = useStudioConfig('inventory', 'Transfer');
 
-  const [products] = useState(getProducts());
-  const [warehouses] = useState(getWarehouses());
+  const { data: products = [] } = useProducts();
+  const { data: warehouses = [] } = useWarehouses();
+  const { data: existingTransfer } = useTransfer(!isNew ? id : undefined);
+  const saveMut = useSaveTransfer();
   const [operationTypes] = useState<OperationType[]>(
     getItem('operation_types', DEFAULT_OPERATION_TYPES)
   );
@@ -97,18 +96,13 @@ export default function TransferForm() {
   const [note, setNote] = useState('');
 
   useEffect(() => {
-    if (!isNew && id) {
-      const existingTransfer = getTransfer(id);
-      if (existingTransfer) {
-        setTransfer({
-          ...existingTransfer,
-          scheduledDate: existingTransfer.scheduledDate.slice(0, 16),
-        });
-      } else {
-        navigate('/inventory/operations');
-      }
+    if (!isNew && existingTransfer) {
+      setTransfer({
+        ...existingTransfer,
+        scheduledDate: existingTransfer.scheduledDate.slice(0, 16),
+      });
     }
-  }, [id, isNew, navigate]);
+  }, [existingTransfer, isNew]);
 
   const handleChange = (field: keyof InventoryTransfer, value: string) => {
     setTransfer((prev) => ({ ...prev, [field]: value }));
@@ -123,7 +117,7 @@ export default function TransferForm() {
     const product = products.find((p) => p.id === newMove.productId);
     if (!product) return;
 
-    const move: StockMove = {
+    const move: LegacyStockMove = {
       productId: product.id,
       productName: `[${product.sku}] ${product.name}`,
       demand: newMove.demand,
@@ -207,12 +201,13 @@ export default function TransferForm() {
           ],
     };
 
-    saveTransfer(transferToSave);
-    toast({
-      title: isNew ? 'Transfer Created' : 'Transfer Updated',
-      description: `${transfer.reference} has been saved.`,
+    saveMut.mutate(transferToSave, {
+      onSuccess: () => {
+        toast({ title: isNew ? 'Transfer Created' : 'Transfer Updated', description: `${transfer.reference} has been saved.` });
+        navigate('/inventory/operations');
+      },
+      onError: (e: any) => toast({ title: 'Save failed', description: e?.message, variant: 'destructive' }),
     });
-    navigate('/inventory/operations');
   };
 
   return (
