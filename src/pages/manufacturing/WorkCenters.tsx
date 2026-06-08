@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
@@ -8,15 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
-import { getWorkCenters, deleteWorkCenter, updateWorkCenter, type WorkCenter } from '@/lib/services/manufacturing';
+import { useWorkCenters, useDeleteWorkCenter, useSaveWorkCenter } from '@/hooks/manufacturing';
 import { Plus, Search, Trash2, Edit, Cog, DollarSign, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function WorkCenters() {
   const navigate = useNavigate();
-  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
-  const refresh = async () => setWorkCenters(await getWorkCenters());
-  useEffect(() => { refresh(); }, []);
+  const { data: workCenters = [] } = useWorkCenters();
+  const deleteWC = useDeleteWorkCenter();
+  const saveWC = useSaveWorkCenter();
   const [search, setSearch] = useState('');
 
   const filteredCenters = workCenters.filter(wc =>
@@ -25,14 +25,14 @@ export default function WorkCenters() {
   );
 
   const handleDelete = async (id: string) => {
-    await deleteWorkCenter(id);
-    await refresh();
+    await deleteWC.mutateAsync(id);
     toast.success('Work center deleted');
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    await updateWorkCenter(id, { isActive });
-    await refresh();
+    const wc = workCenters.find(w => w.id === id);
+    if (!wc) return;
+    await saveWC.mutateAsync({ ...wc, isActive });
     toast.success(`Work center ${isActive ? 'activated' : 'deactivated'}`);
   };
 
