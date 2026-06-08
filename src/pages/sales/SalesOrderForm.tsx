@@ -594,6 +594,10 @@ export default function SalesOrderForm() {
               </CardContent>
             </Card>
 
+            {!isNew && id && (
+              <ReservationsSection salesOrderId={id} lines={lines} />
+            )}
+
           {/* Summary (full width, right-aligned) */}
             <Card>
               <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Order Summary</CardTitle></CardHeader>
