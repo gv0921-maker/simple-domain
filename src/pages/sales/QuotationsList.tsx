@@ -64,6 +64,7 @@ const STATUS_CONFIG: Record<QuotationStatus, { label: string; className: string;
   draft: { label: 'Draft', className: 'bg-muted text-muted-foreground', icon: FileText },
   sent: { label: 'Sent', className: 'bg-info/20 text-info border-info', icon: Send },
   accepted: { label: 'Accepted', className: 'bg-success/20 text-success border-success', icon: CheckCircle },
+  converted: { label: 'Converted', className: 'bg-primary/20 text-primary border-primary', icon: ArrowRight },
   expired: { label: 'Expired', className: 'bg-warning/20 text-warning-foreground border-warning', icon: Clock },
   cancelled: { label: 'Cancelled', className: 'bg-destructive/20 text-destructive border-destructive', icon: XCircle },
 };
@@ -291,7 +292,7 @@ ${quotation.termsAndConditions || ''}
             />
           </div>
           <div className="flex gap-2 flex-wrap">
-            {(['all', 'draft', 'sent', 'accepted', 'expired', 'cancelled'] as const).map((status) => (
+            {(['all', 'draft', 'sent', 'accepted', 'converted', 'expired', 'cancelled'] as const).map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? 'default' : 'outline'}
