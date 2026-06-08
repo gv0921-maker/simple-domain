@@ -1,31 +1,26 @@
-import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getWorkOrders, getWorkCenters, getBOMs, type WorkOrder, type WorkCenter, type BillOfMaterials } from '@/lib/services/manufacturing';
+import { useWorkOrders, useWorkCenters, useBOMs } from '@/hooks/manufacturing';
 import { Factory, ClipboardList, Cog, Layers, TrendingUp, Clock, AlertTriangle, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 
 export default function ManufacturingOverview() {
   const navigate = useNavigate();
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
-  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
-  const [boms, setBOMs] = useState<BillOfMaterials[]>([]);
-  useEffect(() => {
-    (async () => {
-      const [wo, wc, b] = await Promise.all([getWorkOrders(), getWorkCenters(), getBOMs()]);
-      setWorkOrders(wo); setWorkCenters(wc); setBOMs(b);
-    })();
-  }, []);
+  const { data: workOrders = [] } = useWorkOrders();
+  const { data: workCenters = [] } = useWorkCenters();
+  const { data: boms = [] } = useBOMs();
 
   const inProgress = workOrders.filter(wo => wo.status === 'in_progress');
   const confirmed = workOrders.filter(wo => wo.status === 'confirmed');
   const urgent = workOrders.filter(wo => wo.priority === 'urgent');
   const activeWorkCenters = workCenters.filter(wc => wc.isActive);
-  const avgLoad = activeWorkCenters.reduce((sum, wc) => sum + wc.currentLoad, 0) / activeWorkCenters.length;
+  const avgLoad = activeWorkCenters.length
+    ? activeWorkCenters.reduce((sum, wc) => sum + wc.currentLoad, 0) / activeWorkCenters.length
+    : 0;
 
   const stats = [
     { label: 'Active Work Orders', value: inProgress.length, icon: ClipboardList, color: 'text-info' },
