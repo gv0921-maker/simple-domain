@@ -5,12 +5,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command';
-import { useContacts } from '@/hooks/crm';
+import { useCustomers } from '@/hooks/sales';
 import { cn } from '@/lib/utils';
 
 interface CustomerSelectorProps {
   value?: string;
-  onChange: (contact: any) => void;
+  onChange: (customer: any) => void;
   disabled?: boolean;
   placeholder?: string;
   onCreateNew?: () => void;
@@ -18,8 +18,10 @@ interface CustomerSelectorProps {
 
 /**
  * Shared searchable Customer combobox for Sales forms.
- * Loads contacts via TanStack Query (useContacts) and emits the
- * full Contact object on select so the parent can auto-populate.
+ * Loads rows from the `customers` table (via useCustomers) and emits the
+ * full customer object on select so the parent can auto-populate. This is
+ * the source of truth for `quotations.customer_id` / `sales_orders.customer_id`
+ * — both FKs point to `customers.id`.
  */
 export function CustomerSelector({
   value,
@@ -28,14 +30,11 @@ export function CustomerSelector({
   placeholder = 'Select customer...',
   onCreateNew,
 }: CustomerSelectorProps) {
-  const { data: contacts = [], isLoading } = useContacts();
+  const { data: customers = [], isLoading } = useCustomers();
   const [open, setOpen] = useState(false);
 
-  const selected: any = value ? contacts.find((c: any) => c.id === value) : undefined;
-  const selectedLabel = selected
-    ? ([selected.firstName, selected.lastName].filter(Boolean).join(' ').trim() ||
-        selected.name || '')
-    : '';
+  const selected: any = value ? customers.find((c: any) => c.id === value) : undefined;
+  const selectedLabel = selected?.name || '';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -66,13 +65,12 @@ export function CustomerSelector({
           <CommandList>
             <CommandEmpty>No customer found.</CommandEmpty>
             <CommandGroup>
-              {contacts.map((c: any) => {
-                const fullName =
-                  [c.firstName, c.lastName].filter(Boolean).join(' ').trim() ||
-                  c.name || '(No name)';
-                const email = c.email || c.emails?.[0]?.email || '';
-                const phone = c.phone || c.phones?.[0]?.phone || '';
-                const searchValue = `${fullName} ${email} ${phone}`;
+              {customers.map((c: any) => {
+                const fullName = c.name || '(No name)';
+                const email = c.email || '';
+                const phone = c.phone || '';
+                const company = c.company || '';
+                const searchValue = `${fullName} ${email} ${phone} ${company}`;
                 return (
                   <CommandItem
                     key={c.id}
@@ -112,7 +110,7 @@ export function CustomerSelector({
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
-                Create New Contact
+                Create New Customer
               </button>
             </div>
           )}
