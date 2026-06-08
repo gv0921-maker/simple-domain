@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
@@ -14,7 +14,9 @@ import { toast } from 'sonner';
 
 export default function WorkCenters() {
   const navigate = useNavigate();
-  const [workCenters, setWorkCenters] = useState(getWorkCenters());
+  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
+  const refresh = async () => setWorkCenters(await getWorkCenters());
+  useEffect(() => { refresh(); }, []);
   const [search, setSearch] = useState('');
 
   const filteredCenters = workCenters.filter(wc =>
@@ -22,15 +24,15 @@ export default function WorkCenters() {
     wc.code.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = (id: string) => {
-    deleteWorkCenter(id);
-    setWorkCenters(getWorkCenters());
+  const handleDelete = async (id: string) => {
+    await deleteWorkCenter(id);
+    await refresh();
     toast.success('Work center deleted');
   };
 
-  const handleToggleActive = (id: string, isActive: boolean) => {
-    updateWorkCenter(id, { isActive });
-    setWorkCenters(getWorkCenters());
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    await updateWorkCenter(id, { isActive });
+    await refresh();
     toast.success(`Work center ${isActive ? 'activated' : 'deactivated'}`);
   };
 

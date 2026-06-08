@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,41 +8,49 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { getWorkOrders, updateWorkOrder, getWorkCenters, WorkOrder } from '@/lib/services/manufacturing';
+import { getWorkOrders, updateWorkOrder, getWorkCenters, WorkOrder, type WorkCenter } from '@/lib/services/manufacturing';
 import { Play, Pause, CheckCircle, Clock, Package, AlertTriangle, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ShopFloor() {
-  const [workOrders, setWorkOrders] = useState(getWorkOrders().filter(wo => 
-    wo.status === 'confirmed' || wo.status === 'in_progress'
-  ));
-  const workCenters = getWorkCenters();
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
+  const refreshOrders = async () => {
+    const all = await getWorkOrders();
+    setWorkOrders(all.filter(w => w.status === 'confirmed' || w.status === 'in_progress'));
+  };
+  useEffect(() => {
+    (async () => {
+      await refreshOrders();
+      setWorkCenters(await getWorkCenters());
+    })();
+  }, []);
   const [progressDialog, setProgressDialog] = useState<{ open: boolean; order: WorkOrder | null }>({ open: false, order: null });
   const [newProgress, setNewProgress] = useState(0);
 
-  const handleStart = (wo: WorkOrder) => {
-    updateWorkOrder(wo.id, { 
+  const handleStart = async (wo: WorkOrder) => {
+    await updateWorkOrder(wo.id, { 
       status: 'in_progress',
       actualStart: new Date().toISOString().split('T')[0]
     });
-    setWorkOrders(getWorkOrders().filter(w => w.status === 'confirmed' || w.status === 'in_progress'));
+    await refreshOrders();
     toast.success(`Started work order ${wo.name}`);
   };
 
-  const handleComplete = (wo: WorkOrder) => {
-    updateWorkOrder(wo.id, { 
+  const handleComplete = async (wo: WorkOrder) => {
+    await updateWorkOrder(wo.id, { 
       status: 'done',
       progress: 100,
       actualEnd: new Date().toISOString().split('T')[0]
     });
-    setWorkOrders(getWorkOrders().filter(w => w.status === 'confirmed' || w.status === 'in_progress'));
+    await refreshOrders();
     toast.success(`Completed work order ${wo.name}`);
   };
 
-  const handleUpdateProgress = () => {
+  const handleUpdateProgress = async () => {
     if (!progressDialog.order) return;
-    updateWorkOrder(progressDialog.order.id, { progress: newProgress });
-    setWorkOrders(getWorkOrders().filter(w => w.status === 'confirmed' || w.status === 'in_progress'));
+    await updateWorkOrder(progressDialog.order.id, { progress: newProgress });
+    await refreshOrders();
     setProgressDialog({ open: false, order: null });
     toast.success('Progress updated');
   };
@@ -63,9 +71,7 @@ export default function ShopFloor() {
             <h1 className="text-2xl font-bold">Shop Floor Control</h1>
             <p className="text-muted-foreground">Real-time production monitoring and control</p>
           </div>
-          <Button variant="outline" onClick={() => setWorkOrders(getWorkOrders().filter(wo => 
-            wo.status === 'confirmed' || wo.status === 'in_progress'
-          ))}>
+          <Button variant="outline" onClick={() => { refreshOrders(); }}>
             <RotateCcw className="h-4 w-4 mr-2" />
             Refresh
           </Button>

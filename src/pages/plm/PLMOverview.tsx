@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PLM_NAV } from '@/lib/navigation/manufacturing';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +29,9 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function PLMOverview() {
-  const [ecos, setECOs] = useState(getECOs());
+  const [ecos, setECOs] = useState<ECO[]>([]);
+  const refresh = async () => setECOs(await getECOs());
+  useEffect(() => { refresh(); }, []);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -54,19 +56,19 @@ export default function PLMOverview() {
     eco.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formData.productName || !formData.description) {
       toast.error('Please fill in required fields');
       return;
     }
 
-    createECO({
+    await createECO({
       ...formData,
       productId: `PROD-${Date.now()}`,
       status: 'draft',
       requestedDate: new Date().toISOString().split('T')[0],
     });
-    setECOs(getECOs());
+    await refresh();
     setDialogOpen(false);
     setFormData({
       productId: '',
@@ -78,9 +80,9 @@ export default function PLMOverview() {
     toast.success('ECO created');
   };
 
-  const handleStatusChange = (id: string, status: ECO['status']) => {
-    updateECO(id, { status });
-    setECOs(getECOs());
+  const handleStatusChange = async (id: string, status: ECO['status']) => {
+    await updateECO(id, { status });
+    await refresh();
     toast.success(`ECO ${status}`);
   };
 

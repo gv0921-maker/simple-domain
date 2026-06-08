@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +15,9 @@ import { Plus, Search, Trash2, Edit, Layers, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function BOMList() {
-  const [boms, setBOMs] = useState(getBOMs());
+  const [boms, setBOMs] = useState<BillOfMaterials[]>([]);
+  const refresh = async () => setBOMs(await getBOMs());
+  useEffect(() => { refresh(); }, []);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBOM, setEditingBOM] = useState<BillOfMaterials | null>(null);
@@ -86,35 +88,35 @@ export default function BOMList() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.productName) {
       toast.error('Please fill in required fields');
       return;
     }
 
     if (editingBOM) {
-      updateBOM(editingBOM.id, formData);
+      await updateBOM(editingBOM.id, formData);
       toast.success('BOM updated');
     } else {
-      createBOM({
+      await createBOM({
         ...formData,
         productId: `PROD-${Date.now()}`,
       });
       toast.success('BOM created');
     }
-    setBOMs(getBOMs());
+    await refresh();
     setDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    deleteBOM(id);
-    setBOMs(getBOMs());
+  const handleDelete = async (id: string) => {
+    await deleteBOM(id);
+    await refresh();
     toast.success('BOM deleted');
   };
 
-  const handleStatusChange = (id: string, status: BillOfMaterials['status']) => {
-    updateBOM(id, { status });
-    setBOMs(getBOMs());
+  const handleStatusChange = async (id: string, status: BillOfMaterials['status']) => {
+    await updateBOM(id, { status });
+    await refresh();
     toast.success(`BOM ${status}`);
   };
 

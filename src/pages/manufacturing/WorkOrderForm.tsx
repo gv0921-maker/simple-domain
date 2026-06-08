@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import { getWorkOrders, createWorkOrder, updateWorkOrder, getBOMs, getWorkCenters, type WorkOrder } from '@/lib/services/manufacturing';
+import { getWorkOrders, createWorkOrder, updateWorkOrder, getBOMs, getWorkCenters, type WorkOrder, type BillOfMaterials, type WorkCenter } from '@/lib/services/manufacturing';
 import { toast } from 'sonner';
 
 export default function WorkOrderForm() {
@@ -16,8 +16,14 @@ export default function WorkOrderForm() {
   const { id } = useParams();
   const isEdit = !!id;
 
-  const boms = getBOMs();
-  const workCenters = getWorkCenters();
+  const [boms, setBoms] = useState<BillOfMaterials[]>([]);
+  const [workCenters, setWorkCenters] = useState<WorkCenter[]>([]);
+  useEffect(() => {
+    (async () => {
+      const [b, wc] = await Promise.all([getBOMs(), getWorkCenters()]);
+      setBoms(b); setWorkCenters(wc);
+    })();
+  }, []);
 
   const [formData, setFormData] = useState({
     bomId: '',
@@ -29,8 +35,9 @@ export default function WorkOrderForm() {
   });
 
   useEffect(() => {
-    if (id) {
-      const orders = getWorkOrders();
+    if (!id) return;
+    (async () => {
+      const orders = await getWorkOrders();
       const wo = orders.find(w => w.id === id);
       if (wo) {
         setFormData({
@@ -44,10 +51,10 @@ export default function WorkOrderForm() {
       } else {
         navigate('/manufacturing/work-orders');
       }
-    }
+    })();
   }, [id, navigate]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const bom = boms.find(b => b.id === formData.bomId);
     const wc = workCenters.find(w => w.id === formData.workCenterId);
     if (!bom || !wc) {
@@ -56,7 +63,7 @@ export default function WorkOrderForm() {
     }
 
     if (isEdit && id) {
-      updateWorkOrder(id, {
+      await updateWorkOrder(id, {
         ...formData,
         productId: bom.productId,
         productName: bom.productName,
@@ -64,7 +71,7 @@ export default function WorkOrderForm() {
       });
       toast.success('Work order updated');
     } else {
-      createWorkOrder({
+      await createWorkOrder({
         ...formData,
         productId: bom.productId,
         productName: bom.productName,

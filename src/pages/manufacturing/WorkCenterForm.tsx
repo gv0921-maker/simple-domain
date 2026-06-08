@@ -25,8 +25,9 @@ export default function WorkCenterForm() {
   });
 
   useEffect(() => {
-    if (id) {
-      const centers = getWorkCenters();
+    if (!id) return;
+    (async () => {
+      const centers = await getWorkCenters();
       const wc = centers.find(w => w.id === id);
       if (wc) {
         setFormData({
@@ -39,20 +40,20 @@ export default function WorkCenterForm() {
       } else {
         navigate('/manufacturing/work-centers');
       }
-    }
+    })();
   }, [id, navigate]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.code) {
       toast.error('Please fill in required fields');
       return;
     }
 
     if (isEdit && id) {
-      updateWorkCenter(id, formData);
+      await updateWorkCenter(id, formData);
       toast.success('Work center updated');
     } else {
-      createWorkCenter(formData);
+      await createWorkCenter(formData);
       toast.success('Work center created');
     }
     navigate('/manufacturing/work-centers');
