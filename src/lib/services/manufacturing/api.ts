@@ -244,7 +244,7 @@ export async function saveWorkOrder(wo: WorkOrder): Promise<WorkOrder> {
     if (error) throw error;
   } else {
     const { data, error } = await supabase
-      .from('work_orders').insert(payload).select('id').single();
+      .from('work_orders').insert(payload as never).select('id').single();
     if (error) throw error;
     woId = data.id;
   }
