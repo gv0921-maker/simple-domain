@@ -108,3 +108,15 @@ export function useUpdateInvoiceLineApproval() {
     onSuccess: () => qc.invalidateQueries({ queryKey: invoicingKeys.all }),
   });
 }
+
+// -------- Generate invoice from sales order --------
+export function useGenerateInvoiceFromOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => api.generateInvoiceFromOrder(orderId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: invoicingKeys.all });
+      qc.invalidateQueries({ queryKey: ['sales'] });
+    },
+  });
+}
