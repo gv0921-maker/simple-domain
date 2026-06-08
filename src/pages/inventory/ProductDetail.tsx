@@ -64,6 +64,17 @@ export default function ProductDetail() {
   const isNew = id === 'new';
   const studio = useStudioConfig('inventory', 'Product');
   const { data: existingProduct } = useProduct(!isNew ? id : undefined);
+  const { data: serials = [] } = useSerialsByProduct(!isNew ? id : undefined);
+  const { data: productReservations = [] } = useReservationsByProduct(!isNew ? id : undefined);
+  const { data: orders = [] } = useSalesOrders();
+  const reservedQty = productReservations.reduce((s, r) => s + r.quantity, 0);
+  const orderRefBySerial = new Map<string, string>();
+  productReservations.forEach((r) => {
+    if (r.serialNumberId) {
+      const o = (orders as any[]).find((x) => x.id === r.salesOrderId);
+      orderRefBySerial.set(r.serialNumberId, o?.reference || r.salesOrderId.slice(0, 8));
+    }
+  });
   const saveMut = useSaveProduct();
   const deleteMut = useDeleteProduct();
 
@@ -271,6 +282,20 @@ export default function ProductDetail() {
                 <div className="text-2xl font-bold">
                   ₹{(product.stockOnHand * product.costPrice).toLocaleString()}
                 </div>
+              </CardContent>
+            </Card>
+            <Card className="animate-slide-up" style={{ animationDelay: '75ms' }}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Reserved
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{reservedQty}</div>
+                <p className="text-xs text-muted-foreground">
+                  Available: {Math.max(product.stockOnHand - reservedQty, 0)}
+                </p>
               </CardContent>
             </Card>
             <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
