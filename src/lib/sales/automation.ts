@@ -1,32 +1,29 @@
 import {
-  getQuotations,
-  saveQuotation,
-  convertQuotationToOrder,
-  getSubscriptions,
-  saveSubscription,
-  saveSalesOrder,
-  generateOrderReference,
-} from '@/lib/services/sales/storage';
+  listQuotationsRich, saveQuotationRich,
+  convertQuotationToOrderRich,
+  listSubscriptionsRich, saveSubscriptionRich,
+  saveSalesOrderRich, generateOrderReferenceRich,
+} from '@/lib/services/sales/api';
 import type { Subscription, SalesOrder, SalesOrderLine } from '@/lib/services/sales/types';
 import { addMonths, addQuarters, addYears, parseISO } from 'date-fns';
 import { logSales } from './audit';
 
-export function autoExpireQuotations(): number {
-  const quotations = getQuotations();
+export async function autoExpireQuotations(): Promise<number> {
+  const quotations = await listQuotationsRich();
   const today = new Date().toISOString().split('T')[0];
   let count = 0;
-  quotations.forEach((q) => {
+  for (const q of quotations) {
     if ((q.status === 'sent' || q.status === 'draft') && q.validUntil && q.validUntil < today) {
-      saveQuotation({ ...q, status: 'expired' });
+      await saveQuotationRich({ ...q, status: 'expired' });
       logSales('update', 'quotation', q.id, `Auto-expired (valid until ${q.validUntil})`);
       count++;
     }
-  });
+  }
   return count;
 }
 
 export function autoCreateOrderOnAcceptance(quotationId: string, userId: string, userName: string) {
-  return convertQuotationToOrder(quotationId, userId, userName);
+  return convertQuotationToOrderRich(quotationId, userId, userName);
 }
 
 function nextDate(cycle: Subscription['billingCycle'], from: Date): Date {
@@ -36,8 +33,9 @@ function nextDate(cycle: Subscription['billingCycle'], from: Date): Date {
 }
 
 /** Manually renew a subscription: creates a new SalesOrder & advances nextBillingDate. */
-export function renewSubscription(subId: string, userId: string, userName: string): SalesOrder | null {
-  const sub = getSubscriptions().find((s) => s.id === subId);
+export async function renewSubscription(subId: string, userId: string, userName: string): Promise<SalesOrder | null> {
+  const all = await listSubscriptionsRich();
+  const sub = all.find((s) => s.id === subId);
   if (!sub || sub.status !== 'active') return null;
 
   const lines: SalesOrderLine[] = sub.lines.map((l) => ({
@@ -58,9 +56,10 @@ export function renewSubscription(subId: string, userId: string, userName: strin
   }));
 
   const now = new Date();
+  const reference = await generateOrderReferenceRich();
   const order: SalesOrder = {
     id: crypto.randomUUID(),
-    reference: generateOrderReference(),
+    reference,
     customerId: sub.customerId,
     customerName: sub.customerName,
     orderDate: now.toISOString().split('T')[0],
@@ -86,9 +85,9 @@ export function renewSubscription(subId: string, userId: string, userName: strin
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
   };
-  const saved = saveSalesOrder(order);
+  const saved = await saveSalesOrderRich(order);
 
-  saveSubscription({
+  await saveSubscriptionRich({
     ...sub,
     lastOrderId: saved.id,
     orderHistory: [...(sub.orderHistory || []), saved.id],
@@ -100,13 +99,14 @@ export function renewSubscription(subId: string, userId: string, userName: strin
 }
 
 /** Auto-renew any subscription whose nextBillingDate is past. Returns count renewed. */
-export function autoRenewDueSubscriptions(userId = 'system', userName = 'System'): number {
+export async function autoRenewDueSubscriptions(userId = 'system', userName = 'System'): Promise<number> {
   const today = new Date().toISOString().split('T')[0];
   let count = 0;
-  getSubscriptions().forEach((s) => {
+  const subs = await listSubscriptionsRich();
+  for (const s of subs) {
     if (s.status === 'active' && s.nextBillingDate && s.nextBillingDate <= today) {
-      if (renewSubscription(s.id, userId, userName)) count++;
+      if (await renewSubscription(s.id, userId, userName)) count++;
     }
-  });
+  }
   return count;
 }
