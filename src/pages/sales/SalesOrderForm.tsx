@@ -18,6 +18,11 @@ import {
 import { ArrowLeft, Save, XCircle, ShoppingCart, CreditCard, FileText, CheckCircle2 } from 'lucide-react';
 import { RecordPaymentDialog } from '@/components/sales/RecordPaymentDialog';
 import { useGenerateInvoiceFromOrder } from '@/hooks/invoicing';
+import { useDeliveryQC } from '@/hooks/qc';
+import { PreDeliveryQCSection } from '@/components/sales/PreDeliveryQCSection';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   useSalesOrderRich, useSaveSalesOrderRich, usePricelists, useFiscalPositions,
 } from '@/hooks/sales';
@@ -95,6 +100,8 @@ export default function SalesOrderForm() {
   const [confirmAction, setConfirmAction] = useState<'cancel' | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const generateInvoiceMut = useGenerateInvoiceFromOrder();
+  const { data: deliveryQC } = useDeliveryQC(!isNew ? id : undefined);
+  const qcPassed = deliveryQC?.status === 'passed';
   const billingRef = useRef<HTMLDivElement | null>(null);
 
   const [formData, setFormData] = useState<Partial<SalesOrder>>({
@@ -420,26 +427,37 @@ export default function SalesOrderForm() {
               </Button>
             )}
             {status === 'paid' && !isNew && id && (
-              <Button
-                variant="outline"
-                disabled={generateInvoiceMut.isPending}
-                onClick={async () => {
-                  try {
-                    const res = await generateInvoiceMut.mutateAsync(id);
-                    toast({ title: 'Invoice generated successfully' });
-                    navigate(`/invoicing/invoices/${res.invoiceId}`);
-                  } catch (e: any) {
-                    toast({
-                      title: 'Failed to generate invoice',
-                      description: e?.message ?? String(e),
-                      variant: 'destructive',
-                    });
-                  }
-                }}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {generateInvoiceMut.isPending ? 'Generating…' : 'Generate Invoice'}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0}>
+                      <Button
+                        variant="outline"
+                        disabled={generateInvoiceMut.isPending || !qcPassed}
+                        onClick={async () => {
+                          try {
+                            const res = await generateInvoiceMut.mutateAsync(id);
+                            toast({ title: 'Invoice generated successfully' });
+                            navigate(`/invoicing/invoices/${res.invoiceId}`);
+                          } catch (e: any) {
+                            toast({
+                              title: 'Failed to generate invoice',
+                              description: e?.message ?? String(e),
+                              variant: 'destructive',
+                            });
+                          }
+                        }}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        {generateInvoiceMut.isPending ? 'Generating…' : 'Generate Invoice'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!qcPassed && (
+                    <TooltipContent>Complete pre-delivery QC first</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             )}
             {status !== 'cancelled' && status !== 'delivered' && status !== 'paid' && !isNew && (
               <Button variant="outline" onClick={() => { setConfirmAction('cancel'); setConfirmDialogOpen(true); }}>
@@ -465,6 +483,11 @@ export default function SalesOrderForm() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Pre-delivery QC — gates Generate Invoice */}
+        {!isNew && status === 'paid' && id && (
+          <PreDeliveryQCSection salesOrderId={id} orderReference={formData.reference} />
         )}
 
         {/* Status chevrons */}

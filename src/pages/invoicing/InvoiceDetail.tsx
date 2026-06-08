@@ -9,9 +9,11 @@ import {
 } from '@/components/ui/table';
 import { ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useInvoice } from '@/hooks/invoicing';
+import { useDeliveryQC } from '@/hooks/qc';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
+import { ShieldCheck } from 'lucide-react';
 
 const fmtINR = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n || 0);
@@ -38,6 +40,7 @@ export default function InvoiceDetail() {
   const navigate = useNavigate();
   const { data: invoice, isLoading } = useInvoice(id);
   const { data: order } = useLinkedSalesOrder(invoice?.sales_order_id);
+  const { data: deliveryQC } = useDeliveryQC(invoice?.sales_order_id ?? undefined);
 
   if (isLoading) {
     return (
@@ -108,6 +111,43 @@ export default function InvoiceDetail() {
                   {order.payment_reference && ` · Ref ${order.payment_reference}`}
                 </span>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {deliveryQC && (
+          <Card className={deliveryQC.status === 'passed'
+            ? 'border-success/40 bg-success/5'
+            : 'border-destructive/40 bg-destructive/5'}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <ShieldCheck className={`h-5 w-5 ${deliveryQC.status === 'passed' ? 'text-success' : 'text-destructive'}`} />
+              <div className="flex-1 text-sm">
+                <Badge
+                  className={deliveryQC.status === 'passed'
+                    ? 'bg-success text-success-foreground hover:bg-success mr-2'
+                    : 'bg-destructive text-destructive-foreground hover:bg-destructive mr-2'}
+                >
+                  Pre-delivery QC {deliveryQC.status === 'passed' ? 'Passed' : 'Failed'}
+                </Badge>
+                <span className="text-foreground">
+                  {deliveryQC.scannedSerials.length} item(s) scanned
+                  {deliveryQC.verifiedAt && ` · ${format(parseISO(deliveryQC.verifiedAt), 'MMM d, yyyy HH:mm')}`}
+                </span>
+              </div>
+              {deliveryQC.qcImages.length > 0 && (
+                <div className="flex gap-1">
+                  {deliveryQC.qcImages.slice(0, 4).map(url => (
+                    <a key={url} href={url} target="_blank" rel="noreferrer" className="h-10 w-10 rounded border overflow-hidden block">
+                      <img src={url} alt="QC" className="h-full w-full object-cover" />
+                    </a>
+                  ))}
+                  {deliveryQC.qcImages.length > 4 && (
+                    <span className="text-xs text-muted-foreground self-center ml-1">
+                      +{deliveryQC.qcImages.length - 4}
+                    </span>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
