@@ -794,6 +794,7 @@ export type Database = {
         }
         Returns: string
       }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       activity_type:
