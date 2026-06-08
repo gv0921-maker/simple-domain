@@ -8,7 +8,6 @@
 import * as localCRM from './crm';
 import * as localSales from './sales';
 import * as localInventory from './inventory';
-import * as localAccounting from './accounting';
 import * as localHR from './hr';
 import * as localManufacturing from './manufacturing';
 import * as localSettings from './settings';
@@ -22,7 +21,6 @@ export const services = {
   crm: localCRM,
   sales: localSales,
   inventory: localInventory,
-  accounting: localAccounting,
   hr: localHR,
   manufacturing: localManufacturing,
   settings: localSettings,
@@ -31,7 +29,6 @@ export const services = {
 export const crmService = services.crm;
 export const salesService = services.sales;
 export const inventoryService = services.inventory;
-export const accountingService = services.accounting;
 export const hrService = services.hr;
 export const manufacturingService = services.manufacturing;
 export const settingsService = services.settings;
