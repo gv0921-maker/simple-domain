@@ -295,8 +295,12 @@ export default function QuotationForm() {
       await saveQuotationMut.mutateAsync(data);
       toast({ title: isNew ? 'Quotation Created' : 'Quotation Updated', description: `${data.reference} saved.` });
       navigate('/sales/quotations');
-    } catch (error) {
-      toast({ title: 'Error saving quotation', variant: 'destructive' });
+    } catch (error: any) {
+      toast({
+        title: 'Error saving quotation',
+        description: error?.message ?? String(error),
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
