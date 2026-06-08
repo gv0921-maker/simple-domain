@@ -327,8 +327,8 @@ export default function QuotationForm() {
             userName: user?.name || 'System',
           });
           if (order) {
-            toast({ title: 'Order Created', description: `${order.reference} created` });
-            navigate('/sales/orders');
+            toast({ title: 'Sales Order created from Quotation', description: order.reference });
+            navigate(`/sales/orders/${order.id}`);
           }
         } catch (e: any) {
           toast({ title: 'Conversion failed', description: e?.message ?? String(e), variant: 'destructive' });
@@ -588,7 +588,7 @@ export default function QuotationForm() {
               </CardContent>
             </Card>
 
-            {!isNew && formData.status === 'accepted' && formData.convertedToOrderId && (
+            {!isNew && formData.convertedToOrderId && (
               <Card>
                 <CardHeader className="pb-3 p-4"><CardTitle className="text-base">Linked Order</CardTitle></CardHeader>
                 <CardContent className="p-4 pt-0">
