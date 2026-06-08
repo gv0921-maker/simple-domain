@@ -71,6 +71,7 @@ import OpportunityDetail from "@/pages/crm/OpportunityDetail";
 // Invoicing pages
 import InvoicesList from "@/pages/invoicing/InvoicesList";
 import InvoiceForm from "@/pages/invoicing/InvoiceForm";
+import InvoiceDetail from "@/pages/invoicing/InvoiceDetail";
 import BillsList from "@/pages/invoicing/BillsList";
 import WarrantyBillsList from "@/pages/invoicing/WarrantyBillsList";
 import FactoryBillsList from "@/pages/invoicing/FactoryBillsList";
@@ -208,6 +209,7 @@ const App = () => (
             <Route path="/invoicing/factory-bills" element={<ProtectedRoute><FactoryBillsList /></ProtectedRoute>} />
             <Route path="/invoicing/payments" element={<ProtectedRoute><PaymentsList /></ProtectedRoute>} />
             <Route path="/invoicing/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
+            <Route path="/invoicing/invoices/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
             <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
 
             {/* Catch-all */}
