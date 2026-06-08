@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useWorkOrder, useSaveWorkOrder, useBOMs, useWorkCenters } from '@/hooks/manufacturing';
 import { useProducts } from '@/hooks/inventory';
 import type { WorkOrder } from '@/lib/services/manufacturing/api';
 import { toast } from 'sonner';
+import { GoodsReceiptQCDialog, type QCLineInput } from '@/components/qc/GoodsReceiptQCDialog';
 
 export default function WorkOrderForm() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function WorkOrderForm() {
     scheduledEnd: '',
     workCenterId: '',
   });
+  const [qcOpen, setQcOpen] = useState(false);
 
   useEffect(() => {
     if (!existing) return;
@@ -92,6 +94,28 @@ export default function WorkOrderForm() {
     } catch (e: any) {
       toast.error(e?.message ?? 'Failed to save work order');
     }
+  };
+
+  const canComplete = isEdit && existing && existing.status !== 'done' && existing.status !== 'cancelled';
+  const qcLines: QCLineInput[] = existing
+    ? [{
+        productId: existing.productId,
+        productName: existing.productName,
+        expectedQuantity: existing.quantity,
+      }]
+    : [];
+
+  const handleCompleteWithQC = async () => {
+    if (!existing) return;
+    const updated: WorkOrder = {
+      ...existing,
+      status: 'done',
+      progress: 100,
+      actualEnd: new Date().toISOString(),
+    };
+    await saveWO.mutateAsync(updated);
+    toast.success('Work order completed and QC recorded');
+    navigate('/manufacturing/work-orders');
   };
 
   return (
@@ -194,9 +218,28 @@ export default function WorkOrderForm() {
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => navigate('/manufacturing/work-orders')}>Cancel</Button>
+          {canComplete && (
+            <Button variant="default" className="gap-1" onClick={() => setQcOpen(true)}>
+              <CheckCircle2 className="h-4 w-4" />
+              Complete with QC
+            </Button>
+          )}
           <Button onClick={handleSubmit}>{isEdit ? 'Update' : 'Create'} Work Order</Button>
         </div>
       </div>
+      {existing && (
+        <GoodsReceiptQCDialog
+          open={qcOpen}
+          onOpenChange={setQcOpen}
+          title="Work Order QC"
+          description={`Inspect finished goods for ${existing.productName} before marking the work order as done.`}
+          referenceType="work_order"
+          referenceId={existing.id}
+          lines={qcLines}
+          submittingLabel="Confirm QC & Complete"
+          onConfirmed={handleCompleteWithQC}
+        />
+      )}
     </AppLayout>
   );
 }

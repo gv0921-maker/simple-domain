@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { QCHistoryList } from '@/components/qc/QCHistoryList';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -330,6 +331,7 @@ export default function ProductDetail() {
             <TabsTrigger value="general">General Information</TabsTrigger>
             <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
             <TabsTrigger value="variants">Variants</TabsTrigger>
+            {!isNew && <TabsTrigger value="qc">QC History</TabsTrigger>}
           </TabsList>
 
           {/* General Tab */}
@@ -663,6 +665,12 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {!isNew && id && (
+            <TabsContent value="qc" className="space-y-6 animate-fade-in">
+              <QCHistoryList productId={id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </AppLayout>

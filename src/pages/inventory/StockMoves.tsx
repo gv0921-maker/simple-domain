@@ -49,6 +49,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useInventoryAccess } from '@/hooks/useInventoryPermissions';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { GoodsReceiptQCDialog, type QCLineInput } from '@/components/qc/GoodsReceiptQCDialog';
 
 const STATE_CONFIG: Record<StockMoveState, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },
@@ -91,6 +92,7 @@ export default function StockMoves() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<'scheduledDate' | 'reference'>('scheduledDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [qcMove, setQcMove] = useState<StockMove | null>(null);
 
   const filteredMoves = useMemo(() => {
     return moves
@@ -128,11 +130,25 @@ export default function StockMoves() {
   };
 
   const handleValidate = (moveId: string) => {
+    const move = moves.find(m => m.id === moveId);
+    if (move && move.operationType === 'receipt') {
+      setQcMove(move);
+      return;
+    }
     validateMut.mutate(moveId, {
       onSuccess: () => toast({ title: 'Stock Move Validated', description: 'Stock levels have been updated.' }),
       onError: (e: any) => toast({ title: 'Validation failed', description: e?.message, variant: 'destructive' }),
     });
   };
+
+  const qcLines: QCLineInput[] = qcMove
+    ? qcMove.lines.map(l => ({
+        productId: l.productId,
+        productName: l.productName,
+        productSku: l.productSku,
+        expectedQuantity: l.demandQty,
+      }))
+    : [];
 
   const handleDelete = (id: string) => {
     deleteMut.mutate(id, {
@@ -347,6 +363,24 @@ export default function StockMoves() {
           </Table>
         </Card>
       </div>
+      {qcMove && (
+        <GoodsReceiptQCDialog
+          open={!!qcMove}
+          onOpenChange={(v) => { if (!v) setQcMove(null); }}
+          title="Goods Receipt QC"
+          description={`Inspect items on ${qcMove.reference} before adding to stock.`}
+          referenceType="purchase_order"
+          referenceId={qcMove.id}
+          lines={qcLines}
+          submittingLabel="Confirm QC & Validate"
+          onConfirmed={async () => {
+            const id = qcMove.id;
+            await validateMut.mutateAsync(id);
+            toast({ title: 'Receipt validated', description: 'QC recorded and stock updated.' });
+            setQcMove(null);
+          }}
+        />
+      )}
     </AppLayout>
   );
 }
