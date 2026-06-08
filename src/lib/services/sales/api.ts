@@ -17,6 +17,19 @@ export interface SbCustomer {
   gstin: string | null;
   contactPerson: string | null;
   isActive: boolean;
+  type: 'individual' | 'company';
+  company: string | null;
+  defaultBillingAddress: string | null;
+  defaultDeliveryAddress: string | null;
+  defaultPricelistId: string | null;
+  defaultPaymentTerms: string | null;
+  fiscalPositionId: string | null;
+  salespersonId: string | null;
+  creditLimit: number | null;
+  portalEnabled: boolean;
+  portalToken: string | null;
+  tags: string[];
+  notes: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -89,6 +102,10 @@ export interface SbPricelistItem {
   productId: string | null;
   price: number;
   minQty: number;
+  categoryId: string | null;
+  discountPercentage: number | null;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 export interface SbPricelist {
@@ -98,6 +115,9 @@ export interface SbPricelist {
   startDate: string | null;
   endDate: string | null;
   isActive: boolean;
+  code: string | null;
+  isDefault: boolean;
+  parentPricelistId: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -113,15 +133,70 @@ export interface SbSubscription {
   status: string;
   price: number;
   billingPeriod: string;
+  reference: string | null;
+  customerName: string | null;
+  billingCycle: string;
+  endDate: string | null;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  currency: string;
+  paymentTerms: string | null;
+  lastOrderId: string | null;
+  orderHistory: string[];
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  lines?: SbSubscriptionLine[];
+}
+
+export interface SbSubscriptionLine {
+  id: string;
+  subscriptionId: string;
+  productId: string | null;
+  productName: string | null;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+}
+
+export interface SbOrderActivity {
+  id: string;
+  orderId: string;
+  userId: string | null;
+  userName: string | null;
+  action: string;
+  details: string | null;
+  timestamp: string;
+}
+
+export interface SbQuotationVersion {
+  id: string;
+  quotationId: string;
+  version: number;
+  data: unknown;
+  changeNotes: string | null;
+  createdBy: string | null;
+  createdAt: string;
 }
 
 // ---------- Mappers ----------
 const mapCustomer = (r: any): SbCustomer => ({
   id: r.id, name: r.name, email: r.email, phone: r.phone, address: r.address,
   gstin: r.gstin, contactPerson: r.contact_person, isActive: r.is_active,
+  type: (r.type ?? 'individual') as 'individual' | 'company',
+  company: r.company ?? null,
+  defaultBillingAddress: r.default_billing_address ?? null,
+  defaultDeliveryAddress: r.default_delivery_address ?? null,
+  defaultPricelistId: r.default_pricelist_id ?? null,
+  defaultPaymentTerms: r.default_payment_terms ?? null,
+  fiscalPositionId: r.fiscal_position_id ?? null,
+  salespersonId: r.salesperson_id ?? null,
+  creditLimit: r.credit_limit !== null && r.credit_limit !== undefined ? Number(r.credit_limit) : null,
+  portalEnabled: !!r.portal_enabled,
+  portalToken: r.portal_token ?? null,
+  tags: Array.isArray(r.tags) ? r.tags : [],
+  notes: r.notes ?? null,
   createdBy: r.created_by, createdAt: r.created_at, updatedAt: r.updated_at,
 });
 const mapQuotationLine = (r: any): SbQuotationLine => ({
@@ -157,18 +232,53 @@ const mapSalesOrder = (r: any): SbSalesOrder => ({
 const mapPricelistItem = (r: any): SbPricelistItem => ({
   id: r.id, pricelistId: r.pricelist_id, productId: r.product_id,
   price: Number(r.price), minQty: Number(r.min_qty),
+  categoryId: r.category_id ?? null,
+  discountPercentage: r.discount_percentage !== null && r.discount_percentage !== undefined ? Number(r.discount_percentage) : null,
+  startDate: r.start_date ?? null,
+  endDate: r.end_date ?? null,
 });
 const mapPricelist = (r: any): SbPricelist => ({
   id: r.id, name: r.name, currency: r.currency, startDate: r.start_date,
   endDate: r.end_date, isActive: r.is_active, createdBy: r.created_by,
+  code: r.code ?? null,
+  isDefault: !!r.is_default,
+  parentPricelistId: r.parent_pricelist_id ?? null,
   createdAt: r.created_at, updatedAt: r.updated_at,
   items: r.pricelist_items?.map(mapPricelistItem),
+});
+const mapSubscriptionLine = (r: any): SbSubscriptionLine => ({
+  id: r.id, subscriptionId: r.subscription_id, productId: r.product_id,
+  productName: r.product_name ?? null,
+  quantity: Number(r.quantity), unitPrice: Number(r.unit_price),
+  discount: Number(r.discount),
 });
 const mapSubscription = (r: any): SbSubscription => ({
   id: r.id, customerId: r.customer_id, productId: r.product_id,
   startDate: r.start_date, nextBillingDate: r.next_billing_date,
   status: r.status, price: Number(r.price), billingPeriod: r.billing_period,
+  reference: r.reference ?? null,
+  customerName: r.customer_name ?? null,
+  billingCycle: r.billing_cycle ?? 'monthly',
+  endDate: r.end_date ?? null,
+  subtotal: Number(r.subtotal ?? 0),
+  taxAmount: Number(r.tax_amount ?? 0),
+  total: Number(r.total ?? 0),
+  currency: r.currency ?? 'INR',
+  paymentTerms: r.payment_terms ?? null,
+  lastOrderId: r.last_order_id ?? null,
+  orderHistory: Array.isArray(r.order_history) ? r.order_history : [],
   createdBy: r.created_by, createdAt: r.created_at, updatedAt: r.updated_at,
+  lines: r.subscription_lines?.map(mapSubscriptionLine),
+});
+const mapOrderActivity = (r: any): SbOrderActivity => ({
+  id: r.id, orderId: r.order_id, userId: r.user_id ?? null,
+  userName: r.user_name ?? null, action: r.action,
+  details: r.details ?? null, timestamp: r.timestamp,
+});
+const mapQuotationVersion = (r: any): SbQuotationVersion => ({
+  id: r.id, quotationId: r.quotation_id, version: r.version,
+  data: r.data, changeNotes: r.change_notes ?? null,
+  createdBy: r.created_by ?? null, createdAt: r.created_at,
 });
 
 async function currentUserId(): Promise<string | null> {
