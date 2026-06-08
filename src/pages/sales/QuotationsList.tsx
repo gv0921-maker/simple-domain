@@ -47,7 +47,8 @@ import {
   Clock,
   Filter,
 } from 'lucide-react';
-import { getQuotations, deleteQuotation, saveQuotation, convertQuotationToOrder } from '@/lib/services/sales/storage';
+import { convertQuotationToOrder } from '@/lib/services/sales/storage';
+import { useQuotationsRich, useSaveQuotationRich, useDeleteQuotationRich } from '@/hooks/sales';
 import type { Quotation, QuotationStatus } from '@/lib/services/sales/types';
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +70,9 @@ export default function QuotationsList() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [quotations, setQuotations] = useState<Quotation[]>(() => getQuotations());
+  const { data: quotations = [] } = useQuotationsRich();
+  const saveQuotationMut = useSaveQuotationRich();
+  const deleteQuotationMut = useDeleteQuotationRich();
   useState(() => { autoExpireQuotations(); });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<QuotationStatus | 'all'>('all');
@@ -110,23 +113,23 @@ export default function QuotationsList() {
       .reduce((sum, q) => sum + q.total, 0),
   }), [processedQuotations]);
 
-  const handleUpdateStatus = useCallback((id: string, status: QuotationStatus) => {
+  const handleUpdateStatus = useCallback(async (id: string, status: QuotationStatus) => {
     const quotation = quotations.find((q) => q.id === id);
     if (!quotation) return;
-
     const updates: Partial<Quotation> = { status };
     if (status === 'sent') updates.sentAt = new Date().toISOString();
     if (status === 'accepted') updates.acceptedAt = new Date().toISOString();
-
-    const updated = saveQuotation({ ...quotation, ...updates });
-    setQuotations(getQuotations());
-    toast({ title: `Quotation marked as ${status}` });
-  }, [quotations, toast]);
+    try {
+      await saveQuotationMut.mutateAsync({ ...quotation, ...updates });
+      toast({ title: `Quotation marked as ${status}` });
+    } catch (e: any) {
+      toast({ title: 'Update failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
+  }, [quotations, toast, saveQuotationMut]);
 
   const handleConvertToOrder = useCallback((id: string) => {
     const order = convertQuotationToOrder(id, user?.id || '1', user?.name || 'System');
     if (order) {
-      setQuotations(getQuotations());
       toast({
         title: 'Order Created',
         description: `Sales order ${order.reference} created successfully`,
@@ -135,10 +138,10 @@ export default function QuotationsList() {
     }
   }, [user, toast, navigate]);
 
-  const handleDuplicate = useCallback((quotation: Quotation) => {
-    const duplicated: Quotation = {
-      ...quotation,
-      id: crypto.randomUUID(),
+  const handleDuplicate = useCallback(async (quotation: Quotation) => {
+    const { id: _id, ...rest } = quotation;
+    const duplicated: Partial<Quotation> & { reference: string } = {
+      ...rest,
       reference: `${quotation.reference}-COPY`,
       status: 'draft',
       sentAt: undefined,
@@ -149,20 +152,26 @@ export default function QuotationsList() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    saveQuotation(duplicated);
-    setQuotations(getQuotations());
-    toast({ title: 'Quotation duplicated' });
-  }, [toast]);
+    try {
+      await saveQuotationMut.mutateAsync(duplicated);
+      toast({ title: 'Quotation duplicated' });
+    } catch (e: any) {
+      toast({ title: 'Duplicate failed', description: e?.message ?? String(e), variant: 'destructive' });
+    }
+  }, [toast, saveQuotationMut]);
 
-  const confirmDelete = useCallback(() => {
+  const confirmDelete = useCallback(async () => {
     if (quotationToDelete) {
-      deleteQuotation(quotationToDelete);
-      setQuotations(getQuotations());
-      toast({ title: 'Quotation deleted' });
+      try {
+        await deleteQuotationMut.mutateAsync(quotationToDelete);
+        toast({ title: 'Quotation deleted' });
+      } catch (e: any) {
+        toast({ title: 'Delete failed', description: e?.message ?? String(e), variant: 'destructive' });
+      }
     }
     setDeleteDialogOpen(false);
     setQuotationToDelete(null);
-  }, [quotationToDelete, toast]);
+  }, [quotationToDelete, toast, deleteQuotationMut]);
 
   const handleExportPDF = useCallback((quotation: Quotation) => {
     // Generate PDF content

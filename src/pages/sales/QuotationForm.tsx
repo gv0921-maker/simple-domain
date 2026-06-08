@@ -19,9 +19,10 @@ import {
   ArrowLeft, Save, Send, CheckCircle, XCircle, ArrowRight, FileText,
 } from 'lucide-react';
 import {
-  getQuotation, saveQuotation, generateQuotationReference,
   getPricelists, convertQuotationToOrder,
 } from '@/lib/services/sales/storage';
+import { useQuotationRich, useSaveQuotationRich } from '@/hooks/sales';
+import { generateQuotationReferenceRich } from '@/lib/services/sales/api';
 import type {
   Quotation, QuotationLine, QuotationStatus,
   GSTType, OrderDiscountType,
@@ -80,6 +81,8 @@ export default function QuotationForm() {
   const urlCustomerId = searchParams.get('customerId');
   const urlOpportunityId = searchParams.get('opportunityId');
 
+  const { data: loadedQuotation, isLoading: isLoadingQuotation } = useQuotationRich(isNew ? undefined : id);
+  const saveQuotationMut = useSaveQuotationRich();
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -116,18 +119,17 @@ export default function QuotationForm() {
 
   // Load existing quotation
   useEffect(() => {
-    if (!isNew && id) {
-      const q = getQuotation(id);
-      if (q) {
-        setFormData(q);
-        setLines(q.lines);
-      } else {
-        toast({ title: 'Quotation not found', variant: 'destructive' });
-        navigate('/sales/quotations');
-      }
+    if (isNew) return;
+    if (isLoadingQuotation) return;
+    if (loadedQuotation) {
+      setFormData(loadedQuotation);
+      setLines(loadedQuotation.lines);
       setLoading(false);
+    } else {
+      toast({ title: 'Quotation not found', variant: 'destructive' });
+      navigate('/sales/quotations');
     }
-  }, [id, isNew, navigate, toast]);
+  }, [isNew, isLoadingQuotation, loadedQuotation, navigate, toast]);
 
   // Auto-populate billing from selected contact (shared hook).
   const populateFromContact = useContactAutoPopulate(setFormData);
@@ -237,9 +239,10 @@ export default function QuotationForm() {
       const subtotal = formData.totalUntaxed || 0;
       const grand = formData.grandTotal || 0;
       const tax = formData.totalGST || 0;
+      const reference = formData.reference || await generateQuotationReferenceRich();
       const data: Quotation = {
         id: isNew ? crypto.randomUUID() : id!,
-        reference: formData.reference || generateQuotationReference(),
+        reference,
         customerId: formData.customerId!,
         customerName: formData.customerName!,
         contactId: formData.contactId,
@@ -289,7 +292,7 @@ export default function QuotationForm() {
         data.versions = [...prevVersions, snapshot].slice(-20);
       }
 
-      saveQuotation(data);
+      await saveQuotationMut.mutateAsync(data);
       toast({ title: isNew ? 'Quotation Created' : 'Quotation Updated', description: `${data.reference} saved.` });
       navigate('/sales/quotations');
     } catch (error) {
@@ -297,7 +300,7 @@ export default function QuotationForm() {
     } finally {
       setSaving(false);
     }
-  }, [formData, lines, isNew, id, user, toast, navigate, validate]);
+  }, [formData, lines, isNew, id, user, toast, navigate, validate, saveQuotationMut]);
 
   const handleConfirmAction = useCallback(() => {
     switch (confirmAction) {

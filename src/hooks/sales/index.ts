@@ -203,3 +203,41 @@ export function useSaveSubscriptionWithLines() {
     },
   });
 }
+
+// -------- Rich Quotations (full B2C model) --------
+import type { Quotation } from '@/lib/services/sales/types';
+
+export function useQuotationsRich() {
+  return useQuery({ queryKey: [...salesKeys.all, 'quotations-rich'] as const, queryFn: api.listQuotationsRich });
+}
+export function useQuotationRich(id: string | undefined) {
+  return useQuery({
+    queryKey: [...salesKeys.all, 'quotation-rich', id ?? ''] as const,
+    queryFn: () => api.getQuotationRich(id!),
+    enabled: !!id && id !== 'new',
+  });
+}
+export function useSaveQuotationRich() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (q: Partial<Quotation> & { reference: string }) => api.saveQuotationRich(q),
+    onSuccess: (q) => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'quotations-rich'] });
+      qc.invalidateQueries({ queryKey: salesKeys.quotations() });
+      if (q?.id) {
+        qc.invalidateQueries({ queryKey: [...salesKeys.all, 'quotation-rich', q.id] });
+        qc.invalidateQueries({ queryKey: salesKeys.quotation(q.id) });
+      }
+    },
+  });
+}
+export function useDeleteQuotationRich() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.deleteQuotation,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...salesKeys.all, 'quotations-rich'] });
+      qc.invalidateQueries({ queryKey: salesKeys.quotations() });
+    },
+  });
+}
