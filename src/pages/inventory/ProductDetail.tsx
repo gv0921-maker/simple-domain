@@ -330,6 +330,7 @@ export default function ProductDetail() {
             <TabsTrigger value="general">General Information</TabsTrigger>
             <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
             <TabsTrigger value="variants">Variants</TabsTrigger>
+            {!isNew && <TabsTrigger value="qc">QC History</TabsTrigger>}
           </TabsList>
 
           {/* General Tab */}
