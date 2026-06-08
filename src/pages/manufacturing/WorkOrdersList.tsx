@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MANUFACTURING_NAV } from '@/lib/navigation/manufacturing';
@@ -30,7 +30,9 @@ const priorityColors: Record<string, 'default' | 'secondary' | 'destructive' | '
 
 export default function WorkOrdersList() {
   const navigate = useNavigate();
-  const [workOrders, setWorkOrders] = useState(getWorkOrders());
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const refresh = async () => setWorkOrders(await getWorkOrders());
+  useEffect(() => { refresh(); }, []);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -41,19 +43,19 @@ export default function WorkOrdersList() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = (id: string) => {
-    deleteWorkOrder(id);
-    setWorkOrders(getWorkOrders());
+  const handleDelete = async (id: string) => {
+    await deleteWorkOrder(id);
+    await refresh();
     toast.success('Work order deleted');
   };
 
-  const handleStatusChange = (id: string, newStatus: WorkOrder['status']) => {
-    updateWorkOrder(id, { 
+  const handleStatusChange = async (id: string, newStatus: WorkOrder['status']) => {
+    await updateWorkOrder(id, { 
       status: newStatus,
       ...(newStatus === 'in_progress' ? { actualStart: new Date().toISOString().split('T')[0] } : {}),
       ...(newStatus === 'done' ? { actualEnd: new Date().toISOString().split('T')[0], progress: 100 } : {}),
     });
-    setWorkOrders(getWorkOrders());
+    await refresh();
     toast.success(`Work order ${newStatus.replace('_', ' ')}`);
   };
 
