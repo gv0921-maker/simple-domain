@@ -1,9 +1,8 @@
-// Sales service — mirrors `@/lib/data/sales` (legacy module: contacts,
-// leads (sales-side), opportunities, sales orders).
-export * from '@/lib/data/sales';
-
-// New Supabase-backed async API (consumed via @/hooks/sales).
-// Namespaced to avoid colliding with legacy sync exports above.
+// Sales service module.
+//
+// Legacy localStorage CRUD has been fully migrated to Supabase-backed
+// hooks under `@/hooks/sales`. This index now only re-exports the
+// async API namespace and pure B2C helpers used across components.
 export * as salesApi from './api';
 
 // B2C engines & validators (Phase 1)

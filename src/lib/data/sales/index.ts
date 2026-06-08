@@ -1,7 +1,4 @@
-// Sales module - re-exports
+// Sales module — types only. All legacy localStorage CRUD has been
+// removed; data access is via the Supabase-backed hooks in
+// `@/hooks/sales`.
 export * from './types';
-export * from './storage';
-
-// Re-export legacy types for backward compatibility
-export type { Contact, Lead, Opportunity, Activity } from '../sales';
-export { getContacts, getLeads, getOpportunities } from '../sales';
