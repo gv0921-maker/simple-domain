@@ -4,7 +4,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Upload, Download, AlertTriangle } from 'lucide-react';
-import { saveQuotation, saveSalesOrder, getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
+import {
+  useQuotationsRich, useSaveQuotationRich,
+  useSalesOrdersRich, useSaveSalesOrderRich,
+} from '@/hooks/sales';
 import type { Quotation, SalesOrder } from '@/lib/services/sales/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,19 +22,21 @@ export function SalesImportExport({ type, onImportComplete }: SalesImportExportP
   const [importData, setImportData] = useState<string[][]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { data: quotations = [] } = useQuotationsRich();
+  const { data: orders = [] } = useSalesOrdersRich();
+  const saveQuotationMut = useSaveQuotationRich();
+  const saveOrderMut = useSaveSalesOrderRich();
 
   const handleExport = () => {
     let csv = '';
     let filename = '';
     if (type === 'quotations') {
-      const data = getQuotations();
       csv = 'Reference,Customer,Date,Valid Until,Status,Subtotal,Tax,Total\n' +
-        data.map(q => `${q.reference},"${q.customerName}",${q.quotationDate},${q.validUntil},${q.status},${q.subtotal},${q.taxAmount},${q.total}`).join('\n');
+        quotations.map(q => `${q.reference},"${q.customerName}",${q.quotationDate},${q.validUntil},${q.status},${q.subtotal},${q.taxAmount},${q.total}`).join('\n');
       filename = 'quotations_export.csv';
     } else {
-      const data = getSalesOrders();
       csv = 'Reference,Customer,Date,Status,Delivery,Subtotal,Tax,Total\n' +
-        data.map(o => `${o.reference},"${o.customerName}",${o.orderDate},${o.status},${o.deliveryStatus},${o.subtotal},${o.taxAmount},${o.total}`).join('\n');
+        orders.map(o => `${o.reference},"${o.customerName}",${o.orderDate},${o.status},${o.deliveryStatus},${o.subtotal},${o.taxAmount},${o.total}`).join('\n');
       filename = 'orders_export.csv';
     }
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -58,16 +63,16 @@ export function SalesImportExport({ type, onImportComplete }: SalesImportExportP
     reader.readAsText(file);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     const errs: string[] = [];
     const [header, ...rows] = importData;
     let imported = 0;
-    rows.forEach((row, i) => {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
       if (row.length < 4) { errs.push(`Row ${i + 2}: insufficient columns`); return; }
       try {
         if (type === 'quotations') {
-          saveQuotation({
-            id: crypto.randomUUID(),
+          await saveQuotationMut.mutateAsync({
             reference: row[0] || '',
             customerId: '',
             customerName: row[1] || '',
@@ -89,8 +94,7 @@ export function SalesImportExport({ type, onImportComplete }: SalesImportExportP
             versions: [],
           });
         } else {
-          saveSalesOrder({
-            id: crypto.randomUUID(),
+          await saveOrderMut.mutateAsync({
             reference: row[0] || '',
             customerId: '',
             customerName: row[1] || '',
@@ -114,7 +118,7 @@ export function SalesImportExport({ type, onImportComplete }: SalesImportExportP
       } catch (e: any) {
         errs.push(`Row ${i + 2}: ${e.message}`);
       }
-    });
+    }
     setErrors(errs);
     if (imported > 0) {
       toast({ title: `Imported ${imported} ${type}` });
