@@ -577,7 +577,7 @@ export async function updateSerialStatusAsync(
   status: SerialNumber['status'],
   locationId?: string,
 ): Promise<void> {
-  const row: Record<string, any> = { status };
+  const row: any = { status };
   if (locationId !== undefined) row.location_id = locationId || null;
   const { error } = await supabase.from('serial_numbers').update(row).eq('id', serialId);
   if (error) throw error;
