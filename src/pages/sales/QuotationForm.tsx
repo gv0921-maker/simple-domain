@@ -27,8 +27,8 @@ import type {
   GSTType, OrderDiscountType,
 } from '@/lib/services/sales/types';
 import { determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
-import { useContacts } from '@/hooks/crm';
-import { useContactAutoPopulate } from '@/hooks/sales/useContactAutoPopulate';
+import { useCustomers } from '@/hooks/sales';
+import { buildCustomerPopulationFields } from '@/lib/sales/customerCrmSync';
 import { CustomerSelector } from '@/components/sales/CustomerSelector';
 import {
   writeSalesReturnContext, clearStaleSalesReturnContext,
@@ -76,7 +76,7 @@ export default function QuotationForm() {
   const isNew = !id || id === 'new';
   const studio = useStudioConfig('sales', 'Quotation');
 
-  const { data: contacts = [] } = useContacts();
+  const { data: customers = [] } = useCustomers();
   const { data: pricelists = [] } = usePricelists();
   const convertMut = useConvertQuotationToOrder();
 
@@ -133,19 +133,17 @@ export default function QuotationForm() {
     }
   }, [isNew, isLoadingQuotation, loadedQuotation, navigate, toast]);
 
-  // Auto-populate billing from selected contact (shared hook).
-  const populateFromContact = useContactAutoPopulate(setFormData);
-
-  const handleCustomerChange = useCallback((customerId: string) => {
-    const c: any = contacts.find((x) => x.id === customerId);
-    if (!c) return;
-    populateFromContact(c);
-  }, [contacts, populateFromContact]);
+  // Auto-populate billing from selected customer (customers table is the FK target).
+  const populateFromCustomer = useCallback((customer: any) => {
+    const fields = buildCustomerPopulationFields(customer);
+    setFormData((prev) => ({ ...prev, ...fields }));
+  }, []);
 
   useEffect(() => {
-    if (isNew && urlCustomerId) handleCustomerChange(urlCustomerId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNew, urlCustomerId]);
+    if (!isNew || !urlCustomerId) return;
+    const c = customers.find((x: any) => x.id === urlCustomerId);
+    if (c) populateFromCustomer(c);
+  }, [isNew, urlCustomerId, customers, populateFromCustomer]);
 
   useEffect(() => {
     if (formData.pricelistId && !UUID_RE.test(formData.pricelistId)) {
@@ -168,15 +166,16 @@ export default function QuotationForm() {
     }
   }, [location.state]);
 
-  // After contacts load, re-populate from the new contact to ensure full sync.
+  // After customers load, re-populate from the newly created one.
   useEffect(() => {
-    const state: any = window.history.state?.usr || location.state;
-    const newContactId = (location.state as any)?.newContactId;
-    if (newContactId && contacts.length > 0) {
-      const c: any = contacts.find((x: any) => x.id === newContactId);
-      if (c) populateFromContact(c);
+    const newCustomerId =
+      (location.state as any)?.newCustomerId ||
+      (location.state as any)?.newContactId;
+    if (newCustomerId && customers.length > 0) {
+      const c: any = customers.find((x: any) => x.id === newCustomerId);
+      if (c) populateFromCustomer(c);
     }
-  }, [contacts, location.state, populateFromContact]);
+  }, [customers, location.state, populateFromCustomer]);
 
   const handleCreateNewContact = useCallback(() => {
     writeSalesReturnContext({
@@ -184,7 +183,7 @@ export default function QuotationForm() {
       formData,
       timestamp: Date.now(),
     });
-    navigate('/crm/contacts/new?returnTo=sales_form');
+    navigate('/sales/customers/new?returnTo=sales_form');
   }, [formData, navigate]);
 
   const handleTotalsChange = useCallback((t: OrderSummaryValue) => {
@@ -437,7 +436,7 @@ export default function QuotationForm() {
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
                       <CustomerSelector
                         value={formData.customerId}
-                        onChange={populateFromContact}
+                        onChange={populateFromCustomer}
                         disabled={!isEditable}
                         onCreateNew={handleCreateNewContact}
                       />

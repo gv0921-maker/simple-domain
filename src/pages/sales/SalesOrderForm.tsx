@@ -26,8 +26,8 @@ import type {
 } from '@/lib/services/sales/types';
 import { determineGSTType, validatePhone, validateGSTIN } from '@/lib/services/sales';
 import { CustomerSelector } from '@/components/sales/CustomerSelector';
-import { useContactAutoPopulate } from '@/hooks/sales/useContactAutoPopulate';
-import { useContacts } from '@/hooks/crm';
+import { useCustomers } from '@/hooks/sales';
+import { buildCustomerPopulationFields } from '@/lib/sales/customerCrmSync';
 import {
   writeSalesReturnContext, clearStaleSalesReturnContext,
 } from '@/lib/sales/contactPopulation';
@@ -130,9 +130,12 @@ export default function SalesOrderForm() {
     }
   }, [isNew, isLoadingOrder, loadedOrder, navigate, toast]);
 
-  // Auto-populate billing + delivery from selected contact (shared hook).
-  const populateFromContact = useContactAutoPopulate(setFormData);
-  const { data: contacts = [] } = useContacts();
+  // Auto-populate billing + delivery from selected customer.
+  const populateFromCustomer = useCallback((customer: any) => {
+    const fields = buildCustomerPopulationFields(customer);
+    setFormData((prev) => ({ ...prev, ...fields }));
+  }, []);
+  const { data: customers = [] } = useCustomers();
 
   // Clear stale return context (>30 min) on mount.
   useEffect(() => { clearStaleSalesReturnContext(); }, []);
@@ -155,14 +158,16 @@ export default function SalesOrderForm() {
     }
   }, [location.state]);
 
-  // After contacts load, re-populate from the new contact to ensure full sync.
+  // After customers load, re-populate from the newly created one.
   useEffect(() => {
-    const newContactId = (location.state as any)?.newContactId;
-    if (newContactId && contacts.length > 0) {
-      const c: any = contacts.find((x: any) => x.id === newContactId);
-      if (c) populateFromContact(c);
+    const newCustomerId =
+      (location.state as any)?.newCustomerId ||
+      (location.state as any)?.newContactId;
+    if (newCustomerId && customers.length > 0) {
+      const c: any = customers.find((x: any) => x.id === newCustomerId);
+      if (c) populateFromCustomer(c);
     }
-  }, [contacts, location.state, populateFromContact]);
+  }, [customers, location.state, populateFromCustomer]);
 
   const handleCreateNewContact = useCallback(() => {
     writeSalesReturnContext({
@@ -170,7 +175,7 @@ export default function SalesOrderForm() {
       formData,
       timestamp: Date.now(),
     });
-    navigate('/crm/contacts/new?returnTo=sales_form');
+    navigate('/sales/customers/new?returnTo=sales_form');
   }, [formData, navigate]);
 
   const handleTotalsChange = useCallback((t: OrderSummaryValue) => {
@@ -411,7 +416,7 @@ export default function SalesOrderForm() {
                       <Label>{studio.getFieldLabel('customer', 'Customer')} *</Label>
                       <CustomerSelector
                         value={formData.customerId}
-                        onChange={populateFromContact}
+                        onChange={populateFromCustomer}
                         disabled={!isEditable}
                         onCreateNew={handleCreateNewContact}
                       />
