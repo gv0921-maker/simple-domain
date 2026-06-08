@@ -1,72 +1,74 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  type User,
-  type AuthState,
-  getAuthState,
-  setAuthState,
-  clearAuth,
-  validateCredentials,
-  DEMO_USERS,
-} from '@/lib/storage';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-interface AuthContextType extends AuthState {
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'manager' | 'user' | string;
+  avatar?: string;
+}
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  loginAsUser: (user: User) => void;
-  logout: () => void;
-  users: User[];
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function mapUser(su: SupabaseUser | null | undefined): User | null {
+  if (!su) return null;
+  const meta = (su.user_metadata ?? {}) as Record<string, unknown>;
+  const email = su.email ?? (meta.email as string) ?? '';
+  return {
+    id: su.id,
+    email,
+    name: (meta.name as string) || (meta.full_name as string) || email.split('@')[0] || 'User',
+    role: ((meta.role as string) ?? 'user'),
+    avatar: meta.avatar_url as string | undefined,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [authState, setAuthStateLocal] = useState<AuthState>(() => getAuthState());
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    setAuthState(authState);
-  }, [authState]);
+    // Register listener FIRST to avoid missing events.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
+      const mapped = mapUser(session?.user);
+      setUser(mapped);
+      setIsAuthenticated(!!session);
+    });
+
+    // Then hydrate from existing session.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const mapped = mapUser(session?.user);
+      setUser(mapped);
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const user = validateCredentials(email, password);
-    if (user) {
-      const newState: AuthState = {
-        isAuthenticated: true,
-        user,
-        token: `local_${Date.now()}`,
-      };
-      setAuthStateLocal(newState);
-      return true;
-    }
-    return false;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return !error;
   };
 
-  const loginAsUser = (user: User) => {
-    const newState: AuthState = {
-      isAuthenticated: true,
-      user,
-      token: `local_${Date.now()}`,
-    };
-    setAuthStateLocal(newState);
-  };
-
-  const logout = () => {
-    clearAuth();
-    setAuthStateLocal({
-      isAuthenticated: false,
-      user: null,
-      token: null,
-    });
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        ...authState,
-        login,
-        loginAsUser,
-        logout,
-        users: DEMO_USERS,
-      }}
-    >
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

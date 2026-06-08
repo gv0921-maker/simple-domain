@@ -11,7 +11,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/select-user" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!user || !canAccessRoute(user.id, location.pathname)) {

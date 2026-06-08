@@ -9,7 +9,6 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Auth pages
-import UserSelectPage from "@/pages/auth/UserSelectPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import HomePage from "@/pages/HomePage";
 
@@ -105,7 +104,6 @@ const App = () => (
             <BrowserRouter>
           <Routes>
             {/* Auth routes */}
-            <Route path="/select-user" element={<UserSelectPage />} />
             <Route path="/login" element={<LoginPage />} />
 
             {/* Protected routes */}

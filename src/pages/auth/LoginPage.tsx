@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -57,15 +57,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="email">Email</Label>
-              <Link
-                to="/select-user"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Choose a user
-              </Link>
-            </div>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"

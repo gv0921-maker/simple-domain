@@ -54,9 +54,9 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
   const filteredModuleNav =
     moduleNav?.filter((item) => (user ? canAccessRoute(user.id, item.href) : false)) || [];
 
-  const handleLogout = () => {
-    logout();
-    navigate('/select-user');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
   return (
