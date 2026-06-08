@@ -427,26 +427,37 @@ export default function SalesOrderForm() {
               </Button>
             )}
             {status === 'paid' && !isNew && id && (
-              <Button
-                variant="outline"
-                disabled={generateInvoiceMut.isPending}
-                onClick={async () => {
-                  try {
-                    const res = await generateInvoiceMut.mutateAsync(id);
-                    toast({ title: 'Invoice generated successfully' });
-                    navigate(`/invoicing/invoices/${res.invoiceId}`);
-                  } catch (e: any) {
-                    toast({
-                      title: 'Failed to generate invoice',
-                      description: e?.message ?? String(e),
-                      variant: 'destructive',
-                    });
-                  }
-                }}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {generateInvoiceMut.isPending ? 'Generating…' : 'Generate Invoice'}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0}>
+                      <Button
+                        variant="outline"
+                        disabled={generateInvoiceMut.isPending || !qcPassed}
+                        onClick={async () => {
+                          try {
+                            const res = await generateInvoiceMut.mutateAsync(id);
+                            toast({ title: 'Invoice generated successfully' });
+                            navigate(`/invoicing/invoices/${res.invoiceId}`);
+                          } catch (e: any) {
+                            toast({
+                              title: 'Failed to generate invoice',
+                              description: e?.message ?? String(e),
+                              variant: 'destructive',
+                            });
+                          }
+                        }}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        {generateInvoiceMut.isPending ? 'Generating…' : 'Generate Invoice'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!qcPassed && (
+                    <TooltipContent>Complete pre-delivery QC first</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             )}
             {status !== 'cancelled' && status !== 'delivered' && status !== 'paid' && !isNew && (
               <Button variant="outline" onClick={() => { setConfirmAction('cancel'); setConfirmDialogOpen(true); }}>
