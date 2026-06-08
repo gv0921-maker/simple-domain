@@ -2861,6 +2861,90 @@ export type Database = {
           },
         ]
       }
+      stock_reservations: {
+        Row: {
+          created_at: string
+          id: string
+          lot_id: string | null
+          notes: string | null
+          order_line_id: string | null
+          product_id: string
+          quantity: number
+          reserved_at: string
+          reserved_by: string | null
+          sales_order_id: string
+          serial_number_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lot_id?: string | null
+          notes?: string | null
+          order_line_id?: string | null
+          product_id: string
+          quantity?: number
+          reserved_at?: string
+          reserved_by?: string | null
+          sales_order_id: string
+          serial_number_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lot_id?: string | null
+          notes?: string | null
+          order_line_id?: string | null
+          product_id?: string
+          quantity?: number
+          reserved_at?: string
+          reserved_by?: string | null
+          sales_order_id?: string
+          serial_number_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_reservations_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_order_line_id_fkey"
+            columns: ["order_line_id"]
+            isOneToOne: false
+            referencedRelation: "order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_sales_order_id_fkey"
+            columns: ["sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_serial_number_id_fkey"
+            columns: ["serial_number_id"]
+            isOneToOne: false
+            referencedRelation: "serial_numbers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_lines: {
         Row: {
           created_at: string
