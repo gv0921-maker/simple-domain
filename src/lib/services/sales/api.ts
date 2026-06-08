@@ -494,6 +494,9 @@ export async function savePricelist(input: Partial<SbPricelist> & { name: string
     start_date: input.startDate ?? null,
     end_date: input.endDate ?? null,
     is_active: input.isActive ?? true,
+    code: input.code ?? null,
+    is_default: input.isDefault ?? false,
+    parent_pricelist_id: input.parentPricelistId ?? null,
   };
   let pricelistId = input.id;
   if (pricelistId) {
@@ -513,6 +516,10 @@ export async function savePricelist(input: Partial<SbPricelist> & { name: string
         product_id: i.productId,
         price: i.price,
         min_qty: i.minQty,
+        category_id: i.categoryId ?? null,
+        discount_percentage: i.discountPercentage ?? null,
+        start_date: i.startDate ?? null,
+        end_date: i.endDate ?? null,
       }));
       const { error } = await supabase.from('pricelist_items' as any).insert(rows);
       if (error) throw error;
