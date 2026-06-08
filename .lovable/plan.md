@@ -1,3 +1,10 @@
+
+## Sales module — Supabase migration (Phase 1)
+
+- Added 8 Sales tables (customers, quotations, quotation_lines, sales_orders, order_lines, pricelists, pricelist_items, subscriptions) with RLS: authenticated read all; sales_rep can write own rows; sales_manager / admin can write all.
+- New async API at `src/lib/services/sales/api.ts` (mappers + CRUD + nested lines/items).
+- New TanStack Query hooks at `src/hooks/sales/` (use{Customers,Quotations,SalesOrders,Pricelists,Subscriptions} + save/delete mutations).
+- Legacy localStorage exports under `@/lib/services/sales` and `@/lib/data/sales/storage` are kept intact so existing pages keep compiling. Pages will be migrated in a follow-up step (similar to inventory).
 # Inventory → Supabase Migration
 
 ## Important constraint you should know about
