@@ -9,8 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import { getReorderRules, saveReorderRule, getProducts, getWarehouses } from '@/lib/services/inventory/storage';
-import type { ReorderRule } from '@/lib/services/inventory/types';
+import { useReorderRules, useSaveReorderRule, useProducts, useWarehouses } from '@/hooks/inventory';
+import type { ReorderRule } from '@/lib/services/inventory';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ReorderRuleForm() {
@@ -19,8 +19,10 @@ export default function ReorderRuleForm() {
   const { toast } = useToast();
   const isEdit = !!id;
 
-  const [products] = useState(() => getProducts());
-  const [warehouses] = useState(() => getWarehouses());
+  const { data: products = [] } = useProducts();
+  const { data: warehouses = [] } = useWarehouses();
+  const { data: rules = [] } = useReorderRules();
+  const saveMut = useSaveReorderRule();
   const [editingRule, setEditingRule] = useState<ReorderRule | null>(null);
 
   const [formData, setFormData] = useState({
@@ -35,7 +37,6 @@ export default function ReorderRuleForm() {
 
   useEffect(() => {
     if (id) {
-      const rules = getReorderRules();
       const rule = rules.find(r => r.id === id);
       if (rule) {
         setEditingRule(rule);
@@ -48,13 +49,11 @@ export default function ReorderRuleForm() {
           leadTimeDays: rule.leadTimeDays,
           isActive: rule.isActive,
         });
-      } else {
-        navigate('/inventory/reorder-rules');
       }
     } else {
       setFormData(prev => ({ ...prev, warehouseId: warehouses[0]?.id || '' }));
     }
-  }, [id, navigate, warehouses]);
+  }, [id, navigate, warehouses, rules]);
 
   const handleSubmit = () => {
     const product = products.find(p => p.id === formData.productId);
@@ -81,12 +80,13 @@ export default function ReorderRuleForm() {
       updatedAt: new Date().toISOString(),
     };
 
-    saveReorderRule(rule);
-    toast({
-      title: editingRule ? 'Rule Updated' : 'Rule Created',
-      description: `Reorder rule for ${product.name} has been saved.`,
+    saveMut.mutate(rule, {
+      onSuccess: () => {
+        toast({ title: editingRule ? 'Rule Updated' : 'Rule Created', description: `Reorder rule for ${product.name} has been saved.` });
+        navigate('/inventory/reorder-rules');
+      },
+      onError: (e: any) => toast({ title: 'Save failed', description: e?.message, variant: 'destructive' }),
     });
-    navigate('/inventory/reorder-rules');
   };
 
   return (

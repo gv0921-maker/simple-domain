@@ -32,13 +32,8 @@ import {
 import { BarcodeScanner } from '@/components/inventory/BarcodeScanner';
 import { MobilePickingScreen } from '@/components/inventory/MobilePickingScreen';
 import { MobileCountScreen } from '@/components/inventory/MobileCountScreen';
-import { 
-  getStockMoves, 
-  getWarehouses,
-  getLocations,
-  getBarcodeOperations,
-} from '@/lib/services/inventory/storage';
-import type { StockMove, BarcodeOperation } from '@/lib/services/inventory/types';
+import { useStockMoves, useWarehouses, useLocations } from '@/hooks/inventory';
+import type { StockMove, BarcodeOperation } from '@/lib/services/inventory';
 import { BARCODE_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -88,12 +83,11 @@ export default function BarcodeOperations() {
   const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [showScanner, setShowScanner] = useState(false);
-  const [pendingMoves, setPendingMoves] = useState<StockMove[]>(() => 
-    getStockMoves().filter(m => m.state !== 'done' && m.state !== 'cancelled')
-  );
-  const [recentOperations] = useState<BarcodeOperation[]>(() => getBarcodeOperations().slice(0, 5));
-  const warehouses = getWarehouses();
-  const locations = getLocations();
+  const { data: allMoves = [] } = useStockMoves();
+  const { data: warehouses = [] } = useWarehouses();
+  const { data: locations = [] } = useLocations();
+  const pendingMoves = allMoves.filter(m => m.state !== 'done' && m.state !== 'cancelled');
+  const recentOperations: BarcodeOperation[] = [];
 
   const handleOperationSelect = (op: string) => {
     if (op === 'pick') {
@@ -103,11 +97,7 @@ export default function BarcodeOperations() {
         setSelectedMoveId(deliveryMoves[0].id);
         setMode('pick');
       } else {
-        toast({
-          title: 'No pending deliveries',
-          description: 'There are no delivery orders waiting to be picked.',
-          variant: 'destructive'
-        });
+        toast({ title: 'No pending deliveries', description: 'There are no delivery orders waiting to be picked.', variant: 'destructive' });
       }
     } else if (op === 'receive') {
       const receiptMoves = pendingMoves.filter(m => m.operationType === 'receipt');
@@ -154,7 +144,7 @@ export default function BarcodeOperations() {
         onComplete={() => {
           setMode('menu');
           setSelectedMoveId(null);
-          setPendingMoves(getStockMoves().filter(m => m.state !== 'done' && m.state !== 'cancelled'));
+          // pending moves auto-refresh via hooks cache invalidation
         }}
         onBack={() => {
           setMode('menu');

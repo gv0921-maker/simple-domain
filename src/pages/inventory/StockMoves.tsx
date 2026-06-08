@@ -41,12 +41,8 @@ import {
   RotateCcw,
   Factory,
 } from 'lucide-react';
-import { 
-  getStockMoves, 
-  deleteStockMove,
-  validateStockMove,
-} from '@/lib/services/inventory/storage';
-import type { StockMove, StockMoveState } from '@/lib/services/inventory/types';
+import { useStockMoves, useDeleteStockMove, useValidateStockMove } from '@/hooks/inventory';
+import type { StockMove, StockMoveState } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -87,7 +83,9 @@ export default function StockMoves() {
   const { user } = useAuth();
   const { canCreateMoves, canValidateReceipts, canValidateDeliveries } = useInventoryAccess();
   
-  const [moves, setMoves] = useState<StockMove[]>(getStockMoves());
+  const { data: moves = [] } = useStockMoves();
+  const deleteMut = useDeleteStockMove();
+  const validateMut = useValidateStockMove();
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -130,20 +128,16 @@ export default function StockMoves() {
   };
 
   const handleValidate = (moveId: string) => {
-    if (user) {
-      validateStockMove(moveId, user.id, user.name);
-      setMoves(getStockMoves());
-      toast({
-        title: 'Stock Move Validated',
-        description: 'Stock levels have been updated.',
-      });
-    }
+    validateMut.mutate(moveId, {
+      onSuccess: () => toast({ title: 'Stock Move Validated', description: 'Stock levels have been updated.' }),
+      onError: (e: any) => toast({ title: 'Validation failed', description: e?.message, variant: 'destructive' }),
+    });
   };
 
   const handleDelete = (id: string) => {
-    deleteStockMove(id);
-    setMoves(getStockMoves());
-    toast({ title: 'Stock Move Deleted' });
+    deleteMut.mutate(id, {
+      onSuccess: () => toast({ title: 'Stock Move Deleted' }),
+    });
   };
 
   return (

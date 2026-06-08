@@ -31,8 +31,8 @@ import {
   Settings2,
   Eye,
 } from 'lucide-react';
-import { getProducts } from '@/lib/services/inventory/storage';
-import type { Product } from '@/lib/services/inventory/types';
+import { useProducts } from '@/hooks/inventory';
+import type { Product } from '@/lib/services/inventory';
 import { BARCODE_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import JsBarcode from 'jsbarcode';
@@ -77,7 +77,7 @@ function BarcodePreview({ value, width, height }: { value: string; width: number
 
 export default function BarcodeLabels() {
   const { toast } = useToast();
-  const [products] = useState<Product[]>(() => getProducts());
+  const { data: products = [] } = useProducts();
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [config, setConfig] = useState<LabelConfig>({

@@ -40,7 +40,8 @@ import {
   TruckIcon,
   RotateCcw,
 } from 'lucide-react';
-import { getTransfers, deleteTransfer, type InventoryTransfer, type TransferStatus } from '@/lib/services/inventory';
+import { useTransfers, useDeleteTransfer } from '@/hooks/inventory';
+import type { InventoryTransfer, TransferStatus } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -63,7 +64,8 @@ const OPERATION_TYPES = [
 
 export default function OperationsList() {
   const navigate = useNavigate();
-  const [transfers, setTransfers] = useState<InventoryTransfer[]>(getTransfers());
+  const { data: transfers = [] } = useTransfers();
+  const deleteMut = useDeleteTransfer();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -109,8 +111,7 @@ export default function OperationsList() {
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    deleteTransfer(id);
-    setTransfers(getTransfers());
+    deleteMut.mutate(id);
   };
 
   return (

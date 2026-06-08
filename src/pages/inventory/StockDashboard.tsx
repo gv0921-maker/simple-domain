@@ -17,7 +17,7 @@ import {
   Layers,
   Activity,
 } from 'lucide-react';
-import { getProducts, getWarehouses, getStockMoves } from '@/lib/services/inventory/storage';
+import { useProducts, useWarehouses, useStockMoves } from '@/hooks/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -34,12 +34,11 @@ const CHART_COLORS = [
 
 export default function StockDashboard() {
   const navigate = useNavigate();
+  const { data: products = [] } = useProducts();
+  const { data: warehouses = [] } = useWarehouses();
+  const { data: moves = [] } = useStockMoves();
 
   const data = useMemo(() => {
-    const products = getProducts();
-    const warehouses = getWarehouses();
-    const moves = getStockMoves();
-
     const totalValue = products.reduce((sum, p) => sum + p.stockOnHand * p.costPrice, 0);
     const totalItems = products.reduce((sum, p) => sum + p.stockOnHand, 0);
     const lowStock = products.filter(p => p.stockOnHand > 0 && p.stockOnHand <= p.reorderLevel);
@@ -63,7 +62,7 @@ export default function StockDashboard() {
     const typeData = Array.from(typeMap.entries()).map(([name, value]) => ({ name, value }));
 
     return { products, warehouses, totalValue, totalItems, lowStock, outOfStock, recentMoves, categoryData, typeData };
-  }, []);
+  }, [products, warehouses, moves]);
 
   return (
     <AppLayout title="Inventory" moduleNav={INVENTORY_NAV}>

@@ -30,12 +30,8 @@ import {
   Package,
   Bell,
 } from 'lucide-react';
-import { 
-  getReorderRules, 
-  deleteReorderRule,
-  checkReorderRules,
-} from '@/lib/services/inventory/storage';
-import type { ReorderRule } from '@/lib/services/inventory/types';
+import { useReorderRules, useDeleteReorderRule, useTriggeredReorderRules } from '@/hooks/inventory';
+import type { ReorderRule } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -44,7 +40,9 @@ import { cn } from '@/lib/utils';
 export default function ReorderRules() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [rules, setRules] = useState<ReorderRule[]>(getReorderRules());
+  const { data: rules = [] } = useReorderRules();
+  const { data: triggeredRules = [], refetch: refetchTriggered } = useTriggeredReorderRules();
+  const deleteMut = useDeleteReorderRule();
   const [search, setSearch] = useState('');
 
   const filteredRules = useMemo(() => {
@@ -54,8 +52,6 @@ export default function ReorderRules() {
     );
   }, [rules, search]);
 
-  const triggeredRules = useMemo(() => checkReorderRules(), [rules]);
-
   const stats = useMemo(() => ({
     total: rules.length,
     active: rules.filter(r => r.isActive).length,
@@ -64,24 +60,15 @@ export default function ReorderRules() {
 
 
   const handleDelete = (id: string) => {
-    deleteReorderRule(id);
-    setRules(getReorderRules());
-    toast({ title: 'Rule Deleted' });
+    deleteMut.mutate(id, { onSuccess: () => toast({ title: 'Rule Deleted' }) });
   };
 
-  const handleRunCheck = () => {
-    const triggered = checkReorderRules();
+  const handleRunCheck = async () => {
+    const { data: triggered = [] } = await refetchTriggered();
     if (triggered.length > 0) {
-      toast({
-        title: 'Low Stock Alert',
-        description: `${triggered.length} products need replenishment.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Low Stock Alert', description: `${triggered.length} products need replenishment.`, variant: 'destructive' });
     } else {
-      toast({
-        title: 'Stock Levels OK',
-        description: 'All products are above minimum levels.',
-      });
+      toast({ title: 'Stock Levels OK', description: 'All products are above minimum levels.' });
     }
   };
 

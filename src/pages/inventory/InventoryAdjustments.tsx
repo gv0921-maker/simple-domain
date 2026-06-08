@@ -37,12 +37,8 @@ import {
   Package,
   Filter,
 } from 'lucide-react';
-import { 
-  getAdjustments, 
-  approveAdjustment,
-  getLocations,
-} from '@/lib/services/inventory/storage';
-import type { InventoryAdjustment } from '@/lib/services/inventory/types';
+import { useAdjustments, useApproveAdjustment, useLocations } from '@/hooks/inventory';
+import type { InventoryAdjustment } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,10 +66,11 @@ export default function InventoryAdjustments() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [adjustments, setAdjustments] = useState<InventoryAdjustment[]>(getAdjustments());
+  const { data: adjustments = [] } = useAdjustments();
+  const approveMut = useApproveAdjustment();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const locations = getLocations();
+  const { data: locations = [] } = useLocations();
 
   const filteredAdjustments = useMemo(() => {
     return adjustments.filter((adj) => {
@@ -95,14 +92,11 @@ export default function InventoryAdjustments() {
   }), [adjustments]);
 
   const handleApprove = (id: string) => {
-    if (user) {
-      approveAdjustment(id, user.id);
-      setAdjustments(getAdjustments());
-      toast({
-        title: 'Adjustment Approved',
-        description: 'Stock levels have been updated.',
-      });
-    }
+    if (!user) return;
+    approveMut.mutate({ id, userId: user.id }, {
+      onSuccess: () => toast({ title: 'Adjustment Approved', description: 'Stock levels have been updated.' }),
+      onError: (e: any) => toast({ title: 'Approval failed', description: e?.message, variant: 'destructive' }),
+    });
   };
 
   return (
