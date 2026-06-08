@@ -82,7 +82,7 @@ import { format, parseISO } from 'date-fns';
 import { RichComposer, RichContent, type RichComposerValue } from '@/components/ui/rich-composer';
 import { useAuth } from '@/contexts/AuthContext';
 import { TiptapNotesEditor } from '@/components/ui/tiptap-notes-editor';
-import { getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
+import { useQuotationsRich, useSalesOrdersRich } from '@/hooks/sales';
 import { useStockMoves } from '@/hooks/inventory';
 import type { StockMove } from '@/lib/data/inventory/types';
 
@@ -185,6 +185,8 @@ export default function OpportunityDetail() {
   const { data: linkedContact } = useContact(opportunity?.contactId);
   const { data: allContacts = [] } = useContacts();
   const { data: allStockMoves = [] } = useStockMoves();
+  const { data: allQuotations = [] } = useQuotationsRich();
+  const { data: allSalesOrders = [] } = useSalesOrdersRich();
 
   // Cross-module related records (same contact across Sales, Inventory, etc.)
   const relatedRecords = useMemo(() => {
@@ -201,11 +203,11 @@ export default function OpportunityDetail() {
       }
       return false;
     };
-    let quotations: ReturnType<typeof getQuotations> = [];
-    let salesOrders: ReturnType<typeof getSalesOrders> = [];
+    let quotations: typeof allQuotations = [];
+    let salesOrders: typeof allSalesOrders = [];
     let stockMoves: StockMove[] = [];
-    try { quotations = getQuotations().filter(matchByContact); } catch { /* noop */ }
-    try { salesOrders = getSalesOrders().filter(matchByContact); } catch { /* noop */ }
+    try { quotations = allQuotations.filter(matchByContact); } catch { /* noop */ }
+    try { salesOrders = allSalesOrders.filter(matchByContact); } catch { /* noop */ }
     try {
       stockMoves = (allStockMoves ?? []).filter(m => {
         if (cId && m.partnerId === cId) return true;
@@ -214,7 +216,7 @@ export default function OpportunityDetail() {
       });
     } catch { /* noop */ }
     return { quotations, salesOrders, stockMoves };
-  }, [opportunity?.contactId, opportunity?.contactName, allStockMoves]);
+  }, [opportunity?.contactId, opportunity?.contactName, allStockMoves, allQuotations, allSalesOrders]);
 
   // refreshChatter now invalidates the React Query cache instead of calling
   // localStorage helpers directly. The hooks above re-render automatically.

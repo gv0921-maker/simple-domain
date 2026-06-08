@@ -40,7 +40,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { canViewSensitive, maskEmail, maskPhone, displayRevenue } from '@/lib/crm/fieldMask';
-import { getQuotations, getSalesOrders } from '@/lib/services/sales/storage';
+import { useQuotationsRich, useSalesOrdersRich } from '@/hooks/sales';
 import DOMPurify from 'dompurify';
 
 export default function CRMContactDetail() {
@@ -53,6 +53,8 @@ export default function CRMContactDetail() {
   const { data: allContacts = [] } = useContacts();
   const { data: notes = [] } = useNotes('contact', id);
   const { data: opportunities = [] } = useOpportunities();
+  const { data: allQuotations = [] } = useQuotationsRich();
+  const { data: allSalesOrders = [] } = useSalesOrdersRich();
   const saveNoteMutation = useSaveNote();
   useNotesRealtime(id);
 
@@ -60,8 +62,11 @@ export default function CRMContactDetail() {
   const childContacts = id ? allContacts.filter(c => c.parentContactId === id) : [];
 
   // Sales history
-  const linkedQuotations = useMemo(() => getQuotations().filter(q => q.customerId === id), [id]);
-  const linkedOrders = useMemo(() => getSalesOrders().filter(o => linkedQuotations.some(q => q.id === o.quotationId)), [linkedQuotations]);
+  const linkedQuotations = useMemo(() => allQuotations.filter(q => q.customerId === id), [allQuotations, id]);
+  const linkedOrders = useMemo(
+    () => allSalesOrders.filter(o => linkedQuotations.some(q => q.id === o.quotationId)),
+    [allSalesOrders, linkedQuotations],
+  );
 
   const showEmail = canViewSensitive(user?.id, 'crm', 'email');
   const showPhone = canViewSensitive(user?.id, 'crm', 'phone');
