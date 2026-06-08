@@ -49,7 +49,7 @@ function mapProduct(r: Row<any>): Product {
   };
 }
 
-function productToRow(p: Partial<Product>): Record<string, any> {
+function productToRow(p: Partial<Product>): any {
   const out: Record<string, any> = {};
   if (p.sku !== undefined) out.sku = p.sku;
   if (p.name !== undefined) out.name = p.name;
@@ -86,7 +86,7 @@ function mapWarehouse(r: Row<any>): Warehouse {
     defaultInternalLocationId: r.default_internal_location_id ?? undefined,
   };
 }
-function warehouseToRow(w: Partial<Warehouse>): Record<string, any> {
+function warehouseToRow(w: Partial<Warehouse>): any {
   const out: Record<string, any> = {};
   if (w.name !== undefined) out.name = w.name;
   if (w.code !== undefined) out.code = w.code;
@@ -113,7 +113,7 @@ function mapLocation(r: Row<any>): Location {
     bin: r.bin ?? undefined,
   };
 }
-function locationToRow(l: Partial<Location>): Record<string, any> {
+function locationToRow(l: Partial<Location>): any {
   const out: Record<string, any> = {};
   if (l.name !== undefined) out.name = l.name;
   if (l.code !== undefined) out.code = l.code;
@@ -141,7 +141,7 @@ function mapLot(r: Row<any>): Lot {
     updatedAt: toISO(r.updated_at)!,
   };
 }
-function lotToRow(l: Partial<Lot>): Record<string, any> {
+function lotToRow(l: Partial<Lot>): any {
   const out: Record<string, any> = {};
   if (l.name !== undefined) out.name = l.name;
   if (l.productId !== undefined) out.product_id = l.productId;
@@ -163,7 +163,7 @@ function mapSerial(r: Row<any>): SerialNumber {
     createdAt: toISO(r.created_at)!,
   };
 }
-function serialToRow(s: Partial<SerialNumber>): Record<string, any> {
+function serialToRow(s: Partial<SerialNumber>): any {
   const out: Record<string, any> = {};
   if (s.name !== undefined) out.name = s.name;
   if (s.productId !== undefined) out.product_id = s.productId;
@@ -190,7 +190,7 @@ function mapStockMoveLine(r: Row<any>): StockMoveLine {
     destinationLocationId: r.destination_location_id ?? '',
   };
 }
-function stockMoveLineToRow(stockMoveId: string, l: StockMoveLine): Record<string, any> {
+function stockMoveLineToRow(stockMoveId: string, l: StockMoveLine): any {
   return {
     stock_move_id: stockMoveId,
     product_id: l.productId,
@@ -231,7 +231,7 @@ function mapStockMove(r: Row<any>, lines: StockMoveLine[] = []): StockMove {
     updatedAt: toISO(r.updated_at)!,
   };
 }
-function stockMoveToRow(m: Partial<StockMove>): Record<string, any> {
+function stockMoveToRow(m: Partial<StockMove>): any {
   const out: Record<string, any> = {};
   if (m.reference !== undefined) out.reference = m.reference;
   if (m.operationType !== undefined) out.operation_type = m.operationType;
@@ -261,7 +261,7 @@ function mapTransferLine(r: Row<any>): LegacyStockMove {
     available: !!r.available,
   };
 }
-function transferLineToRow(transferId: string, l: LegacyStockMove): Record<string, any> {
+function transferLineToRow(transferId: string, l: LegacyStockMove): any {
   return {
     transfer_id: transferId,
     product_id: l.productId,
@@ -296,7 +296,7 @@ function mapTransfer(r: Row<any>, moves: LegacyStockMove[] = []): InventoryTrans
     updatedAt: toISO(r.updated_at)!,
   };
 }
-function transferToRow(t: Partial<InventoryTransfer> & { fromWarehouseId?: string; toWarehouseId?: string }): Record<string, any> {
+function transferToRow(t: Partial<InventoryTransfer> & { fromWarehouseId?: string; toWarehouseId?: string }): any {
   const out: Record<string, any> = {};
   if (t.reference !== undefined) out.reference = t.reference;
   if (t.contact !== undefined) out.contact = t.contact;
@@ -336,7 +336,7 @@ function mapReorderRule(r: Row<any>): ReorderRule {
     updatedAt: toISO(r.updated_at)!,
   };
 }
-function reorderRuleToRow(r: Partial<ReorderRule>): Record<string, any> {
+function reorderRuleToRow(r: Partial<ReorderRule>): any {
   const out: Record<string, any> = {};
   if (r.productId !== undefined) out.product_id = r.productId;
   if (r.productName !== undefined) out.product_name = r.productName;
@@ -367,7 +367,7 @@ function mapAdjustmentLine(r: Row<any>): AdjustmentLine {
     valueDifference: Number(r.value_difference ?? 0),
   };
 }
-function adjustmentLineToRow(adjustmentId: string, l: AdjustmentLine): Record<string, any> {
+function adjustmentLineToRow(adjustmentId: string, l: AdjustmentLine): any {
   return {
     adjustment_id: adjustmentId,
     product_id: l.productId,
@@ -400,7 +400,7 @@ function mapAdjustment(r: Row<any>, lines: AdjustmentLine[] = []): InventoryAdju
     updatedAt: toISO(r.updated_at)!,
   };
 }
-function adjustmentToRow(a: Partial<InventoryAdjustment>): Record<string, any> {
+function adjustmentToRow(a: Partial<InventoryAdjustment>): any {
   const out: Record<string, any> = {};
   if (a.reference !== undefined) out.reference = a.reference;
   if (a.locationId !== undefined) out.location_id = a.locationId || null;
