@@ -121,6 +121,8 @@ Deno.serve(async (req) => {
     if (!odoo_url || !api_key) return json({ success: false, error: "Missing odoo_url or api_key" }, 400);
     if (!login) return json({ success: false, error: "Missing login (Odoo user email)" }, 400);
 
+    const normalizedUrl = /^https?:\/\//i.test(odoo_url) ? odoo_url : `https://${odoo_url}`;
+
     if (action === "test") {
       try {
         const userCount = await callKw(odoo_url, login, api_key, "res.users", "search_count", [[["active", "=", true]]]);
