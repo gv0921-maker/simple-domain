@@ -122,3 +122,6 @@ export async function deleteContract(id: string): Promise<void> {
   const { error } = await supabase.from('contracts').delete().eq('id', id);
   if (error) throw error;
 }
+
+// Re-export Batch 2 attendance service surface
+export * from './attendance';
