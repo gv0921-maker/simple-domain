@@ -12,6 +12,7 @@ import {
   useEmployee, useEmployees, useDepartments,
   useContractsByEmployee, useDeleteEmployee,
 } from '@/hooks/hr';
+import { useRangeAttendance } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
 const fmtINR = (n: number) =>
@@ -39,6 +40,21 @@ export default function EmployeeDetail() {
   );
   const manager = employee?.reports_to ? allEmployees.find((e) => e.id === employee.reports_to) : null;
   const dept = employee?.department_id ? departments.find((d) => d.id === employee.department_id) : null;
+
+  const ninetyDays = useMemo(() => {
+    const end = new Date();
+    const start = new Date(Date.now() - 90 * 86400_000);
+    return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+  }, []);
+  const { data: attendance = [] } = useRangeAttendance(id ? [id] : [], ninetyDays.start, ninetyDays.end);
+  const attStats = useMemo(() => {
+    const work = attendance.filter((s) => s.session_type === 'work');
+    const brk = attendance.filter((s) => s.session_type === 'break');
+    const wm = work.reduce((a, s) => a + (s.duration_minutes ?? 0), 0);
+    const bm = brk.reduce((a, s) => a + (s.duration_minutes ?? 0), 0);
+    const days = new Set(work.map((s) => s.session_date)).size;
+    return { workMin: wm, breakMin: bm, daysPresent: days, sessions: attendance.length };
+  }, [attendance]);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -100,6 +116,7 @@ export default function EmployeeDetail() {
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="contracts">Contracts</TabsTrigger>
             <TabsTrigger value="reports">Reports / Reportees</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="mt-4">
@@ -201,6 +218,15 @@ export default function EmployeeDetail() {
                   </div>
                 )}
               </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="attendance" className="mt-4">
+            <Card className="p-6 grid gap-4 md:grid-cols-4">
+              <Info label="Days Present (90d)" value={String(attStats.daysPresent)} />
+              <Info label="Total Worked" value={`${Math.floor(attStats.workMin / 60)}h ${attStats.workMin % 60}m`} />
+              <Info label="Total Break" value={`${Math.floor(attStats.breakMin / 60)}h ${attStats.breakMin % 60}m`} />
+              <Info label="Sessions" value={String(attStats.sessions)} />
             </Card>
           </TabsContent>
         </Tabs>
