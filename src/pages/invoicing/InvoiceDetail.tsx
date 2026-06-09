@@ -10,10 +10,12 @@ import {
 import { ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryQC } from '@/hooks/qc';
+import { useGenerateDeliveryNote } from '@/hooks/inventory/deliveryNotes';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Truck } from 'lucide-react';
+import { toast } from 'sonner';
 
 const fmtINR = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n || 0);
@@ -41,6 +43,7 @@ export default function InvoiceDetail() {
   const { data: invoice, isLoading } = useInvoice(id);
   const { data: order } = useLinkedSalesOrder(invoice?.sales_order_id);
   const { data: deliveryQC } = useDeliveryQC(invoice?.sales_order_id ?? undefined);
+  const generateDN = useGenerateDeliveryNote();
 
   if (isLoading) {
     return (
@@ -97,6 +100,26 @@ export default function InvoiceDetail() {
             </Button>
           )}
         </div>
+
+        {invoice.status === 'paid' && (
+          <div className="flex justify-end">
+            <Button
+              onClick={() =>
+                generateDN.mutate(invoice.id, {
+                  onSuccess: (dn) => {
+                    toast.success(`Delivery note ${dn.reference} created`);
+                    navigate(`/inventory/delivery-notes/${dn.id}`);
+                  },
+                  onError: (e: any) => toast.error(e?.message ?? 'Failed to generate delivery note'),
+                })
+              }
+              disabled={generateDN.isPending}
+            >
+              <Truck className="h-4 w-4 mr-2" />
+              {generateDN.isPending ? 'Generating…' : 'Generate Delivery Note'}
+            </Button>
+          </div>
+        )}
 
         {invoice.status === 'paid' && order && (
           <Card className="border-success/40 bg-success/5">
