@@ -129,3 +129,5 @@ export * from './attendance';
 export * from './leaves';
 // Re-export Batch 4 payroll service surface
 export * from './payroll';
+// Re-export Batch 5 appraisals service surface
+export * from './appraisals';
