@@ -32,25 +32,77 @@ class OdooError extends Error {
   }
 }
 
+async function authenticateOdoo(
+  url: string,
+  db: string,
+  login: string,
+  password: string,
+): Promise<{ sessionId: string; uid: number }> {
+  const endpoint = `${url.replace(/\/$/, "")}/web/session/authenticate`;
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "call",
+      params: { db, login, password },
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new OdooError(`Odoo auth HTTP ${res.status}`, res.status, text.slice(0, 2000));
+  }
+  let data: { result?: { uid?: number | false; session_id?: string }; error?: { message?: string; data?: { message?: string; debug?: string } } };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new OdooError("Odoo auth returned non-JSON", res.status, text.slice(0, 2000));
+  }
+  if (data.error) {
+    const msg = data.error?.data?.message || data.error?.message || "Odoo auth error";
+    const debug = data.error?.data?.debug || "";
+    throw new OdooError(msg, res.status, debug ? `${msg}\n${debug}`.slice(0, 2000) : msg);
+  }
+  const uid = data.result?.uid;
+  if (!uid) {
+    throw new OdooError(
+      "Odoo authentication failed: invalid credentials, database, or login.",
+      res.status,
+      text.slice(0, 2000),
+    );
+  }
+  // Try header session_id first, fall back to Set-Cookie
+  let sessionId = data.result?.session_id || "";
+  if (!sessionId) {
+    const setCookie = res.headers.get("set-cookie") || "";
+    const m = setCookie.match(/session_id=([^;]+)/);
+    if (m) sessionId = m[1];
+  }
+  if (!sessionId) {
+    throw new OdooError("Odoo auth: missing session_id in response", res.status, text.slice(0, 2000));
+  }
+  return { sessionId, uid: Number(uid) };
+}
+
 async function callKw(
   url: string,
-  login: string,
-  apiKey: string,
+  sessionId: string,
   model: string,
   method: string,
   args: unknown[] = [],
   kwargs: Record<string, unknown> = {},
 ): Promise<unknown> {
   const endpoint = `${url.replace(/\/$/, "")}/web/dataset/call_kw`;
-  const auth = `Basic ${btoa(`${login}:${apiKey}`)}`;
   const res = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": auth,
+      "Cookie": `session_id=${sessionId}`,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
+      id: Date.now(),
       method: "call",
       params: { model, method, args, kwargs },
     }),
@@ -116,15 +168,28 @@ Deno.serve(async (req) => {
       return json({ success: false, error: "Invalid JSON body" }, 400);
     }
     const { odoo_url, api_key, model, action } = body;
-    const login = body.login || "admin";
+    const login = body.login || "";
+    const db = body.db || "";
 
     if (!odoo_url || !api_key) return json({ success: false, error: "Missing odoo_url or api_key" }, 400);
     if (!login) return json({ success: false, error: "Missing login (Odoo user email)" }, 400);
+    if (!db) return json({ success: false, error: "Missing db (Odoo database name)" }, 400);
+
+    let sessionId: string;
+    try {
+      const auth = await authenticateOdoo(odoo_url, db, login, api_key);
+      sessionId = auth.sessionId;
+    } catch (e) {
+      if (e instanceof OdooError) {
+        return json({ success: false, error: e.message, odoo_status: e.status, odoo_body: e.body }, 200);
+      }
+      const msg = e instanceof Error ? e.message : String(e);
+      return json({ success: false, error: msg }, 200);
+    }
 
     if (action === "test") {
       try {
-        const userCount = await callKw(odoo_url, login, api_key, "res.users", "search_count", [[["active", "=", true]]]);
-        const counts: Record<string, number> = { users: Number(userCount) || 0 };
+        const counts: Record<string, number> = {};
         const targets: Array<[string, string, unknown[]]> = [
           ["warehouses", "stock.warehouse", []],
           ["products", "product.template", [["sale_ok", "=", true]]],
@@ -135,7 +200,7 @@ Deno.serve(async (req) => {
         ];
         for (const [k, m, domain] of targets) {
           try {
-            const c = await callKw(odoo_url, login, api_key, m, "search_count", [domain]);
+            const c = await callKw(odoo_url, sessionId, m, "search_count", [domain]);
             counts[k] = Number(c) || 0;
           } catch (err) {
             console.error(`count failed for ${k}/${m}`, err);
@@ -165,7 +230,7 @@ Deno.serve(async (req) => {
     let skipped = 0;
 
     if (model === "warehouses") {
-      const rows = await callKw(odoo_url, login, api_key, "stock.warehouse", "search_read", [[], ["name", "code"]]) as Array<{ name: string; code: string }>;
+      const rows = await callKw(odoo_url, sessionId, "stock.warehouse", "search_read", [[], ["name", "code"]]) as Array<{ name: string; code: string }>;
       for (const r of rows as Array<{ name: string; code: string }>) {
         if (!r.code) { skipped++; continue; }
         const { error } = await svc.from("warehouses").upsert(
@@ -175,7 +240,7 @@ Deno.serve(async (req) => {
         if (error) { errors.push(`${r.code}: ${error.message}`); skipped++; } else imported++;
       }
     } else if (model === "products") {
-      const rows = await callKw(odoo_url, login, api_key, "product.template", "search_read", [[], [
+      const rows = await callKw(odoo_url, sessionId, "product.template", "search_read", [[], [
         "name", "default_code", "barcode", "categ_id", "list_price", "standard_price", "description", "active", "type",
       ]]) as Array<Record<string, unknown>>;
       const typeMap: Record<string, string> = { product: "stockable", consu: "consumable", service: "service" };
@@ -205,7 +270,7 @@ Deno.serve(async (req) => {
     } else if (model === "customers" || model === "vendors") {
       const rank = model === "customers" ? "customer_rank" : "supplier_rank";
       const rows = await callKw(
-        odoo_url, login, api_key, "res.partner", "search_read",
+        odoo_url, sessionId, "res.partner", "search_read",
         [[[rank, ">", 0]], ["name", "email", "phone", "street", "city", "zip", "vat"]],
       ) as Array<Record<string, unknown>>;
       const target = model === "customers" ? "customers" : "suppliers";
@@ -220,7 +285,7 @@ Deno.serve(async (req) => {
         if (error) { errors.push(`${email}: ${error.message}`); skipped++; } else imported++;
       }
     } else if (model === "serials") {
-      const rows = await callKw(odoo_url, login, api_key, "stock.lot", "search_read", [[], ["name", "product_id", "ref"]]) as Array<Record<string, unknown>>;
+      const rows = await callKw(odoo_url, sessionId, "stock.lot", "search_read", [[], ["name", "product_id", "ref"]]) as Array<Record<string, unknown>>;
       for (const r of rows as Array<Record<string, unknown>>) {
         const name = r.name as string;
         const prodTuple = r.product_id as unknown[];
@@ -236,7 +301,7 @@ Deno.serve(async (req) => {
       }
     } else if (model === "stock") {
       const rows = await callKw(
-        odoo_url, login, api_key, "stock.quant", "search_read",
+        odoo_url, sessionId, "stock.quant", "search_read",
         [[["location_id.usage", "=", "internal"]], ["product_id", "location_id", "quantity", "reserved_quantity"]],
       ) as Array<Record<string, unknown>>;
       for (const r of rows as Array<Record<string, unknown>>) {

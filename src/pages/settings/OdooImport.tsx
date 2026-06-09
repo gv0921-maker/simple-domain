@@ -169,7 +169,7 @@ export default function OdooImport() {
                 <Input id="odoo-login" value={login} onChange={(e) => setLogin(e.target.value)} placeholder="" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="odoo-key">API Key</Label>
+                <Label htmlFor="odoo-key">API Key / Password</Label>
                 <Input id="odoo-key" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="" />
               </div>
             </div>
