@@ -29,4 +29,10 @@ export const HR_NAV = [
   { label: 'Payroll Settings (Admin)', href: '/payroll/admin/settings' },
   { label: 'Loans (Admin)', href: '/payroll/admin/loans' },
   { label: 'Advances (Admin)', href: '/payroll/admin/advances' },
+  { label: 'My Appraisals', href: '/appraisals/my-appraisals' },
+  { label: 'Team Appraisals', href: '/appraisals/team' },
+  { label: 'Appraisals Overview', href: '/appraisals' },
+  { label: 'Cycles (Admin)', href: '/appraisals/admin/cycles' },
+  { label: 'Templates (Admin)', href: '/appraisals/admin/templates' },
+  { label: 'Appraisal Reports', href: '/appraisals/admin/reports' },
 ];
