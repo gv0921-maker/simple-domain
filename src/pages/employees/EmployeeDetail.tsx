@@ -14,6 +14,7 @@ import {
 } from '@/hooks/hr';
 import { useRangeAttendance } from '@/hooks/hr';
 import { useEmployeePayslips, useLoans, useAdvances } from '@/hooks/hr';
+import { useAppraisalsForEmployee } from '@/hooks/hr';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
@@ -52,6 +53,7 @@ export default function EmployeeDetail() {
   const { data: payslips = [] } = useEmployeePayslips(id);
   const { data: loans = [] } = useLoans(id);
   const { data: advances = [] } = useAdvances(id);
+  const { data: empAppraisals = [] } = useAppraisalsForEmployee(id);
   const activeContract = contracts.find((c) => c.status === 'active') ?? contracts[0];
   const attStats = useMemo(() => {
     const work = attendance.filter((s) => s.session_type === 'work');
@@ -124,6 +126,7 @@ export default function EmployeeDetail() {
             <TabsTrigger value="reports">Reports / Reportees</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="payroll">Payroll</TabsTrigger>
+            <TabsTrigger value="appraisals">Appraisals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="mt-4">
@@ -292,6 +295,28 @@ export default function EmployeeDetail() {
                 )}
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="appraisals" className="mt-4">
+            <Card className="p-6">
+              <h3 className="font-semibold mb-3">Appraisal History</h3>
+              {empAppraisals.length === 0 ? <p className="text-sm text-muted-foreground">No appraisals yet.</p> : (
+                <div className="space-y-2">
+                  {empAppraisals.map((a: any) => (
+                    <Link key={a.id} to={`/appraisals/${a.id}`} className="flex justify-between p-3 rounded border hover:bg-accent">
+                      <div>
+                        <p className="font-medium">{a.appraisal_cycles?.name}</p>
+                        <p className="text-xs text-muted-foreground">{a.status} · {a.appraisal_cycles?.period_start_date} → {a.appraisal_cycles?.period_end_date}</p>
+                      </div>
+                      <div className="text-right">
+                        {a.final_overall_rating != null && <p className="font-medium">{a.final_overall_rating}</p>}
+                        {a.recommendation && <p className="text-xs text-muted-foreground">{a.recommendation}</p>}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
