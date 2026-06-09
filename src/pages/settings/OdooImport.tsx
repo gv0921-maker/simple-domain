@@ -57,8 +57,18 @@ export default function OdooImport() {
 
   const callFn = async (payload: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke('odoo-import', { body: payload });
-    if (error) throw new Error(error.message);
-    if (data?.error) throw new Error(data.error);
+    if (error) {
+      const ctx = (data && typeof data === 'object' && 'error' in (data as Record<string, unknown>))
+        ? ` — ${(data as Record<string, unknown>).error}`
+        : '';
+      throw new Error(`${error.message}${ctx}`);
+    }
+    if (data && (data as Record<string, unknown>).success === false) {
+      const d = data as Record<string, unknown>;
+      const extra = d.odoo_status ? ` [HTTP ${d.odoo_status}]` : '';
+      const body = d.odoo_body ? `\n${String(d.odoo_body).slice(0, 500)}` : '';
+      throw new Error(`${d.error ?? 'Odoo error'}${extra}${body}`);
+    }
     return data as Record<string, unknown>;
   };
 
