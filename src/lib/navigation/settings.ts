@@ -1,5 +1,5 @@
 // Settings Module Navigation - shared across all settings pages
-export const SETTINGS_NAV: Array<{ label: string; href: string; superAdminOnly?: boolean }> = [
+export const SETTINGS_NAV = [
   { label: 'General', href: '/settings' },
   { label: 'Users', href: '/settings/users' },
   { label: 'Roles', href: '/settings/roles' },
@@ -11,5 +11,4 @@ export const SETTINGS_NAV: Array<{ label: string; href: string; superAdminOnly?:
   { label: 'Price Approvals', href: '/settings/price-approvals' },
   { label: 'Audit Logs', href: '/settings/audit' },
   { label: 'Backups', href: '/settings/backups' },
-  { label: 'Odoo Import', href: '/settings/odoo-import', superAdminOnly: true },
 ];

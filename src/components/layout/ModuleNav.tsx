@@ -1,13 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useRef, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { isSuperAdminUser } from '@/lib/data/rbac';
 
 interface NavItem {
   label: string;
   href: string;
-  superAdminOnly?: boolean;
 }
 
 interface ModuleNavProps {
@@ -18,9 +15,6 @@ export function ModuleNav({ items }: ModuleNavProps) {
   const location = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLAnchorElement>(null);
-  const { user } = useAuth();
-  const isSuper = user ? isSuperAdminUser(user.id) : false;
-  const visibleItems = items.filter((i) => !i.superAdminOnly || isSuper);
 
   // Auto-scroll active item into view on mobile
   useEffect(() => {
@@ -37,7 +31,7 @@ export function ModuleNav({ items }: ModuleNavProps) {
       ref={scrollRef}
       className="flex items-center gap-4 md:gap-6 border-b border-border bg-card px-4 h-10 overflow-x-auto scrollbar-hide"
     >
-      {visibleItems.map((item) => {
+      {items.map((item) => {
         const isActive = location.pathname === item.href;
         return (
           <Link
