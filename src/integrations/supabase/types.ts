@@ -3740,6 +3740,7 @@ export type Database = {
         | "warehouse_operator"
         | "super_admin"
         | "accountant"
+        | "hr_manager"
       contact_status: "active" | "archived"
       contact_type: "individual" | "company"
       lead_priority: "low" | "medium" | "high" | "urgent"
@@ -3898,6 +3899,7 @@ export const Constants = {
         "warehouse_operator",
         "super_admin",
         "accountant",
+        "hr_manager",
       ],
       contact_status: ["active", "archived"],
       contact_type: ["individual", "company"],
