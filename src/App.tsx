@@ -131,6 +131,17 @@ import AdminEntitlements from "@/pages/leave/AdminEntitlements";
 import AdminLeaveTypes from "@/pages/leave/AdminLeaveTypes";
 import AdminCompOff from "@/pages/leave/AdminCompOff";
 
+// Payroll pages (HR Batch 4)
+import PayrollDashboard from "@/pages/payroll/PayrollDashboard";
+import PayrollPeriodsList from "@/pages/payroll/PayrollPeriodsList";
+import PayrollPeriodDetail from "@/pages/payroll/PayrollPeriodDetail";
+import PayslipDetail from "@/pages/payroll/PayslipDetail";
+import MyPayslips from "@/pages/payroll/MyPayslips";
+import AdminComponents from "@/pages/payroll/admin/AdminComponents";
+import AdminPayrollSettings from "@/pages/payroll/admin/AdminSettings";
+import AdminLoans from "@/pages/payroll/admin/AdminLoans";
+import AdminAdvances from "@/pages/payroll/admin/AdminAdvances";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -255,6 +266,17 @@ const App = () => (
             <Route path="/leave/admin/types" element={<ProtectedRoute><AdminLeaveTypes /></ProtectedRoute>} />
             <Route path="/leave/admin/comp-off" element={<ProtectedRoute><AdminCompOff /></ProtectedRoute>} />
             <Route path="/leave/:id" element={<ProtectedRoute><LeaveDetail /></ProtectedRoute>} />
+
+            {/* Payroll routes (HR Batch 4) */}
+            <Route path="/payroll" element={<ProtectedRoute><PayrollDashboard /></ProtectedRoute>} />
+            <Route path="/payroll/periods" element={<ProtectedRoute><PayrollPeriodsList /></ProtectedRoute>} />
+            <Route path="/payroll/periods/:id" element={<ProtectedRoute><PayrollPeriodDetail /></ProtectedRoute>} />
+            <Route path="/payroll/payslips/:id" element={<ProtectedRoute><PayslipDetail /></ProtectedRoute>} />
+            <Route path="/payroll/my-payslips" element={<ProtectedRoute><MyPayslips /></ProtectedRoute>} />
+            <Route path="/payroll/admin/components" element={<ProtectedRoute><AdminComponents /></ProtectedRoute>} />
+            <Route path="/payroll/admin/settings" element={<ProtectedRoute><AdminPayrollSettings /></ProtectedRoute>} />
+            <Route path="/payroll/admin/loans" element={<ProtectedRoute><AdminLoans /></ProtectedRoute>} />
+            <Route path="/payroll/admin/advances" element={<ProtectedRoute><AdminAdvances /></ProtectedRoute>} />
 
             {/* CRM module */}
             <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
