@@ -287,3 +287,183 @@ export function useUpsertSchedule() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'schedules'] }),
   });
 }
+
+// ============================================================
+// Batch 3 — Leaves & Roster
+// ============================================================
+export const leaveKeys = {
+  types: () => [...hrKeys.all, 'leaveTypes'] as const,
+  entitlements: (year?: number) => [...hrKeys.all, 'entitlements', year ?? 'all'] as const,
+  balances: (year: number) => [...hrKeys.all, 'balances', year] as const,
+  employeeBalance: (empId: string, year: number) =>
+    [...hrKeys.all, 'employeeBalance', empId, year] as const,
+  requests: (filters?: unknown) => [...hrKeys.all, 'leaveRequests', filters ?? 'all'] as const,
+  request: (id: string) => [...hrKeys.all, 'leaveRequest', id] as const,
+  approvalLog: (id: string) => [...hrKeys.all, 'leaveApprovalLog', id] as const,
+  rosters: (from: string, to: string, ids?: string[]) =>
+    [...hrKeys.all, 'rosters', from, to, ids?.join(',') ?? 'all'] as const,
+  compOff: (empId?: string) => [...hrKeys.all, 'compOff', empId ?? 'all'] as const,
+  workedOnOff: (from: string, to: string) =>
+    [...hrKeys.all, 'workedOnOff', from, to] as const,
+} as const;
+
+// Leave types
+export const useLeaveTypes = () =>
+  useQuery({ queryKey: leaveKeys.types(), queryFn: hr.listLeaveTypes });
+export function useCreateLeaveType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.LeaveTypeInsert) => hr.createLeaveType(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: leaveKeys.types() }),
+  });
+}
+export function useUpdateLeaveType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: hr.LeaveTypeUpdate }) =>
+      hr.updateLeaveType(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: leaveKeys.types() }),
+  });
+}
+export function useDeleteLeaveType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteLeaveType(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: leaveKeys.types() }),
+  });
+}
+
+// Entitlements
+export const useEntitlements = (year?: number) =>
+  useQuery({ queryKey: leaveKeys.entitlements(year), queryFn: () => hr.listEntitlements(year) });
+export function useUpsertEntitlement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.LeaveEntitlementInsert) => hr.upsertEntitlement(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'entitlements'] }),
+  });
+}
+export function useDeleteEntitlement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteEntitlement(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'entitlements'] }),
+  });
+}
+
+// Balances
+export const useBalances = (year: number) =>
+  useQuery({ queryKey: leaveKeys.balances(year), queryFn: () => hr.listBalances(year) });
+export function useUpsertBalance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.LeaveBalanceInsert) => hr.upsertBalance(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'balances'] }),
+  });
+}
+export function useCarryForward() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (fromYear: number) => hr.carryForwardLeaves(fromYear),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'balances'] }),
+  });
+}
+export const useEmployeeLeaveBalance = (employeeId: string | undefined, year: number) =>
+  useQuery({
+    queryKey: employeeId ? leaveKeys.employeeBalance(employeeId, year) : ['noop'],
+    queryFn: () => hr.getEmployeeLeaveBalance(employeeId!, year),
+    enabled: !!employeeId,
+  });
+
+// Leave requests
+export const useLeaveRequests = (filters?: Parameters<typeof hr.listLeaveRequests>[0]) =>
+  useQuery({ queryKey: leaveKeys.requests(filters), queryFn: () => hr.listLeaveRequests(filters) });
+export const useLeaveRequest = (id: string | undefined) =>
+  useQuery({
+    queryKey: id ? leaveKeys.request(id) : ['noop'],
+    queryFn: () => hr.getLeaveRequest(id!),
+    enabled: !!id,
+  });
+export const useApprovalLog = (id: string | undefined) =>
+  useQuery({
+    queryKey: id ? leaveKeys.approvalLog(id) : ['noop'],
+    queryFn: () => hr.listApprovalLog(id!),
+    enabled: !!id,
+  });
+export function useSubmitLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: Parameters<typeof hr.submitLeaveRequest>[0]) => hr.submitLeaveRequest(args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'leaveRequests'] }),
+  });
+}
+export function useApproveLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, approver_id, comments }: { id: string; approver_id?: string | null; comments?: string }) =>
+      hr.approveLeaveRequest(id, approver_id, comments),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'leaveRequests'] }),
+  });
+}
+export function useRejectLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => hr.rejectLeaveRequest(id, reason),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'leaveRequests'] }),
+  });
+}
+export function useCancelLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, comments }: { id: string; comments?: string }) => hr.cancelLeaveRequest(id, comments),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'leaveRequests'] }),
+  });
+}
+
+// Rosters
+export const useRosters = (from: string, to: string, employeeIds?: string[]) =>
+  useQuery({
+    queryKey: leaveKeys.rosters(from, to, employeeIds),
+    queryFn: () => hr.listRosters({ from, to, employeeIds }),
+    enabled: !!from && !!to,
+  });
+export function useUpsertRoster() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.EmployeeRosterInsert) => hr.upsertRoster(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'rosters'] }),
+  });
+}
+export function useScheduleWeeklyOff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ employeeId, dates, notes }: { employeeId: string; dates: string[]; notes?: string }) =>
+      hr.scheduleWeeklyOff(employeeId, dates, notes),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'rosters'] }),
+  });
+}
+export function useRescheduleWeeklyOff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ employeeId, originalDate, newDate }: { employeeId: string; originalDate: string; newDate: string }) =>
+      hr.rescheduleWeeklyOff(employeeId, originalDate, newDate),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'rosters'] }),
+  });
+}
+export const useWorkedOnWeeklyOff = (from: string, to: string) =>
+  useQuery({
+    queryKey: leaveKeys.workedOnOff(from, to),
+    queryFn: () => hr.listWorkedOnWeeklyOff(from, to),
+    enabled: !!from && !!to,
+  });
+
+// Comp-off
+export const useCompOffCredits = (employeeId?: string) =>
+  useQuery({ queryKey: leaveKeys.compOff(employeeId), queryFn: () => hr.listCompOffCredits(employeeId) });
+export function useGrantCompOff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: Parameters<typeof hr.grantCompOff>[0]) => hr.grantCompOff(args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'compOff'] }),
+  });
+}

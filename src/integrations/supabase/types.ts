@@ -425,6 +425,60 @@ export type Database = {
           },
         ]
       }
+      comp_off_credits: {
+        Row: {
+          comp_off_days: number
+          created_at: string
+          employee_id: string
+          expiry_date: string
+          granted_by: string | null
+          id: string
+          notes: string | null
+          used: boolean
+          used_in_leave_request_id: string | null
+          work_date: string
+        }
+        Insert: {
+          comp_off_days?: number
+          created_at?: string
+          employee_id: string
+          expiry_date?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          used?: boolean
+          used_in_leave_request_id?: string | null
+          work_date: string
+        }
+        Update: {
+          comp_off_days?: number
+          created_at?: string
+          employee_id?: string
+          expiry_date?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          used?: boolean
+          used_in_leave_request_id?: string | null
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comp_off_credits_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comp_off_credits_used_in_leave_request_id_fkey"
+            columns: ["used_in_leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "leave_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           basic_salary: number
@@ -1360,6 +1414,110 @@ export type Database = {
           },
         ]
       }
+      employee_leave_entitlements: {
+        Row: {
+          allocated_days: number
+          carry_forward_max_days: number | null
+          created_at: string
+          employee_id: string
+          id: string
+          leave_type_id: string
+          max_consecutive_days: number | null
+          min_notice_days: number | null
+          notes: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          allocated_days?: number
+          carry_forward_max_days?: number | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          leave_type_id: string
+          max_consecutive_days?: number | null
+          min_notice_days?: number | null
+          notes?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          allocated_days?: number
+          carry_forward_max_days?: number | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          leave_type_id?: string
+          max_consecutive_days?: number | null
+          min_notice_days?: number | null
+          notes?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_leave_entitlements_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_leave_entitlements_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_rosters: {
+        Row: {
+          comp_off_reason: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          notes: string | null
+          original_off_date: string | null
+          planned_by: string | null
+          roster_date: string
+          roster_type: string
+          updated_at: string
+        }
+        Insert: {
+          comp_off_reason?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          original_off_date?: string | null
+          planned_by?: string | null
+          roster_date: string
+          roster_type?: string
+          updated_at?: string
+        }
+        Update: {
+          comp_off_reason?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          original_off_date?: string | null
+          planned_by?: string | null
+          roster_date?: string
+          roster_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_rosters_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           aadhaar_number: string | null
@@ -1724,6 +1882,264 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leave_approval_log: {
+        Row: {
+          action: string
+          action_date: string
+          actor_id: string | null
+          comments: string | null
+          id: string
+          leave_request_id: string
+          new_status: string | null
+          previous_status: string | null
+        }
+        Insert: {
+          action: string
+          action_date?: string
+          actor_id?: string | null
+          comments?: string | null
+          id?: string
+          leave_request_id: string
+          new_status?: string | null
+          previous_status?: string | null
+        }
+        Update: {
+          action?: string
+          action_date?: string
+          actor_id?: string | null
+          comments?: string | null
+          id?: string
+          leave_request_id?: string
+          new_status?: string | null
+          previous_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_approval_log_leave_request_id_fkey"
+            columns: ["leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "leave_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_balances: {
+        Row: {
+          accrued: number
+          available_balance: number | null
+          carried_forward: number
+          created_at: string
+          employee_id: string
+          id: string
+          leave_type_id: string
+          opening_balance: number
+          pending_approval: number
+          updated_at: string
+          used: number
+          year: number
+        }
+        Insert: {
+          accrued?: number
+          available_balance?: number | null
+          carried_forward?: number
+          created_at?: string
+          employee_id: string
+          id?: string
+          leave_type_id: string
+          opening_balance?: number
+          pending_approval?: number
+          updated_at?: string
+          used?: number
+          year: number
+        }
+        Update: {
+          accrued?: number
+          available_balance?: number | null
+          carried_forward?: number
+          created_at?: string
+          employee_id?: string
+          id?: string
+          leave_type_id?: string
+          opening_balance?: number
+          pending_approval?: number
+          updated_at?: string
+          used?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_balances_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          applied_date: string | null
+          approved_date: string | null
+          approver_id: string | null
+          attachment_url: string | null
+          contact_during_leave: string | null
+          created_at: string
+          employee_id: string
+          end_date: string
+          half_day_session: string | null
+          id: string
+          is_half_day: boolean
+          leave_type_id: string
+          notes: string | null
+          reason: string | null
+          rejection_reason: string | null
+          request_number: string | null
+          start_date: string
+          status: string
+          total_days: number
+          updated_at: string
+        }
+        Insert: {
+          applied_date?: string | null
+          approved_date?: string | null
+          approver_id?: string | null
+          attachment_url?: string | null
+          contact_during_leave?: string | null
+          created_at?: string
+          employee_id: string
+          end_date: string
+          half_day_session?: string | null
+          id?: string
+          is_half_day?: boolean
+          leave_type_id: string
+          notes?: string | null
+          reason?: string | null
+          rejection_reason?: string | null
+          request_number?: string | null
+          start_date: string
+          status?: string
+          total_days?: number
+          updated_at?: string
+        }
+        Update: {
+          applied_date?: string | null
+          approved_date?: string | null
+          approver_id?: string | null
+          attachment_url?: string | null
+          contact_during_leave?: string | null
+          created_at?: string
+          employee_id?: string
+          end_date?: string
+          half_day_session?: string | null
+          id?: string
+          is_half_day?: boolean
+          leave_type_id?: string
+          notes?: string | null
+          reason?: string | null
+          rejection_reason?: string | null
+          request_number?: string | null
+          start_date?: string
+          status?: string
+          total_days?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_types: {
+        Row: {
+          accrual_type: string
+          allow_half_day: boolean
+          allow_negative_balance: boolean
+          applicable_after_months: number
+          code: string
+          color: string
+          created_at: string
+          default_carry_forward_max_days: number
+          default_days_per_year: number
+          default_max_consecutive_days: number | null
+          default_min_notice_days: number
+          description: string | null
+          gender_restriction: string
+          id: string
+          is_active: boolean
+          is_paid: boolean
+          name: string
+          requires_approval: boolean
+          updated_at: string
+        }
+        Insert: {
+          accrual_type?: string
+          allow_half_day?: boolean
+          allow_negative_balance?: boolean
+          applicable_after_months?: number
+          code: string
+          color?: string
+          created_at?: string
+          default_carry_forward_max_days?: number
+          default_days_per_year?: number
+          default_max_consecutive_days?: number | null
+          default_min_notice_days?: number
+          description?: string | null
+          gender_restriction?: string
+          id?: string
+          is_active?: boolean
+          is_paid?: boolean
+          name: string
+          requires_approval?: boolean
+          updated_at?: string
+        }
+        Update: {
+          accrual_type?: string
+          allow_half_day?: boolean
+          allow_negative_balance?: boolean
+          applicable_after_months?: number
+          code?: string
+          color?: string
+          created_at?: string
+          default_carry_forward_max_days?: number
+          default_days_per_year?: number
+          default_max_consecutive_days?: number | null
+          default_min_notice_days?: number
+          description?: string | null
+          gender_restriction?: string
+          id?: string
+          is_active?: boolean
+          is_paid?: boolean
+          name?: string
+          requires_approval?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       lots: {
         Row: {
