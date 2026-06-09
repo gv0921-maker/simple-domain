@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
 
     if (action === "test") {
       try {
-        const userCount = await callKw(odoo_url, login, api_key, "res.users", "search_count", [[["active", "=", true]]]);
+        const userCount = await callKw(normalizedUrl, login, api_key, "res.users", "search_count", [[["active", "=", true]]]);
         const counts: Record<string, number> = { users: Number(userCount) || 0 };
         const targets: Array<[string, string, unknown[]]> = [
           ["warehouses", "stock.warehouse", []],
@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
         ];
         for (const [k, m, domain] of targets) {
           try {
-            const c = await callKw(odoo_url, login, api_key, m, "search_count", [domain]);
+            const c = await callKw(normalizedUrl, login, api_key, m, "search_count", [domain]);
             counts[k] = Number(c) || 0;
           } catch (err) {
             console.error(`count failed for ${k}/${m}`, err);
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
     let skipped = 0;
 
     if (model === "warehouses") {
-      const rows = await callKw(odoo_url, login, api_key, "stock.warehouse", "search_read", [[], ["name", "code"]]) as Array<{ name: string; code: string }>;
+      const rows = await callKw(normalizedUrl, login, api_key, "stock.warehouse", "search_read", [[], ["name", "code"]]) as Array<{ name: string; code: string }>;
       for (const r of rows as Array<{ name: string; code: string }>) {
         if (!r.code) { skipped++; continue; }
         const { error } = await svc.from("warehouses").upsert(
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
         if (error) { errors.push(`${r.code}: ${error.message}`); skipped++; } else imported++;
       }
     } else if (model === "products") {
-      const rows = await callKw(odoo_url, login, api_key, "product.template", "search_read", [[], [
+      const rows = await callKw(normalizedUrl, login, api_key, "product.template", "search_read", [[], [
         "name", "default_code", "barcode", "categ_id", "list_price", "standard_price", "description", "active", "type",
       ]]) as Array<Record<string, unknown>>;
       const typeMap: Record<string, string> = { product: "stockable", consu: "consumable", service: "service" };
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
         if (error) { errors.push(`${email}: ${error.message}`); skipped++; } else imported++;
       }
     } else if (model === "serials") {
-      const rows = await callKw(odoo_url, login, api_key, "stock.lot", "search_read", [[], ["name", "product_id", "ref"]]) as Array<Record<string, unknown>>;
+      const rows = await callKw(normalizedUrl, login, api_key, "stock.lot", "search_read", [[], ["name", "product_id", "ref"]]) as Array<Record<string, unknown>>;
       for (const r of rows as Array<Record<string, unknown>>) {
         const name = r.name as string;
         const prodTuple = r.product_id as unknown[];
