@@ -168,15 +168,28 @@ Deno.serve(async (req) => {
       return json({ success: false, error: "Invalid JSON body" }, 400);
     }
     const { odoo_url, api_key, model, action } = body;
-    const login = body.login || "admin";
+    const login = body.login || "";
+    const db = body.db || "";
 
     if (!odoo_url || !api_key) return json({ success: false, error: "Missing odoo_url or api_key" }, 400);
     if (!login) return json({ success: false, error: "Missing login (Odoo user email)" }, 400);
+    if (!db) return json({ success: false, error: "Missing db (Odoo database name)" }, 400);
+
+    let sessionId: string;
+    try {
+      const auth = await authenticateOdoo(odoo_url, db, login, api_key);
+      sessionId = auth.sessionId;
+    } catch (e) {
+      if (e instanceof OdooError) {
+        return json({ success: false, error: e.message, odoo_status: e.status, odoo_body: e.body }, 200);
+      }
+      const msg = e instanceof Error ? e.message : String(e);
+      return json({ success: false, error: msg }, 200);
+    }
 
     if (action === "test") {
       try {
-        const userCount = await callKw(odoo_url, sessionId, "res.users", "search_count", [[["active", "=", true]]]);
-        const counts: Record<string, number> = { users: Number(userCount) || 0 };
+        const counts: Record<string, number> = {};
         const targets: Array<[string, string, unknown[]]> = [
           ["warehouses", "stock.warehouse", []],
           ["products", "product.template", [["sale_ok", "=", true]]],
