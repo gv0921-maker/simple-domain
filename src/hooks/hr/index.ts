@@ -144,3 +144,146 @@ export function useDeleteContract() {
     onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.contracts() }),
   });
 }
+
+// ---------- Attendance Sessions ----------
+export function useActiveSession(employeeId: string | undefined) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!employeeId) return;
+    return hr.subscribeToActiveSession(employeeId, () => {
+      qc.invalidateQueries({ queryKey: hrKeys.attendance() });
+    });
+  }, [employeeId, qc]);
+  return useQuery({
+    queryKey: employeeId ? hrKeys.activeSession(employeeId) : ['noop'],
+    queryFn: () => hr.getActiveSession(employeeId!),
+    enabled: !!employeeId,
+  });
+}
+
+export const useDailyAttendance = (employeeId: string | undefined, date: string) =>
+  useQuery({
+    queryKey: employeeId ? hrKeys.daily(employeeId, date) : ['noop'],
+    queryFn: () => hr.getDailyAttendance(employeeId!, date),
+    enabled: !!employeeId,
+  });
+
+export const useMonthlyAttendance = (employeeId: string | undefined, month: string) =>
+  useQuery({
+    queryKey: employeeId ? hrKeys.monthly(employeeId, month) : ['noop'],
+    queryFn: () => hr.getMonthlyAttendance(employeeId!, month),
+    enabled: !!employeeId,
+  });
+
+export const useRangeAttendance = (employeeIds: string[], startDate: string, endDate: string) =>
+  useQuery({
+    queryKey: hrKeys.range(employeeIds, startDate, endDate),
+    queryFn: () => hr.getRangeAttendance(employeeIds, startDate, endDate),
+    enabled: employeeIds.length > 0,
+  });
+
+export function usePunchIn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: Parameters<typeof hr.punchIn>[0]) => hr.punchIn(args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.attendance() }),
+  });
+}
+
+export function usePunchOut() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: Parameters<typeof hr.punchOut>[0]) => hr.punchOut(args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.attendance() }),
+  });
+}
+
+export function useUpdateSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: hr.AttendanceSessionUpdate }) =>
+      hr.updateSession(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.attendance() }),
+  });
+}
+
+export function useDeleteSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteSession(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.attendance() }),
+  });
+}
+
+export function useBulkInsertSessions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (rows: hr.AttendanceSessionInsert[]) => hr.bulkInsertFromCSV(rows),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.attendance() }),
+  });
+}
+
+// ---------- Locations ----------
+export const useLocations = () =>
+  useQuery({ queryKey: hrKeys.locations(), queryFn: hr.listLocations });
+
+export function useCreateLocation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.AttendanceLocationInsert) => hr.createLocation(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.locations() }),
+  });
+}
+export function useUpdateLocation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: hr.AttendanceLocationUpdate }) =>
+      hr.updateLocation(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.locations() }),
+  });
+}
+export function useDeleteLocation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteLocation(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.locations() }),
+  });
+}
+
+// ---------- Holidays ----------
+export const useHolidays = () =>
+  useQuery({ queryKey: hrKeys.holidays(), queryFn: hr.listHolidays });
+export function useCreateHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.HolidayInsert) => hr.createHoliday(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.holidays() }),
+  });
+}
+export function useUpdateHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: hr.HolidayUpdate }) =>
+      hr.updateHoliday(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.holidays() }),
+  });
+}
+export function useDeleteHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteHoliday(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrKeys.holidays() }),
+  });
+}
+
+// ---------- Schedules ----------
+export const useSchedules = (employeeId?: string) =>
+  useQuery({ queryKey: hrKeys.schedules(employeeId), queryFn: () => hr.listSchedules(employeeId) });
+
+export function useUpsertSchedule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.WorkScheduleInsert) => hr.upsertSchedule(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'schedules'] }),
+  });
+}
