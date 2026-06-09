@@ -96,6 +96,17 @@ import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 
 import NotFound from "@/pages/NotFound";
 
+// HR/Employees pages
+import EmployeesOverview from "@/pages/employees/EmployeesOverview";
+import EmployeesDirectory from "@/pages/employees/EmployeesDirectory";
+import EmployeeForm from "@/pages/employees/EmployeeForm";
+import EmployeeDetail from "@/pages/employees/EmployeeDetail";
+import DepartmentsList from "@/pages/employees/DepartmentsList";
+import DepartmentDetail from "@/pages/employees/DepartmentDetail";
+import ContractsList from "@/pages/employees/ContractsList";
+import ContractForm from "@/pages/employees/ContractForm";
+import ContractDetail from "@/pages/employees/ContractDetail";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -184,8 +195,18 @@ const App = () => (
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/dashboards/crm" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
             <Route path="/discuss" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/employees" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/employees/*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+
+            {/* HR / Employees module */}
+            <Route path="/employees" element={<ProtectedRoute><EmployeesOverview /></ProtectedRoute>} />
+            <Route path="/employees/directory" element={<ProtectedRoute><EmployeesDirectory /></ProtectedRoute>} />
+            <Route path="/employees/new" element={<ProtectedRoute><EmployeeForm /></ProtectedRoute>} />
+            <Route path="/employees/departments" element={<ProtectedRoute><DepartmentsList /></ProtectedRoute>} />
+            <Route path="/employees/departments/:id" element={<ProtectedRoute><DepartmentDetail /></ProtectedRoute>} />
+            <Route path="/employees/contracts" element={<ProtectedRoute><ContractsList /></ProtectedRoute>} />
+            <Route path="/employees/contracts/new" element={<ProtectedRoute><ContractForm /></ProtectedRoute>} />
+            <Route path="/employees/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
+            <Route path="/employees/:id" element={<ProtectedRoute><EmployeeDetail /></ProtectedRoute>} />
+            <Route path="/employees/:id/edit" element={<ProtectedRoute><EmployeeForm /></ProtectedRoute>} />
 
             {/* CRM module */}
             <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
