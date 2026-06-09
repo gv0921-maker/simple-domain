@@ -32,25 +32,77 @@ class OdooError extends Error {
   }
 }
 
+async function authenticateOdoo(
+  url: string,
+  db: string,
+  login: string,
+  password: string,
+): Promise<{ sessionId: string; uid: number }> {
+  const endpoint = `${url.replace(/\/$/, "")}/web/session/authenticate`;
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "call",
+      params: { db, login, password },
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new OdooError(`Odoo auth HTTP ${res.status}`, res.status, text.slice(0, 2000));
+  }
+  let data: { result?: { uid?: number | false; session_id?: string }; error?: { message?: string; data?: { message?: string; debug?: string } } };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new OdooError("Odoo auth returned non-JSON", res.status, text.slice(0, 2000));
+  }
+  if (data.error) {
+    const msg = data.error?.data?.message || data.error?.message || "Odoo auth error";
+    const debug = data.error?.data?.debug || "";
+    throw new OdooError(msg, res.status, debug ? `${msg}\n${debug}`.slice(0, 2000) : msg);
+  }
+  const uid = data.result?.uid;
+  if (!uid) {
+    throw new OdooError(
+      "Odoo authentication failed: invalid credentials, database, or login.",
+      res.status,
+      text.slice(0, 2000),
+    );
+  }
+  // Try header session_id first, fall back to Set-Cookie
+  let sessionId = data.result?.session_id || "";
+  if (!sessionId) {
+    const setCookie = res.headers.get("set-cookie") || "";
+    const m = setCookie.match(/session_id=([^;]+)/);
+    if (m) sessionId = m[1];
+  }
+  if (!sessionId) {
+    throw new OdooError("Odoo auth: missing session_id in response", res.status, text.slice(0, 2000));
+  }
+  return { sessionId, uid: Number(uid) };
+}
+
 async function callKw(
   url: string,
-  login: string,
-  apiKey: string,
+  sessionId: string,
   model: string,
   method: string,
   args: unknown[] = [],
   kwargs: Record<string, unknown> = {},
 ): Promise<unknown> {
   const endpoint = `${url.replace(/\/$/, "")}/web/dataset/call_kw`;
-  const auth = `Basic ${btoa(`${login}:${apiKey}`)}`;
   const res = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": auth,
+      "Cookie": `session_id=${sessionId}`,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
+      id: Date.now(),
       method: "call",
       params: { model, method, args, kwargs },
     }),
