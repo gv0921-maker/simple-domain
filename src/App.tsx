@@ -116,6 +116,20 @@ import AdminImport from "@/pages/attendance/AdminImport";
 import LocationsPage from "@/pages/attendance/Locations";
 import HolidaysPage from "@/pages/attendance/Holidays";
 import WorkSchedulesPage from "@/pages/attendance/WorkSchedules";
+import RosterPlanning from "@/pages/attendance/RosterPlanning";
+import RosterReschedule from "@/pages/attendance/RosterReschedule";
+
+// Leave pages (HR Batch 3)
+import MyLeaves from "@/pages/leave/MyLeaves";
+import ApplyLeave from "@/pages/leave/ApplyLeave";
+import LeaveDetail from "@/pages/leave/LeaveDetail";
+import TeamLeaves from "@/pages/leave/TeamLeaves";
+import LeaveCalendar from "@/pages/leave/LeaveCalendar";
+import AdminRequests from "@/pages/leave/AdminRequests";
+import AdminBalances from "@/pages/leave/AdminBalances";
+import AdminEntitlements from "@/pages/leave/AdminEntitlements";
+import AdminLeaveTypes from "@/pages/leave/AdminLeaveTypes";
+import AdminCompOff from "@/pages/leave/AdminCompOff";
 
 const queryClient = new QueryClient();
 
@@ -227,6 +241,20 @@ const App = () => (
             <Route path="/attendance/locations" element={<ProtectedRoute><LocationsPage /></ProtectedRoute>} />
             <Route path="/attendance/holidays" element={<ProtectedRoute><HolidaysPage /></ProtectedRoute>} />
             <Route path="/attendance/work-schedules" element={<ProtectedRoute><WorkSchedulesPage /></ProtectedRoute>} />
+            <Route path="/attendance/roster" element={<ProtectedRoute><RosterPlanning /></ProtectedRoute>} />
+            <Route path="/attendance/roster/reschedule" element={<ProtectedRoute><RosterReschedule /></ProtectedRoute>} />
+
+            {/* Leave routes (HR Batch 3) */}
+            <Route path="/leave/my-leaves" element={<ProtectedRoute><MyLeaves /></ProtectedRoute>} />
+            <Route path="/leave/apply" element={<ProtectedRoute><ApplyLeave /></ProtectedRoute>} />
+            <Route path="/leave/team" element={<ProtectedRoute><TeamLeaves /></ProtectedRoute>} />
+            <Route path="/leave/calendar" element={<ProtectedRoute><LeaveCalendar /></ProtectedRoute>} />
+            <Route path="/leave/admin/requests" element={<ProtectedRoute><AdminRequests /></ProtectedRoute>} />
+            <Route path="/leave/admin/balances" element={<ProtectedRoute><AdminBalances /></ProtectedRoute>} />
+            <Route path="/leave/admin/entitlements" element={<ProtectedRoute><AdminEntitlements /></ProtectedRoute>} />
+            <Route path="/leave/admin/types" element={<ProtectedRoute><AdminLeaveTypes /></ProtectedRoute>} />
+            <Route path="/leave/admin/comp-off" element={<ProtectedRoute><AdminCompOff /></ProtectedRoute>} />
+            <Route path="/leave/:id" element={<ProtectedRoute><LeaveDetail /></ProtectedRoute>} />
 
             {/* CRM module */}
             <Route path="/crm" element={<ProtectedRoute><CRMPipeline /></ProtectedRoute>} />
