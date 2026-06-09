@@ -90,6 +90,7 @@ import CRMBackupSettings from "@/pages/settings/CRMBackupSettings";
 import CRMDataSchema from "@/pages/settings/CRMDataSchema";
 import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
 import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
+import OdooImport from "@/pages/settings/OdooImport";
 
 import NotFound from "@/pages/NotFound";
 
@@ -173,6 +174,7 @@ const App = () => (
             <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
+            <Route path="/settings/odoo-import" element={<ProtectedRoute><OdooImport /></ProtectedRoute>} />
 
             {/* Placeholder routes */}
             <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
