@@ -318,6 +318,98 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          basic_salary: number
+          contract_document_url: string | null
+          contract_number: string | null
+          contract_type: string
+          conveyance_allowance: number
+          created_at: string
+          ctc: number
+          currency: string
+          da: number
+          employee_id: string
+          end_date: string | null
+          gross_salary: number | null
+          hra: number
+          id: string
+          medical_allowance: number
+          notice_period_days: number | null
+          other_allowances_json: Json
+          probation_period_months: number | null
+          signed_date: string | null
+          special_allowance: number
+          start_date: string
+          status: string
+          updated_at: string
+          working_days_per_week: number
+          working_hours_per_day: number
+        }
+        Insert: {
+          basic_salary?: number
+          contract_document_url?: string | null
+          contract_number?: string | null
+          contract_type?: string
+          conveyance_allowance?: number
+          created_at?: string
+          ctc?: number
+          currency?: string
+          da?: number
+          employee_id: string
+          end_date?: string | null
+          gross_salary?: number | null
+          hra?: number
+          id?: string
+          medical_allowance?: number
+          notice_period_days?: number | null
+          other_allowances_json?: Json
+          probation_period_months?: number | null
+          signed_date?: string | null
+          special_allowance?: number
+          start_date: string
+          status?: string
+          updated_at?: string
+          working_days_per_week?: number
+          working_hours_per_day?: number
+        }
+        Update: {
+          basic_salary?: number
+          contract_document_url?: string | null
+          contract_number?: string | null
+          contract_type?: string
+          conveyance_allowance?: number
+          created_at?: string
+          ctc?: number
+          currency?: string
+          da?: number
+          employee_id?: string
+          end_date?: string | null
+          gross_salary?: number | null
+          hra?: number
+          id?: string
+          medical_allowance?: number
+          notice_period_days?: number | null
+          other_allowances_json?: Json
+          probation_period_months?: number | null
+          signed_date?: string | null
+          special_allowance?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+          working_days_per_week?: number
+          working_hours_per_day?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_activities: {
         Row: {
           attachments: Json | null
@@ -1113,6 +1205,182 @@ export type Database = {
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          code: string
+          color: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          manager_id: string | null
+          name: string
+          parent_department_id: string | null
+        }
+        Insert: {
+          code: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name: string
+          parent_department_id?: string | null
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name?: string
+          parent_department_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          aadhaar_number: string | null
+          address: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          blood_group: string | null
+          created_at: string
+          date_of_birth: string | null
+          date_of_exit: string | null
+          date_of_joining: string | null
+          department_id: string | null
+          designation: string | null
+          display_name: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_code: string | null
+          employment_type: string
+          esi_number: string | null
+          exit_reason: string | null
+          full_name: string
+          gender: string | null
+          id: string
+          ifsc_code: string | null
+          marital_status: string | null
+          notes: string | null
+          pan_number: string | null
+          personal_phone: string | null
+          pf_number: string | null
+          phone: string | null
+          profile_photo_url: string | null
+          reports_to: string | null
+          status: string
+          uan_number: string | null
+          updated_at: string
+          user_id: string | null
+          work_location: string | null
+        }
+        Insert: {
+          aadhaar_number?: string | null
+          address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          blood_group?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          date_of_exit?: string | null
+          date_of_joining?: string | null
+          department_id?: string | null
+          designation?: string | null
+          display_name?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_code?: string | null
+          employment_type?: string
+          esi_number?: string | null
+          exit_reason?: string | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          ifsc_code?: string | null
+          marital_status?: string | null
+          notes?: string | null
+          pan_number?: string | null
+          personal_phone?: string | null
+          pf_number?: string | null
+          phone?: string | null
+          profile_photo_url?: string | null
+          reports_to?: string | null
+          status?: string
+          uan_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+          work_location?: string | null
+        }
+        Update: {
+          aadhaar_number?: string | null
+          address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          blood_group?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          date_of_exit?: string | null
+          date_of_joining?: string | null
+          department_id?: string | null
+          designation?: string | null
+          display_name?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_code?: string | null
+          employment_type?: string
+          esi_number?: string | null
+          exit_reason?: string | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          ifsc_code?: string | null
+          marital_status?: string | null
+          notes?: string | null
+          pan_number?: string | null
+          personal_phone?: string | null
+          pf_number?: string | null
+          phone?: string | null
+          profile_photo_url?: string | null
+          reports_to?: string | null
+          status?: string
+          uan_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+          work_location?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
