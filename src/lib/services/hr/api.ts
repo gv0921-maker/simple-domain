@@ -127,3 +127,5 @@ export async function deleteContract(id: string): Promise<void> {
 export * from './attendance';
 // Re-export Batch 3 leaves + roster service surface
 export * from './leaves';
+// Re-export Batch 4 payroll service surface
+export * from './payroll';

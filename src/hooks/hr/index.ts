@@ -467,3 +467,200 @@ export function useGrantCompOff() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'compOff'] }),
   });
 }
+
+// ============================================================
+// Batch 4 — Payroll
+// ============================================================
+export const payrollKeys = {
+  components: () => [...hrKeys.all, 'salaryComponents'] as const,
+  settings: () => [...hrKeys.all, 'payrollSettings'] as const,
+  taxSlabs: (fy: string, regime: string) => [...hrKeys.all, 'taxSlabs', fy, regime] as const,
+  loans: (empId?: string) => [...hrKeys.all, 'loans', empId ?? 'all'] as const,
+  advances: (empId?: string) => [...hrKeys.all, 'advances', empId ?? 'all'] as const,
+  periods: () => [...hrKeys.all, 'payrollPeriods'] as const,
+  period: (id: string) => [...hrKeys.all, 'payrollPeriod', id] as const,
+  periodPayslips: (id: string) => [...hrKeys.all, 'periodPayslips', id] as const,
+  payslip: (id: string) => [...hrKeys.all, 'payslip', id] as const,
+  employeePayslips: (empId: string) => [...hrKeys.all, 'employeePayslips', empId] as const,
+} as const;
+
+export const useSalaryComponents = () =>
+  useQuery({ queryKey: payrollKeys.components(), queryFn: hr.listSalaryComponents });
+export function useCreateSalaryComponent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.SalaryComponentInsert) => hr.createSalaryComponent(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.components() }),
+  });
+}
+export function useUpdateSalaryComponent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: hr.SalaryComponentUpdate }) =>
+      hr.updateSalaryComponent(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.components() }),
+  });
+}
+export function useDeleteSalaryComponent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteSalaryComponent(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.components() }),
+  });
+}
+
+export const usePayrollSettings = () =>
+  useQuery({ queryKey: payrollKeys.settings(), queryFn: hr.getActivePayrollSettings });
+export function useUpdatePayrollSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: hr.PayrollSettingsUpdate }) =>
+      hr.updatePayrollSettings(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.settings() }),
+  });
+}
+
+export const useTaxSlabs = (fy: string, regime: 'old' | 'new') =>
+  useQuery({
+    queryKey: payrollKeys.taxSlabs(fy, regime),
+    queryFn: () => hr.listTaxSlabs(fy, regime),
+    enabled: !!fy,
+  });
+export function useUpsertTaxSlab() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.TaxSlabInsert) => hr.upsertTaxSlab(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'taxSlabs'] }),
+  });
+}
+export function useDeleteTaxSlab() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.deleteTaxSlab(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'taxSlabs'] }),
+  });
+}
+
+export const useLoans = (empId?: string) =>
+  useQuery({ queryKey: payrollKeys.loans(empId), queryFn: () => hr.listLoans(empId) });
+export function useAddLoan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.EmployeeLoanInsert) => hr.addLoan(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'loans'] }),
+  });
+}
+export function useUpdateLoan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<hr.EmployeeLoan> }) =>
+      hr.updateLoan(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'loans'] }),
+  });
+}
+
+export const useAdvances = (empId?: string) =>
+  useQuery({ queryKey: payrollKeys.advances(empId), queryFn: () => hr.listAdvances(empId) });
+export function useAddAdvance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: hr.EmployeeAdvanceInsert) => hr.addAdvance(p),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'advances'] }),
+  });
+}
+export function useUpdateAdvance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<hr.EmployeeAdvance> }) =>
+      hr.updateAdvance(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'advances'] }),
+  });
+}
+
+export const usePayrollPeriods = () =>
+  useQuery({ queryKey: payrollKeys.periods(), queryFn: hr.listPayrollPeriods });
+export const usePayrollPeriod = (id: string | undefined) =>
+  useQuery({
+    queryKey: id ? payrollKeys.period(id) : ['noop'],
+    queryFn: () => hr.getPayrollPeriod(id!),
+    enabled: !!id,
+  });
+export const usePeriodPayslips = (id: string | undefined) =>
+  useQuery({
+    queryKey: id ? payrollKeys.periodPayslips(id) : ['noop'],
+    queryFn: () => hr.listPayslipsForPeriod(id!),
+    enabled: !!id,
+  });
+export const usePayslip = (id: string | undefined) =>
+  useQuery({
+    queryKey: id ? payrollKeys.payslip(id) : ['noop'],
+    queryFn: () => hr.getPayslip(id!),
+    enabled: !!id,
+  });
+export const useEmployeePayslips = (empId: string | undefined) =>
+  useQuery({
+    queryKey: empId ? payrollKeys.employeePayslips(empId) : ['noop'],
+    queryFn: () => hr.listPayslipsForEmployee(empId!),
+    enabled: !!empId,
+  });
+
+export function useCreatePayrollPeriod() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ month, year }: { month: number; year: number }) => hr.createPayrollPeriod(month, year),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.periods() }),
+  });
+}
+export function useProcessPayroll() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (periodId: string) => hr.processPayroll(periodId),
+    onSuccess: (_d, periodId) => {
+      qc.invalidateQueries({ queryKey: payrollKeys.periods() });
+      qc.invalidateQueries({ queryKey: payrollKeys.period(periodId) });
+      qc.invalidateQueries({ queryKey: payrollKeys.periodPayslips(periodId) });
+    },
+  });
+}
+export function useRecalculatePayslip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payslipId: string) => hr.recalculatePayslip(payslipId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...hrKeys.all, 'payslip'] });
+      qc.invalidateQueries({ queryKey: [...hrKeys.all, 'periodPayslips'] });
+    },
+  });
+}
+export function useFinalizePayslip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hr.finalizePayslip(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...hrKeys.all, 'payslip'] }),
+  });
+}
+export function useBulkFinalizePayroll() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (periodId: string) => hr.bulkFinalizePayroll(periodId),
+    onSuccess: (_d, periodId) => {
+      qc.invalidateQueries({ queryKey: payrollKeys.periodPayslips(periodId) });
+      qc.invalidateQueries({ queryKey: payrollKeys.period(periodId) });
+    },
+  });
+}
+export function useLockPayrollPeriod() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (periodId: string) => hr.lockPayrollPeriod(periodId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.periods() }),
+  });
+}
+export function useMarkPaid() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ periodId, date, reference }: { periodId: string; date: string; reference: string }) =>
+      hr.markPaid(periodId, date, reference),
+    onSuccess: () => qc.invalidateQueries({ queryKey: payrollKeys.periods() }),
+  });
+}

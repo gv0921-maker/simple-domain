@@ -1414,6 +1414,53 @@ export type Database = {
           },
         ]
       }
+      employee_advances: {
+        Row: {
+          advance_amount: number
+          created_at: string
+          deducted_amount: number
+          deduction_month: string
+          employee_id: string
+          id: string
+          notes: string | null
+          remaining_amount: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          advance_amount: number
+          created_at?: string
+          deducted_amount?: number
+          deduction_month: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          remaining_amount?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          advance_amount?: number
+          created_at?: string
+          deducted_amount?: number
+          deduction_month?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          remaining_amount?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_advances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_leave_entitlements: {
         Row: {
           allocated_days: number
@@ -1467,6 +1514,59 @@ export type Database = {
             columns: ["leave_type_id"]
             isOneToOne: false
             referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_loans: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          loan_amount: number
+          monthly_emi: number
+          notes: string | null
+          paid_emis: number
+          remaining_amount: number | null
+          start_month: string
+          status: string
+          total_emis: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          loan_amount: number
+          monthly_emi: number
+          notes?: string | null
+          paid_emis?: number
+          remaining_amount?: number | null
+          start_month: string
+          status?: string
+          total_emis: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          loan_amount?: number
+          monthly_emi?: number
+          notes?: string | null
+          paid_emis?: number
+          remaining_amount?: number | null
+          start_month?: string
+          status?: string
+          total_emis?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_loans_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -2404,6 +2504,271 @@ export type Database = {
           },
         ]
       }
+      payroll_periods: {
+        Row: {
+          created_at: string
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          paid_at: string | null
+          payment_reference: string | null
+          period_label: string
+          period_month: number
+          period_year: number
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          total_deductions: number
+          total_employees: number
+          total_employer_contrib: number
+          total_gross: number
+          total_net: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          period_label: string
+          period_month: number
+          period_year: number
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          total_deductions?: number
+          total_employees?: number
+          total_employer_contrib?: number
+          total_gross?: number
+          total_net?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          period_label?: string
+          period_month?: number
+          period_year?: number
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          total_deductions?: number
+          total_employees?: number
+          total_employer_contrib?: number
+          total_gross?: number
+          total_net?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payroll_settings: {
+        Row: {
+          created_at: string
+          esi_gross_threshold: number
+          esi_rate_employee: number
+          esi_rate_employer: number
+          financial_year: string
+          id: string
+          is_active: boolean
+          overtime_rate_multiplier: number
+          pf_basic_cap: number
+          pf_rate: number
+          pt_amount: number
+          pt_state: string
+          standard_deduction: number
+          tds_regime: string
+          updated_at: string
+          working_days_per_month: number
+          working_hours_per_day: number
+        }
+        Insert: {
+          created_at?: string
+          esi_gross_threshold?: number
+          esi_rate_employee?: number
+          esi_rate_employer?: number
+          financial_year: string
+          id?: string
+          is_active?: boolean
+          overtime_rate_multiplier?: number
+          pf_basic_cap?: number
+          pf_rate?: number
+          pt_amount?: number
+          pt_state?: string
+          standard_deduction?: number
+          tds_regime?: string
+          updated_at?: string
+          working_days_per_month?: number
+          working_hours_per_day?: number
+        }
+        Update: {
+          created_at?: string
+          esi_gross_threshold?: number
+          esi_rate_employee?: number
+          esi_rate_employer?: number
+          financial_year?: string
+          id?: string
+          is_active?: boolean
+          overtime_rate_multiplier?: number
+          pf_basic_cap?: number
+          pf_rate?: number
+          pt_amount?: number
+          pt_state?: string
+          standard_deduction?: number
+          tds_regime?: string
+          updated_at?: string
+          working_days_per_month?: number
+          working_hours_per_day?: number
+        }
+        Relationships: []
+      }
+      payslip_components: {
+        Row: {
+          amount: number
+          calculation_notes: string | null
+          created_at: string
+          id: string
+          payslip_id: string
+          salary_component_id: string
+          sort_order: number
+        }
+        Insert: {
+          amount?: number
+          calculation_notes?: string | null
+          created_at?: string
+          id?: string
+          payslip_id: string
+          salary_component_id: string
+          sort_order?: number
+        }
+        Update: {
+          amount?: number
+          calculation_notes?: string | null
+          created_at?: string
+          id?: string
+          payslip_id?: string
+          salary_component_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslip_components_payslip_id_fkey"
+            columns: ["payslip_id"]
+            isOneToOne: false
+            referencedRelation: "payslips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslip_components_salary_component_id_fkey"
+            columns: ["salary_component_id"]
+            isOneToOne: false
+            referencedRelation: "salary_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payslips: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          ctc_for_period: number
+          employee_id: string
+          employer_contributions: number
+          finalized_at: string | null
+          gross_earnings: number
+          id: string
+          lop_days: number
+          net_pay: number
+          notes: string | null
+          overtime_hours: number
+          paid_days: number | null
+          payment_date: string | null
+          payment_reference: string | null
+          payroll_period_id: string
+          payslip_number: string
+          payslip_pdf_url: string | null
+          status: string
+          total_deductions: number
+          total_working_days: number
+          updated_at: string
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          ctc_for_period?: number
+          employee_id: string
+          employer_contributions?: number
+          finalized_at?: string | null
+          gross_earnings?: number
+          id?: string
+          lop_days?: number
+          net_pay?: number
+          notes?: string | null
+          overtime_hours?: number
+          paid_days?: number | null
+          payment_date?: string | null
+          payment_reference?: string | null
+          payroll_period_id: string
+          payslip_number: string
+          payslip_pdf_url?: string | null
+          status?: string
+          total_deductions?: number
+          total_working_days?: number
+          updated_at?: string
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          ctc_for_period?: number
+          employee_id?: string
+          employer_contributions?: number
+          finalized_at?: string | null
+          gross_earnings?: number
+          id?: string
+          lop_days?: number
+          net_pay?: number
+          notes?: string | null
+          overtime_hours?: number
+          paid_days?: number | null
+          payment_date?: string | null
+          payment_reference?: string | null
+          payroll_period_id?: string
+          payslip_number?: string
+          payslip_pdf_url?: string | null
+          status?: string
+          total_deductions?: number
+          total_working_days?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslips_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslips_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslips_payroll_period_id_fkey"
+            columns: ["payroll_period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricelist_items: {
         Row: {
           category_id: string | null
@@ -3106,6 +3471,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      salary_components: {
+        Row: {
+          affects_lop: boolean
+          calculation_type: string
+          code: string
+          created_at: string
+          default_value: number
+          display_order: number
+          id: string
+          is_active: boolean
+          is_esi_applicable: boolean
+          is_pf_applicable: boolean
+          is_taxable: boolean
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          affects_lop?: boolean
+          calculation_type?: string
+          code: string
+          created_at?: string
+          default_value?: number
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_esi_applicable?: boolean
+          is_pf_applicable?: boolean
+          is_taxable?: boolean
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          affects_lop?: boolean
+          calculation_type?: string
+          code?: string
+          created_at?: string
+          default_value?: number
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_esi_applicable?: boolean
+          is_pf_applicable?: boolean
+          is_taxable?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       sales_fiscal_positions: {
         Row: {
@@ -4038,6 +4454,39 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           zip?: string | null
+        }
+        Relationships: []
+      }
+      tax_slabs: {
+        Row: {
+          created_at: string
+          financial_year: string
+          from_amount: number
+          id: string
+          rate_percentage: number
+          regime: string
+          slab_order: number
+          to_amount: number | null
+        }
+        Insert: {
+          created_at?: string
+          financial_year: string
+          from_amount: number
+          id?: string
+          rate_percentage: number
+          regime: string
+          slab_order: number
+          to_amount?: number | null
+        }
+        Update: {
+          created_at?: string
+          financial_year?: string
+          from_amount?: number
+          id?: string
+          rate_percentage?: number
+          regime?: string
+          slab_order?: number
+          to_amount?: number | null
         }
         Relationships: []
       }

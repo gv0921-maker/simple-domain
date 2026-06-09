@@ -13,6 +13,8 @@ import {
   useContractsByEmployee, useDeleteEmployee,
 } from '@/hooks/hr';
 import { useRangeAttendance } from '@/hooks/hr';
+import { useEmployeePayslips, useLoans, useAdvances } from '@/hooks/hr';
+import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 const fmtINR = (n: number) =>
@@ -47,6 +49,10 @@ export default function EmployeeDetail() {
     return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
   }, []);
   const { data: attendance = [] } = useRangeAttendance(id ? [id] : [], ninetyDays.start, ninetyDays.end);
+  const { data: payslips = [] } = useEmployeePayslips(id);
+  const { data: loans = [] } = useLoans(id);
+  const { data: advances = [] } = useAdvances(id);
+  const activeContract = contracts.find((c) => c.status === 'active') ?? contracts[0];
   const attStats = useMemo(() => {
     const work = attendance.filter((s) => s.session_type === 'work');
     const brk = attendance.filter((s) => s.session_type === 'break');
@@ -117,6 +123,7 @@ export default function EmployeeDetail() {
             <TabsTrigger value="contracts">Contracts</TabsTrigger>
             <TabsTrigger value="reports">Reports / Reportees</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="payroll">Payroll</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="mt-4">
@@ -228,6 +235,63 @@ export default function EmployeeDetail() {
               <Info label="Total Break" value={`${Math.floor(attStats.breakMin / 60)}h ${attStats.breakMin % 60}m`} />
               <Info label="Sessions" value={String(attStats.sessions)} />
             </Card>
+          </TabsContent>
+
+          <TabsContent value="payroll" className="mt-4 space-y-4">
+            <Card className="p-6">
+              <h3 className="font-semibold mb-3">Salary Breakup (Active Contract)</h3>
+              {!activeContract ? (
+                <p className="text-sm text-muted-foreground">No active contract.</p>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-4 text-sm">
+                  <Info label="Basic" value={fmtINR(Number(activeContract.basic_salary || 0))} />
+                  <Info label="HRA" value={fmtINR(Number(activeContract.hra || 0))} />
+                  <Info label="DA" value={fmtINR(Number(activeContract.da || 0))} />
+                  <Info label="Conveyance" value={fmtINR(Number(activeContract.conveyance_allowance || 0))} />
+                  <Info label="Medical" value={fmtINR(Number(activeContract.medical_allowance || 0))} />
+                  <Info label="Special" value={fmtINR(Number(activeContract.special_allowance || 0))} />
+                  <Info label="Gross" value={fmtINR(Number(activeContract.gross_salary || 0))} />
+                  <Info label="CTC" value={fmtINR(Number(activeContract.ctc || 0))} />
+                </div>
+              )}
+            </Card>
+            <Card className="p-6">
+              <h3 className="font-semibold mb-3">Last 6 Payslips</h3>
+              {payslips.length === 0 ? <p className="text-sm text-muted-foreground">No payslips yet.</p> : (
+                <div className="space-y-2">
+                  {payslips.slice(0, 6).map((p: any) => (
+                    <Link key={p.id} to={`/payroll/payslips/${p.id}`} className="flex justify-between p-2 rounded border hover:bg-accent">
+                      <span>{p.payroll_periods?.period_label}</span>
+                      <span className="font-medium">{fmtINR(Number(p.net_pay))}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </Card>
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Active Loans</h3>
+                {loans.filter((l) => l.status === 'active').length === 0 ? <p className="text-sm text-muted-foreground">None.</p> : (
+                  loans.filter((l) => l.status === 'active').map((l) => (
+                    <div key={l.id} className="flex justify-between text-sm py-1">
+                      <span>EMI {fmtINR(Number(l.monthly_emi))} · {l.paid_emis}/{l.total_emis}</span>
+                      <span>Rem {fmtINR(Number(l.remaining_amount))}</span>
+                    </div>
+                  ))
+                )}
+              </Card>
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Pending Advances</h3>
+                {advances.filter((a) => a.status === 'pending').length === 0 ? <p className="text-sm text-muted-foreground">None.</p> : (
+                  advances.filter((a) => a.status === 'pending').map((a) => (
+                    <div key={a.id} className="flex justify-between text-sm py-1">
+                      <span>{a.deduction_month}</span>
+                      <span>{fmtINR(Number(a.remaining_amount))}</span>
+                    </div>
+                  ))
+                )}
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

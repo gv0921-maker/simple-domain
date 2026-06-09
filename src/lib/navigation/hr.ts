@@ -22,4 +22,11 @@ export const HR_NAV = [
   { label: 'Leave Entitlements (Admin)', href: '/leave/admin/entitlements' },
   { label: 'Leave Types (Admin)', href: '/leave/admin/types' },
   { label: 'Comp Off (Admin)', href: '/leave/admin/comp-off' },
+  { label: 'Payroll Dashboard', href: '/payroll' },
+  { label: 'Payroll Periods', href: '/payroll/periods' },
+  { label: 'My Payslips', href: '/payroll/my-payslips' },
+  { label: 'Components (Admin)', href: '/payroll/admin/components' },
+  { label: 'Payroll Settings (Admin)', href: '/payroll/admin/settings' },
+  { label: 'Loans (Admin)', href: '/payroll/admin/loans' },
+  { label: 'Advances (Admin)', href: '/payroll/admin/advances' },
 ];
