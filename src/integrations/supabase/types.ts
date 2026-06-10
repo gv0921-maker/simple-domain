@@ -931,6 +931,117 @@ export type Database = {
           },
         ]
       }
+      chat_message_attachments: {
+        Row: {
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          height: number | null
+          id: string
+          message_id: string
+          mime_type: string | null
+          thumbnail_url: string | null
+          uploaded_at: string
+          width: number | null
+        }
+        Insert: {
+          file_name: string
+          file_size?: number
+          file_type: string
+          file_url: string
+          height?: number | null
+          id?: string
+          message_id: string
+          mime_type?: string | null
+          thumbnail_url?: string | null
+          uploaded_at?: string
+          width?: number | null
+        }
+        Update: {
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          height?: number | null
+          id?: string
+          message_id?: string
+          mime_type?: string | null
+          thumbnail_url?: string | null
+          uploaded_at?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_message_mentions: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          mentioned_user_id: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          mentioned_user_id: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          mentioned_user_id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_mentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_message_reads: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           body: string
@@ -941,7 +1052,10 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_edited: boolean
+          last_thread_reply_at: string | null
           message_type: string
+          parent_message_id: string | null
+          thread_reply_count: number
           updated_at: string
           user_id: string | null
         }
@@ -954,7 +1068,10 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_edited?: boolean
+          last_thread_reply_at?: string | null
           message_type?: string
+          parent_message_id?: string | null
+          thread_reply_count?: number
           updated_at?: string
           user_id?: string | null
         }
@@ -967,7 +1084,10 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_edited?: boolean
+          last_thread_reply_at?: string | null
           message_type?: string
+          parent_message_id?: string | null
+          thread_reply_count?: number
           updated_at?: string
           user_id?: string | null
         }
@@ -977,6 +1097,13 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
