@@ -92,6 +92,7 @@ const ROUTE_MODULE_PREFIXES: Array<{ prefix: string; module: ModuleName }> = [
   { prefix: '/payroll', module: 'hr' },
   { prefix: '/appraisals', module: 'hr' },
   { prefix: '/discuss', module: 'discuss' },
+  { prefix: '/chat', module: 'discuss' },
   { prefix: '/projects', module: 'projects' },
   { prefix: '/pos', module: 'pos' },
   { prefix: '/settings', module: 'settings' },
