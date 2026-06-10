@@ -459,19 +459,19 @@ export async function fetchResourcePreview(
   try {
     switch (type) {
       case 'sales_order': {
-        const { data } = await supabase.from('sales_orders').select('id, name, status, partner_name, amount_total').eq('id', id).maybeSingle();
+        const { data } = await supabase.from('sales_orders').select('id, reference, status, customer_name').eq('id', id).maybeSingle();
         if (!data) return null;
-        return { label: data.name ?? `Order ${id.slice(0,8)}`, subtitle: data.partner_name ?? undefined, status: data.status ?? undefined };
+        return { label: data.reference ?? `Order ${id.slice(0,8)}`, subtitle: data.customer_name ?? undefined, status: data.status ?? undefined };
       }
       case 'quotation': {
-        const { data } = await supabase.from('quotations').select('id, name, status, partner_name').eq('id', id).maybeSingle();
+        const { data } = await supabase.from('quotations').select('id, reference, status, customer_name').eq('id', id).maybeSingle();
         if (!data) return null;
-        return { label: data.name ?? `Quotation ${id.slice(0,8)}`, subtitle: data.partner_name ?? undefined, status: data.status ?? undefined };
+        return { label: data.reference ?? `Quotation ${id.slice(0,8)}`, subtitle: data.customer_name ?? undefined, status: data.status ?? undefined };
       }
       case 'invoice': {
-        const { data } = await supabase.from('invoices').select('id, invoice_number, status, customer_name').eq('id', id).maybeSingle();
+        const { data } = await supabase.from('invoices').select('id, reference, status').eq('id', id).maybeSingle();
         if (!data) return null;
-        return { label: data.invoice_number ?? `Invoice ${id.slice(0,8)}`, subtitle: (data as any).customer_name ?? undefined, status: data.status ?? undefined };
+        return { label: data.reference ?? `Invoice ${id.slice(0,8)}`, status: data.status ?? undefined };
       }
       case 'customer': {
         const { data } = await supabase.from('customers').select('id, name, email').eq('id', id).maybeSingle();
@@ -484,9 +484,9 @@ export async function fetchResourcePreview(
         return { label: data.name, subtitle: data.sku ?? undefined };
       }
       case 'work_order': {
-        const { data } = await supabase.from('work_orders').select('id, name, status').eq('id', id).maybeSingle();
+        const { data } = await supabase.from('work_orders').select('id, reference, state').eq('id', id).maybeSingle();
         if (!data) return null;
-        return { label: (data as any).name ?? `WO ${id.slice(0,8)}`, status: data.status ?? undefined };
+        return { label: data.reference ?? `WO ${id.slice(0,8)}`, status: data.state ?? undefined };
       }
       case 'employee': {
         const { data } = await supabase.from('employees').select('id, full_name, display_name, job_title').eq('id', id).maybeSingle();
