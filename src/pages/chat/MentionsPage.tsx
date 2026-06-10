@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AtSign, CheckCheck } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -10,10 +11,10 @@ import { useUserMentions, useMarkMentionRead, useMarkAllMentionsRead, useDirecto
 import { cn } from '@/lib/utils';
 import { MessageBody } from '@/components/chat/MessageBody';
 
-export default function MentionsPage() {
+function MentionsPageInner() {
   const navigate = useNavigate();
   const [onlyUnread, setOnlyUnread] = useState(false);
-  const { data: mentions = [], isLoading } = useUserMentions(onlyUnread ? false : undefined);
+  const { data: mentions = [], isLoading, error } = useUserMentions(onlyUnread ? false : undefined);
   const markRead = useMarkMentionRead();
   const markAll = useMarkAllMentionsRead();
   const { data: directory = [] } = useDirectory();
@@ -40,8 +41,19 @@ export default function MentionsPage() {
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
           {isLoading && <div className="text-sm text-muted-foreground py-12 text-center">Loading…</div>}
-          {!isLoading && mentions.length === 0 && (
-            <div className="text-sm text-muted-foreground py-12 text-center">No mentions</div>
+          {!isLoading && error && (
+            <div className="text-sm text-destructive py-12 text-center">
+              Couldn't load mentions: {(error as Error).message}
+            </div>
+          )}
+          {!isLoading && !error && mentions.length === 0 && (
+            <div className="flex flex-col items-center justify-center text-center py-16 gap-2">
+              <AtSign className="h-10 w-10 text-muted-foreground/60" />
+              <p className="text-sm font-medium">You're all caught up</p>
+              <p className="text-xs text-muted-foreground">
+                When someone @mentions you in a channel, it'll show up here.
+              </p>
+            </div>
           )}
           <ul className="space-y-2">
             {mentions.map((row) => {
@@ -83,5 +95,13 @@ export default function MentionsPage() {
         </ScrollArea>
       </div>
     </AppLayout>
+  );
+}
+
+export default function MentionsPage() {
+  return (
+    <ErrorBoundary label="MentionsPage">
+      <MentionsPageInner />
+    </ErrorBoundary>
   );
 }
