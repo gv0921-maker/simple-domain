@@ -11,6 +11,7 @@ import {
   useFinalizePayslip, useBulkFinalizePayroll, useLockPayrollPeriod, useMarkPaid,
 } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
+import { MobileScrollHint } from '@/components/layout/MobileScrollHint';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
@@ -47,13 +48,13 @@ export default function PayrollPeriodDetail() {
 
   return (
     <AppLayout title={`Payroll · ${period.period_label}`} moduleNav={PAYROLL_NAV}>
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between items-center">
+      <div className="p-4 md:p-6 space-y-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
           <div className="flex gap-2 items-center">
             <Badge>{period.status}</Badge>
             <span className="text-sm text-muted-foreground">{period.total_employees} employees</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={exportCSV}>Export CSV</Button>
             {!locked && (
               <Button onClick={async () => {
@@ -95,8 +96,9 @@ export default function PayrollPeriodDetail() {
           </Card>
         )}
 
-        <Card>
-          <table className="w-full text-sm">
+        <MobileScrollHint />
+        <Card className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-md">
+          <table className="w-full text-sm min-w-[720px]">
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left p-3">Employee</th>

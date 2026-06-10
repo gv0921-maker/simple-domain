@@ -16,7 +16,7 @@ export function AppLayout({ children, title, subtitle, moduleNav }: AppLayoutPro
     <div className="min-h-screen flex flex-col bg-background">
       <OfflineIndicator />
       <TopNav title={title} subtitle={subtitle} moduleNav={moduleNav} />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
       <MobileBottomTabs />
       <InstallPWAPrompt />
     </div>

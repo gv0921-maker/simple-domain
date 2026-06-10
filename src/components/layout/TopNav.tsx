@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   Home,
+  ChevronDown,
 } from 'lucide-react';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { NotificationsBell } from '@/components/layout/NotificationsBell';
@@ -124,6 +125,7 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
 
         {/* Module sub-navigation inline */}
         {filteredModuleNav.length > 0 && (
+          <>
           <nav className="hidden md:flex items-center gap-1 ml-2">
             {filteredModuleNav.map((item) => {
               const isActive = location.pathname === item.href;
@@ -143,6 +145,37 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
               );
             })}
           </nav>
+          {/* Mobile module nav dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden ml-1 gap-1 h-8 px-2 text-sm font-medium max-w-[140px]"
+              >
+                <span className="truncate">
+                  {filteredModuleNav.find((i) => i.href === location.pathname)?.label ??
+                    filteredModuleNav[0]?.label}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 max-h-[70vh] overflow-y-auto">
+              {filteredModuleNav.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <DropdownMenuItem
+                    key={item.href}
+                    onClick={() => navigate(item.href)}
+                    className={cn(isActive && 'bg-accent font-medium')}
+                  >
+                    {item.label}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          </>
         )}
       </div>
 
