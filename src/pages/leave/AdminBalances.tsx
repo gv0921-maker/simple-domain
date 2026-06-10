@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useBalances, useEmployees, useLeaveTypes, useUpsertBalance, useCarryForward } from '@/hooks/hr';
 import { toast } from 'sonner';
+import { MobileScrollHint } from '@/components/layout/MobileScrollHint';
 
 export default function AdminBalances() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -28,8 +29,9 @@ export default function AdminBalances() {
             Carry forward {year} → {year + 1}
           </Button>
         </div>
-        <Card className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <MobileScrollHint />
+        <Card className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-md">
+          <table className="w-full text-xs min-w-[640px]">
             <thead className="bg-muted/40">
               <tr><th className="text-left p-2">Employee</th>
                 {types.map((t) => <th key={t.id} className="text-left p-2">{t.code}</th>)}</tr>
