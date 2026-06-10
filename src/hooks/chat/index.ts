@@ -10,6 +10,12 @@ export const chatKeys = {
   members: (id: string) => [...chatKeys.all, 'members', id] as const,
   messages: (id: string) => [...chatKeys.all, 'messages', id] as const,
   directory: () => [...chatKeys.all, 'directory'] as const,
+  attachments: (id: string) => [...chatKeys.all, 'attachments', id] as const,
+  mentionsForMsgs: (ids: string[]) => [...chatKeys.all, 'msg-mentions', ids.join(',')] as const,
+  thread: (parentId: string) => [...chatKeys.all, 'thread', parentId] as const,
+  reads: (msgId: string) => [...chatKeys.all, 'reads', msgId] as const,
+  myMentions: (isRead?: boolean) => [...chatKeys.all, 'my-mentions', isRead ?? 'all'] as const,
+  unreadMentions: () => [...chatKeys.all, 'unread-mentions'] as const,
 };
 
 export function useDirectory() {
@@ -162,3 +168,137 @@ export function useTotalUnread(): number {
 }
 
 export { chat };
+
+export function useMessageAttachments(channelId: string | undefined, messageIds: string[]) {
+  return useQuery({
+    queryKey: [...chatKeys.attachments(channelId ?? '__none__'), messageIds.join(',')],
+    queryFn: () => chat.fetchAttachmentsForMessages(messageIds),
+    enabled: !!channelId && messageIds.length > 0,
+  });
+}
+
+export function useMessageMentions(channelId: string | undefined, messageIds: string[]) {
+  return useQuery({
+    queryKey: [...chatKeys.all, 'mentions-batch', channelId ?? '__none__', messageIds.join(',')],
+    queryFn: () => chat.fetchMentionsForMessages(messageIds),
+    enabled: !!channelId && messageIds.length > 0,
+  });
+}
+
+export function useThreadReplies(parentMessageId: string | undefined) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: chatKeys.thread(parentMessageId ?? '__none__'),
+    queryFn: () => chat.fetchThreadReplies(parentMessageId!),
+    enabled: !!parentMessageId,
+  });
+
+  useEffect(() => {
+    if (!parentMessageId) return;
+    const ch = supabase
+      .channel(`rt-chat-thread-${parentMessageId}-${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_messages', filter: `parent_message_id=eq.${parentMessageId}` },
+        () => qc.invalidateQueries({ queryKey: chatKeys.thread(parentMessageId) }),
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [parentMessageId, qc]);
+
+  return query;
+}
+
+export function useSendThreadReply(parentMessageId: string | undefined, channelId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (opts: { body: string; attachments?: chat.PendingAttachment[]; mentionedUserIds?: string[] }) =>
+      chat.sendMessageRich({
+        channelId: channelId!,
+        body: opts.body,
+        attachments: opts.attachments,
+        parentMessageId: parentMessageId!,
+        mentionedUserIds: opts.mentionedUserIds,
+      }),
+    onSuccess: () => {
+      if (parentMessageId) qc.invalidateQueries({ queryKey: chatKeys.thread(parentMessageId) });
+      if (channelId) qc.invalidateQueries({ queryKey: chatKeys.messages(channelId) });
+    },
+  });
+}
+
+export function useSendRichMessage(channelId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (opts: { body: string; attachments?: chat.PendingAttachment[]; mentionedUserIds?: string[] }) =>
+      chat.sendMessageRich({
+        channelId: channelId!,
+        body: opts.body,
+        attachments: opts.attachments,
+        mentionedUserIds: opts.mentionedUserIds,
+      }),
+    onSuccess: () => channelId && qc.invalidateQueries({ queryKey: chatKeys.messages(channelId) }),
+  });
+}
+
+export function useUploadAttachment(channelId: string | undefined) {
+  return useMutation({
+    mutationFn: (file: File) => chat.uploadAttachment(file, channelId!),
+  });
+}
+
+export function useMarkMessageRead() {
+  return useMutation({
+    mutationFn: (messageId: string) => chat.markMessageRead(messageId),
+  });
+}
+
+export function useMessageReads(messageId: string | undefined) {
+  return useQuery({
+    queryKey: chatKeys.reads(messageId ?? '__none__'),
+    queryFn: () => chat.fetchMessageReads(messageId!),
+    enabled: !!messageId,
+  });
+}
+
+export function useUserMentions(isRead?: boolean) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: chatKeys.myMentions(isRead),
+    queryFn: () => chat.fetchUserMentions(isRead),
+  });
+  useEffect(() => {
+    const ch = supabase
+      .channel(`rt-chat-my-mentions-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_message_mentions' }, () => {
+        qc.invalidateQueries({ queryKey: chatKeys.all });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [qc]);
+  return query;
+}
+
+export function useUnreadMentionCount() {
+  return useQuery({
+    queryKey: chatKeys.unreadMentions(),
+    queryFn: () => chat.fetchUnreadMentionCount(),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useMarkMentionRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (mentionId: string) => chat.markMentionRead(mentionId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: chatKeys.all }),
+  });
+}
+
+export function useMarkAllMentionsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => chat.markAllMentionsRead(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: chatKeys.all }),
+  });
+}
