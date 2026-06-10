@@ -38,7 +38,7 @@ export function useChannels() {
 
 export function useChannel(channelId: string | undefined) {
   return useQuery({
-    queryKey: channelId ? chatKeys.channel(channelId) : ['noop'],
+    queryKey: chatKeys.channel(channelId ?? '__none__'),
     queryFn: () => chat.fetchChannel(channelId!),
     enabled: !!channelId,
   });
@@ -46,7 +46,7 @@ export function useChannel(channelId: string | undefined) {
 
 export function useChannelMembers(channelId: string | undefined) {
   return useQuery({
-    queryKey: channelId ? chatKeys.members(channelId) : ['noop'],
+    queryKey: chatKeys.members(channelId ?? '__none__'),
     queryFn: () => chat.fetchChannelMembers(channelId!),
     enabled: !!channelId,
   });
@@ -55,7 +55,7 @@ export function useChannelMembers(channelId: string | undefined) {
 export function useMessages(channelId: string | undefined) {
   const qc = useQueryClient();
   const query = useQuery({
-    queryKey: channelId ? chatKeys.messages(channelId) : ['noop'],
+    queryKey: chatKeys.messages(channelId ?? '__none__'),
     queryFn: () => chat.fetchMessages(channelId!),
     enabled: !!channelId,
   });
