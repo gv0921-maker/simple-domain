@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Edit, FileText, Trash2, Users } from 'lucide-react';
+import { ShareToChatButton } from '@/components/chat/ShareToChatDialog';
 import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import {
   useEmployee, useEmployees, useDepartments,
@@ -87,6 +88,7 @@ export default function EmployeeDetail() {
             <ArrowLeft className="h-4 w-4" /> Directory
           </Button>
           <div className="flex gap-2">
+            <ShareToChatButton resourceType="employee" resourceId={id!} resourceLabel={employee.full_name} />
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/employees/${id}/edit`)}>
               <Edit className="h-4 w-4" /> Edit
             </Button>
