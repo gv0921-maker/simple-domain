@@ -485,8 +485,8 @@ export function OrderLinesTable<L extends AnyLine>({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="w-full">
-          <table className="w-full table-fixed border-collapse">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[640px] table-fixed border-collapse">
             <colgroup>
               <col style={{ width: 24 }} />
               <col />
