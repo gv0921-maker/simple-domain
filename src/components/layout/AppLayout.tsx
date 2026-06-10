@@ -17,7 +17,7 @@ export function AppLayout({ children, title, subtitle, moduleNav }: AppLayoutPro
       <OfflineIndicator />
       <TopNav title={title} subtitle={subtitle} />
       {moduleNav && moduleNav.length > 0 && <ModuleNav items={moduleNav} />}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
+      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">{children}</main>
       <InstallPWAPrompt />
     </div>
   );
