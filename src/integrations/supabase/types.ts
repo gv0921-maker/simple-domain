@@ -5409,6 +5409,7 @@ export type Database = {
         Returns: boolean
       }
       can_write_inventory: { Args: never; Returns: boolean }
+      get_current_employee_id: { Args: never; Returns: string }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -5446,6 +5447,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_app_admin: { Args: { _user_id: string }; Returns: boolean }
       is_employee_self: { Args: { _employee_id: string }; Returns: boolean }
+      is_manager_of: { Args: { target_employee_id: string }; Returns: boolean }
       is_reviewer_for: { Args: { _reviewer_id: string }; Returns: boolean }
       portal_get_quotation: {
         Args: { _id: string; _token: string }
