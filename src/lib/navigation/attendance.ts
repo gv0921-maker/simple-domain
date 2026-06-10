@@ -4,6 +4,7 @@ export const ATTENDANCE_NAV = [
   { label: 'My Attendance', href: '/attendance/my' },
   { label: 'Team Attendance', href: '/attendance/team' },
   { label: 'Admin', href: '/attendance/admin' },
+  { label: 'Import', href: '/attendance/admin/import' },
   { label: 'Locations', href: '/attendance/locations' },
   { label: 'Holidays', href: '/attendance/holidays' },
   { label: 'Work Schedules', href: '/attendance/work-schedules' },
