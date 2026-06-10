@@ -10,10 +10,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MessageBody, bodyMentionsMe } from './MessageBody';
 import { AttachmentList } from './AttachmentList';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, MoreHorizontal, Copy, Pencil, Trash2, Eye } from 'lucide-react';
+import { MessageSquare, Copy, Pencil, Trash2, Eye, Pin, PinOff } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { usePinMessage, useUnpinMessage } from '@/hooks/chat';
+import { ResourceCard } from './ResourceCard';
+import type { ResourceType } from '@/lib/services/chat/api';
 
 function initials(name: string) {
   return name.split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
@@ -40,11 +43,27 @@ export function MessageList({
 
   const editMessage = useEditMessage(channelId);
   const deleteMessage = useDeleteMessage(channelId);
+  const pinMutation = usePinMessage();
+  const unpinMutation = useUnpinMessage();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages.length]);
+
+  // Jump-to-message via URL hash (#message-:id)
+  useEffect(() => {
+    const hash = window.location.hash;
+    const m = hash.match(/^#message-(.+)$/);
+    if (!m) return;
+    const id = m[1];
+    const el = scrollRef.current?.querySelector<HTMLElement>(`[data-message-id="${id}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-primary');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary'), 2000);
+    }
   }, [messages.length]);
 
   useEffect(() => {
@@ -156,11 +175,23 @@ export function MessageList({
                         </div>
                       ) : (
                         <>
+                          {m.is_pinned && (
+                            <span className="absolute -left-5 top-1.5 text-primary" title="Pinned">
+                              <Pin className="h-3.5 w-3.5" />
+                            </span>
+                          )}
                           <MessageBody body={m.body} />
                           {m.is_edited && !m.is_deleted && (
                             <span className={cn('ml-2 text-[10px]', mine ? 'text-primary-foreground/70' : 'text-muted-foreground')}>(edited)</span>
                           )}
                           {atts.length > 0 && <AttachmentList items={atts} />}
+                          {m.linked_resource_type && m.linked_resource_id && (
+                            <ResourceCard
+                              resourceType={m.linked_resource_type as ResourceType}
+                              resourceId={m.linked_resource_id}
+                              fallbackLabel={m.linked_resource_label}
+                            />
+                          )}
                           <MessageFooter
                             messageId={m.id}
                             replyCount={m.thread_reply_count ?? 0}
@@ -184,6 +215,17 @@ export function MessageList({
                           <Button size="icon" variant="ghost" className="h-7 w-7" title="Copy"
                             onClick={() => { void navigator.clipboard.writeText(m.body); toast({ title: 'Copied' }); }}>
                             <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" title={m.is_pinned ? 'Unpin' : 'Pin'}
+                            onClick={async () => {
+                              try {
+                                if (m.is_pinned) { await unpinMutation.mutateAsync(m.id); toast({ title: 'Unpinned' }); }
+                                else { await pinMutation.mutateAsync(m.id); toast({ title: 'Pinned' }); }
+                              } catch (e: any) {
+                                toast({ title: 'Failed', description: e?.message, variant: 'destructive' });
+                              }
+                            }}>
+                            {m.is_pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
                           </Button>
                           {canEdit && (
                             <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit"

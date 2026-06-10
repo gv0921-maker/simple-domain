@@ -8,6 +8,11 @@ export type ChatMessage = Database['public']['Tables']['chat_messages']['Row'];
 export type ChatAttachment = Database['public']['Tables']['chat_message_attachments']['Row'];
 export type ChatMention = Database['public']['Tables']['chat_message_mentions']['Row'];
 export type ChatRead = Database['public']['Tables']['chat_message_reads']['Row'];
+export type ChatNotification = Database['public']['Tables']['chat_notifications']['Row'];
+
+export type ResourceType =
+  | 'sales_order' | 'quotation' | 'invoice' | 'customer'
+  | 'product' | 'work_order' | 'purchase_order' | 'employee';
 
 export const CHAT_BUCKET = 'chat-attachments';
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
@@ -293,6 +298,251 @@ export async function fetchUnreadMentionCount(): Promise<number> {
     .from('chat_message_mentions')
     .select('id', { count: 'exact', head: true })
     .eq('mentioned_user_id', user.id)
+    .eq('is_read', false);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+// ---------------- Batch 3: Search ----------------
+
+export interface MessageSearchResult {
+  message: ChatMessage;
+  channel: ChatChannel | null;
+  sender_name: string | null;
+  snippet: string;
+}
+
+export async function searchMessages(
+  query: string,
+  channelId: string | null = null,
+  limit = 30,
+  offset = 0,
+): Promise<MessageSearchResult[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  let req = supabase
+    .from('chat_messages')
+    .select('*, channel:chat_channels(*)')
+    .textSearch('body_tsv', q, { type: 'websearch', config: 'english' })
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (channelId) req = req.eq('channel_id', channelId);
+
+  const { data, error } = await req;
+  if (error) throw error;
+
+  const dir = await fetchDirectory();
+  const nameById = new Map(dir.map((d) => [d.user_id, d.name]));
+  const terms = q.split(/\s+/).filter(Boolean);
+
+  return (data ?? []).map((row: any) => {
+    const body: string = row.body ?? '';
+    let snippet = body;
+    // build a snippet around the first match
+    const lower = body.toLowerCase();
+    let pos = -1;
+    for (const t of terms) {
+      const i = lower.indexOf(t.toLowerCase());
+      if (i >= 0 && (pos === -1 || i < pos)) pos = i;
+    }
+    if (pos > 60) snippet = '…' + body.slice(pos - 40);
+    if (snippet.length > 200) snippet = snippet.slice(0, 200) + '…';
+    return {
+      message: { ...row, channel: undefined } as ChatMessage,
+      channel: row.channel ?? null,
+      sender_name: row.user_id ? nameById.get(row.user_id) ?? null : null,
+      snippet,
+    };
+  });
+}
+
+export function highlightSnippet(text: string, query: string): Array<{ text: string; hit: boolean }> {
+  const terms = query.trim().split(/\s+/).filter((t) => t.length >= 2);
+  if (terms.length === 0) return [{ text, hit: false }];
+  const re = new RegExp('(' + terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'ig');
+  const parts: Array<{ text: string; hit: boolean }> = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) parts.push({ text: text.slice(last, m.index), hit: false });
+    parts.push({ text: m[0], hit: true });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ text: text.slice(last), hit: false });
+  return parts;
+}
+
+// ---------------- Batch 3: Pinned messages ----------------
+
+export async function pinMessage(messageId: string): Promise<ChatMessage> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not signed in');
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .update({ is_pinned: true, pinned_by: user.id, pinned_at: new Date().toISOString() })
+    .eq('id', messageId)
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function unpinMessage(messageId: string): Promise<ChatMessage> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .update({ is_pinned: false, pinned_by: null, pinned_at: null })
+    .eq('id', messageId)
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchPinnedMessages(channelId: string): Promise<ChatMessage[]> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .eq('channel_id', channelId)
+    .eq('is_pinned', true)
+    .order('pinned_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---------------- Batch 3: Resource-linked messages ----------------
+
+export async function sendMessageWithResource(opts: {
+  channelId: string;
+  body: string;
+  resourceType: ResourceType;
+  resourceId: string;
+  resourceLabel: string;
+}): Promise<ChatMessage> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not signed in');
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .insert({
+      channel_id: opts.channelId,
+      user_id: user.id,
+      body: opts.body,
+      message_type: 'resource',
+      linked_resource_type: opts.resourceType,
+      linked_resource_id: opts.resourceId,
+      linked_resource_label: opts.resourceLabel,
+    })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+export function resolveResourceLink(type: ResourceType, id: string): string {
+  switch (type) {
+    case 'sales_order': return `/sales/orders/${id}`;
+    case 'quotation': return `/sales/quotations/${id}`;
+    case 'invoice': return `/invoicing/invoices/${id}`;
+    case 'customer': return `/sales/customers/${id}/edit`;
+    case 'product': return `/inventory/products/${id}`;
+    case 'work_order': return `/manufacturing/work-orders/${id}`;
+    case 'employee': return `/employees/${id}`;
+    case 'purchase_order': return `/`;
+    default: return '/';
+  }
+}
+
+export async function fetchResourcePreview(
+  type: ResourceType, id: string
+): Promise<{ label: string; subtitle?: string; status?: string } | null> {
+  try {
+    switch (type) {
+      case 'sales_order': {
+        const { data } = await supabase.from('sales_orders').select('id, reference, status, customer_name').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: data.reference ?? `Order ${id.slice(0,8)}`, subtitle: data.customer_name ?? undefined, status: data.status ?? undefined };
+      }
+      case 'quotation': {
+        const { data } = await supabase.from('quotations').select('id, reference, status, customer_name').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: data.reference ?? `Quotation ${id.slice(0,8)}`, subtitle: data.customer_name ?? undefined, status: data.status ?? undefined };
+      }
+      case 'invoice': {
+        const { data } = await supabase.from('invoices').select('id, reference, status').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: data.reference ?? `Invoice ${id.slice(0,8)}`, status: data.status ?? undefined };
+      }
+      case 'customer': {
+        const { data } = await supabase.from('customers').select('id, name, email').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: data.name, subtitle: data.email ?? undefined };
+      }
+      case 'product': {
+        const { data } = await supabase.from('products').select('id, name, sku').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: data.name, subtitle: data.sku ?? undefined };
+      }
+      case 'work_order': {
+        const { data } = await supabase.from('work_orders').select('id, reference, state').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: data.reference ?? `WO ${id.slice(0,8)}`, status: data.state ?? undefined };
+      }
+      case 'employee': {
+        const { data } = await supabase.from('employees').select('id, full_name, display_name, job_title').eq('id', id).maybeSingle();
+        if (!data) return null;
+        return { label: (data as any).display_name || (data as any).full_name, subtitle: (data as any).job_title ?? undefined };
+      }
+      default: return null;
+    }
+  } catch { return null; }
+}
+
+// ---------------- Batch 3: Notifications ----------------
+
+export async function fetchUserNotifications(
+  isReadFilter?: boolean, limit = 50
+): Promise<ChatNotification[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  let q = supabase
+    .from('chat_notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (typeof isReadFilter === 'boolean') q = q.eq('is_read', isReadFilter);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  const { error } = await supabase
+    .from('chat_notifications')
+    .update({ is_read: true })
+    .eq('id', notificationId);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from('chat_notifications')
+    .update({ is_read: true })
+    .eq('user_id', user.id)
+    .eq('is_read', false);
+  if (error) throw error;
+}
+
+export async function fetchUnreadNotificationCount(): Promise<number> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+  const { count, error } = await supabase
+    .from('chat_notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
     .eq('is_read', false);
   if (error) throw error;
   return count ?? 0;

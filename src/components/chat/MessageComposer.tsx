@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, KeyboardEvent, ClipboardEvent, DragEvent } from 'react';
-import { Send, Paperclip, X, Camera, Loader2 } from 'lucide-react';
+import { Send, Paperclip, X, Camera, Loader2, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -8,6 +8,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { extractMentions, MAX_ATTACHMENT_BYTES, type PendingAttachment } from '@/lib/services/chat/api';
 import { cn } from '@/lib/utils';
+import { ResourcePickerDialog } from './ResourcePickerDialog';
 
 interface Props {
   channelId: string;
@@ -31,6 +32,7 @@ export function MessageComposer({ channelId, parentMessageId, placeholder, autoF
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionIdx, setMentionIdx] = useState(0);
   const [dragOver, setDragOver] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -197,6 +199,11 @@ export function MessageComposer({ channelId, parentMessageId, placeholder, autoF
           <Button type="button" variant="ghost" size="icon" className="md:hidden" onClick={() => cameraInputRef.current?.click()}>
             <Camera className="h-4 w-4" />
           </Button>
+          {!parentMessageId && (
+            <Button type="button" variant="ghost" size="icon" title="Share resource" onClick={() => setPickerOpen(true)}>
+              <Link2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <input
           ref={fileInputRef}
@@ -244,6 +251,7 @@ export function MessageComposer({ channelId, parentMessageId, placeholder, autoF
           </div>
         )}
       </div>
+      <ResourcePickerDialog open={pickerOpen} onOpenChange={setPickerOpen} channelId={channelId} />
     </div>
   );
 }

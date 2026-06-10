@@ -16,6 +16,10 @@ export const chatKeys = {
   reads: (msgId: string) => [...chatKeys.all, 'reads', msgId] as const,
   myMentions: (isRead?: boolean) => [...chatKeys.all, 'my-mentions', isRead ?? 'all'] as const,
   unreadMentions: () => [...chatKeys.all, 'unread-mentions'] as const,
+  search: (q: string, channelId: string | null) => [...chatKeys.all, 'search', channelId ?? 'all', q] as const,
+  pinned: (channelId: string) => [...chatKeys.all, 'pinned', channelId] as const,
+  notifications: (isRead?: boolean) => [...chatKeys.all, 'notifications', isRead ?? 'all'] as const,
+  unreadNotifications: () => [...chatKeys.all, 'unread-notifications'] as const,
 };
 
 export function useDirectory() {
@@ -299,6 +303,100 @@ export function useMarkAllMentionsRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => chat.markAllMentionsRead(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: chatKeys.all }),
+  });
+}
+
+// ---------------- Batch 3 hooks ----------------
+
+export function useSearchMessages(query: string, channelId: string | null = null) {
+  return useQuery({
+    queryKey: chatKeys.search(query, channelId),
+    queryFn: () => chat.searchMessages(query, channelId),
+    enabled: query.trim().length >= 2,
+    staleTime: 30_000,
+  });
+}
+
+export function usePinMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: string) => chat.pinMessage(messageId),
+    onSuccess: (m) => {
+      qc.invalidateQueries({ queryKey: chatKeys.messages(m.channel_id) });
+      qc.invalidateQueries({ queryKey: chatKeys.pinned(m.channel_id) });
+    },
+  });
+}
+
+export function useUnpinMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: string) => chat.unpinMessage(messageId),
+    onSuccess: (m) => {
+      qc.invalidateQueries({ queryKey: chatKeys.messages(m.channel_id) });
+      qc.invalidateQueries({ queryKey: chatKeys.pinned(m.channel_id) });
+    },
+  });
+}
+
+export function usePinnedMessages(channelId: string | undefined) {
+  return useQuery({
+    queryKey: chatKeys.pinned(channelId ?? '__none__'),
+    queryFn: () => chat.fetchPinnedMessages(channelId!),
+    enabled: !!channelId,
+  });
+}
+
+export function useSendMessageWithResource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (opts: {
+      channelId: string; body: string;
+      resourceType: chat.ResourceType; resourceId: string; resourceLabel: string;
+    }) => chat.sendMessageWithResource(opts),
+    onSuccess: (m) => qc.invalidateQueries({ queryKey: chatKeys.messages(m.channel_id) }),
+  });
+}
+
+export function useNotifications(isReadFilter?: boolean) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: chatKeys.notifications(isReadFilter),
+    queryFn: () => chat.fetchUserNotifications(isReadFilter),
+  });
+  useEffect(() => {
+    const ch = supabase
+      .channel(`rt-chat-notifications-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_notifications' }, () => {
+        qc.invalidateQueries({ queryKey: chatKeys.all });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [qc]);
+  return query;
+}
+
+export function useUnreadNotificationCount() {
+  return useQuery({
+    queryKey: chatKeys.unreadNotifications(),
+    queryFn: () => chat.fetchUnreadNotificationCount(),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => chat.markNotificationRead(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: chatKeys.all }),
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => chat.markAllNotificationsRead(),
     onSuccess: () => qc.invalidateQueries({ queryKey: chatKeys.all }),
   });
 }
