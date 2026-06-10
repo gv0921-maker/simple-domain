@@ -64,7 +64,7 @@ export function AttachmentList({ items }: { items: ChatAttachment[] }) {
       </div>
 
       <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
-        <DialogContent className="max-w-5xl p-2 bg-background">
+        <DialogContent className="max-w-5xl w-[calc(100vw-2rem)] p-2 bg-background">
           <DialogTitle className="sr-only">{lightbox?.file_name ?? 'Image'}</DialogTitle>
           {lightbox && (
             <img

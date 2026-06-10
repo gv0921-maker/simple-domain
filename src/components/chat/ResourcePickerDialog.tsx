@@ -94,7 +94,7 @@ export function ResourcePickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl w-[calc(100vw-2rem)]">
         <DialogHeader><DialogTitle>Share a resource</DialogTitle></DialogHeader>
         <Tabs value={tab} onValueChange={(v) => { setTab(v as ResourceType); setSelected(null); }}>
           <TabsList className="flex flex-wrap h-auto">

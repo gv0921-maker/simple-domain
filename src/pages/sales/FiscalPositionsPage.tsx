@@ -154,7 +154,7 @@ export default function FiscalPositionsPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>{editing?.id ? 'Edit' : 'New'} Fiscal Position</DialogTitle>
           </DialogHeader>

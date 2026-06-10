@@ -217,7 +217,7 @@ export default function BOMList() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>{editingBOM ? 'Edit BOM' : 'New Bill of Materials'}</DialogTitle>
             <DialogDescription>
