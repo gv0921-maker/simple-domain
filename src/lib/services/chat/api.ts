@@ -429,7 +429,7 @@ export async function sendMessageWithResource(opts: {
       channel_id: opts.channelId,
       user_id: user.id,
       body: opts.body,
-      message_type: 'resource',
+      message_type: opts.body && opts.body.trim().length > 0 ? 'mixed' : 'resource_link',
       linked_resource_type: opts.resourceType,
       linked_resource_id: opts.resourceId,
       linked_resource_label: opts.resourceLabel,
