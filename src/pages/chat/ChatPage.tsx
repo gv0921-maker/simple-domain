@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Settings, Hash, Lock, Users, MessageCircle } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { useChannel, useChannelMembers, useChannels } from '@/hooks/chat';
@@ -10,7 +11,7 @@ import { MessageList } from '@/components/chat/MessageList';
 import { MessageComposer } from '@/components/chat/MessageComposer';
 import { ChannelSettingsDialog } from '@/components/chat/ChannelSettingsDialog';
 
-export default function ChatPage() {
+function ChatPageInner() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: channels = [] } = useChannels();
@@ -72,5 +73,13 @@ export default function ChatPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <ErrorBoundary label="ChatPage">
+      <ChatPageInner />
+    </ErrorBoundary>
   );
 }
