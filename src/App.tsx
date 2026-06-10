@@ -96,6 +96,10 @@ import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 
 import NotFound from "@/pages/NotFound";
 
+// Chat module
+import ChatPage from "@/pages/chat/ChatPage";
+import ChatDMRedirect from "@/pages/chat/ChatDMRedirect";
+
 // HR/Employees pages
 import EmployeesOverview from "@/pages/employees/EmployeesOverview";
 import EmployeesDirectory from "@/pages/employees/EmployeesDirectory";
