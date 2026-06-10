@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useEntitlements, useEmployees, useLeaveTypes, useDepartments, useUpsertEntitlement } from '@/hooks/hr';
+import { MobileScrollHint } from '@/components/layout/MobileScrollHint';
 
 export default function AdminEntitlements() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -34,8 +35,9 @@ export default function AdminEntitlements() {
           </Select>
         </div>
         <div className="text-xs text-muted-foreground">Empty cell = default from Leave Type. Edit a cell to override per employee.</div>
-        <Card className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <MobileScrollHint />
+        <Card className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-md">
+          <table className="w-full text-xs min-w-[640px]">
             <thead className="bg-muted/40">
               <tr>
                 <th className="text-left p-2 sticky left-0 bg-muted/40">Employee</th>
