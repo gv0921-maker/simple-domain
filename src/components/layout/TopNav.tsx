@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import glfLogo from '@/assets/glf-logo.png';
 import {
@@ -14,7 +14,6 @@ import {
   LogOut,
   Menu,
   Home,
-  ChevronDown,
 } from 'lucide-react';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { NotificationsBell } from '@/components/layout/NotificationsBell';
@@ -27,7 +26,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
 import { canAccessRoute } from '@/lib/services/settings';
 import { isSuperAdminUser } from '@/lib/data/rbac';
 import { usePendingPriceApprovalsCount } from '@/hooks/invoicing';
@@ -36,13 +34,11 @@ import { Badge } from '@/components/ui/badge';
 interface TopNavProps {
   title?: string;
   subtitle?: string;
-  moduleNav?: { label: string; href: string }[];
 }
 
-export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
+export function TopNav({ title, subtitle }: TopNavProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const isSuper = user ? isSuperAdminUser(user.id) : false;
   const { data: pendingApprovals = 0 } = usePendingPriceApprovalsCount(isSuper);
 
@@ -61,9 +57,6 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
     { label: 'Appraisals', href: '/appraisals' },
     { label: 'Settings', href: '/settings', icon: Settings },
   ].filter((item) => (user ? canAccessRoute(user.id, item.href) : false));
-
-  const filteredModuleNav =
-    moduleNav?.filter((item) => (user ? canAccessRoute(user.id, item.href) : false)) || [];
 
   const handleLogout = async () => {
     await logout();
@@ -121,61 +114,6 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
               </>
             )}
           </div>
-        )}
-
-        {/* Module sub-navigation inline */}
-        {filteredModuleNav.length > 0 && (
-          <>
-          <nav className="hidden md:flex items-center gap-1 ml-2">
-            {filteredModuleNav.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    'text-sm px-3 py-1.5 rounded-md transition-colors whitespace-nowrap',
-                    isActive
-                      ? 'bg-accent text-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-          {/* Mobile module nav dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden ml-1 gap-1 h-8 px-2 text-sm font-medium max-w-[140px]"
-              >
-                <span className="truncate">
-                  {filteredModuleNav.find((i) => i.href === location.pathname)?.label ??
-                    filteredModuleNav[0]?.label}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 max-h-[70vh] overflow-y-auto">
-              {filteredModuleNav.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <DropdownMenuItem
-                    key={item.href}
-                    onClick={() => navigate(item.href)}
-                    className={cn(isActive && 'bg-accent font-medium')}
-                  >
-                    {item.label}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          </>
         )}
       </div>
 

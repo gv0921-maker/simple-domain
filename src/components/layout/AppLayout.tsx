@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { TopNav } from './TopNav';
+import { ModuleNav } from './ModuleNav';
 import { MobileBottomTabs } from './MobileBottomTabs';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { InstallPWAPrompt } from '@/components/pwa/InstallPWAPrompt';
@@ -15,7 +16,8 @@ export function AppLayout({ children, title, subtitle, moduleNav }: AppLayoutPro
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <OfflineIndicator />
-      <TopNav title={title} subtitle={subtitle} moduleNav={moduleNav} />
+      <TopNav title={title} subtitle={subtitle} />
+      {moduleNav && moduleNav.length > 0 && <ModuleNav items={moduleNav} />}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
       <MobileBottomTabs />
       <InstallPWAPrompt />
