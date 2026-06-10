@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Hash, Lock, Users, MessageCircle, Plus, Menu, Search } from 'lucide-react';
+import { Hash, Lock, Users, MessageCircle, Plus, Menu, Search, AtSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChannels } from '@/hooks/chat';
+import { useChannels, useUnreadMentionCount } from '@/hooks/chat';
 import { cn } from '@/lib/utils';
 import { NewChatDialog } from './NewChatDialog';
 
@@ -12,6 +12,7 @@ export function ChatSidebar({ onPick }: { onPick?: () => void }) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { data: channels = [] } = useChannels();
+  const { data: unreadMentions = 0 } = useUnreadMentionCount();
   const [search, setSearch] = useState('');
   const [newOpen, setNewOpen] = useState(false);
 
@@ -67,6 +68,18 @@ export function ChatSidebar({ onPick }: { onPick?: () => void }) {
       </div>
       <ScrollArea className="flex-1">
         <div className="py-3">
+          <button
+            onClick={() => { navigate('/chat/mentions'); onPick?.(); }}
+            className="w-full flex items-center gap-2 px-3 py-2 mb-2 rounded-md text-sm hover:bg-muted/60 transition text-left"
+          >
+            <AtSign className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1">Mentions</span>
+            {unreadMentions > 0 && (
+              <span className="text-[10px] bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 font-medium">
+                {unreadMentions}
+              </span>
+            )}
+          </button>
           {section('Channels', channelList)}
           {section('Direct Messages', dms)}
           {section('Groups', groups)}
