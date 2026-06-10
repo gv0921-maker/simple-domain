@@ -113,8 +113,41 @@ export default function ProductsList() {
           </div>
         </div>
 
-        {/* Products table */}
-        <div className="border rounded-lg bg-card overflow-x-auto">
+        {/* Mobile card grid */}
+        <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filteredProducts.length === 0 ? (
+            <div className="col-span-full border rounded-lg p-8 text-center text-muted-foreground bg-card">
+              <Package className="h-10 w-10 mx-auto mb-2" />
+              No products found
+            </div>
+          ) : (
+            filteredProducts.map((product) => (
+              <button
+                key={product.id}
+                type="button"
+                onClick={() => navigate(`/inventory/products/${product.id}`)}
+                className="text-left border rounded-lg bg-card p-3 flex gap-3 hover:bg-muted/40 transition-colors min-h-[88px]"
+              >
+                <div className="w-14 h-14 bg-muted rounded flex items-center justify-center shrink-0">
+                  <Package className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium truncate">{product.name}</div>
+                  <div className="text-xs font-mono text-muted-foreground truncate">{product.sku}</div>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">₹{product.salePrice.toLocaleString()}</span>
+                    <Badge variant={product.stockOnHand <= product.reorderLevel ? 'destructive' : 'secondary'}>
+                      {product.stockOnHand} {product.stockOnHand <= product.reorderLevel ? 'Low' : 'in stock'}
+                    </Badge>
+                  </div>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+
+        {/* Products table (desktop / tablet) */}
+        <div className="hidden md:block border rounded-lg bg-card overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
