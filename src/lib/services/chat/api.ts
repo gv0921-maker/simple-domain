@@ -425,17 +425,57 @@ export async function markChannelRead(channelId: string): Promise<void> {
 }
 
 export async function fetchDirectory(): Promise<DirectoryUser[]> {
-  const { data, error } = await supabase
+  const map = new Map<string, DirectoryUser>();
+
+  // Primary source: employees with linked auth users.
+  const { data: emps } = await supabase
     .from('employees')
     .select('user_id, full_name, display_name, email')
     .not('user_id', 'is', null);
-  if (error) throw error;
-  return (data ?? []).map((e: any) => ({
-    user_id: e.user_id,
-    name: e.display_name || e.full_name || e.email || 'User',
-    email: e.email ?? null,
-    avatar_url: null,
-  }));
+  for (const e of (emps ?? []) as any[]) {
+    if (!e.user_id) continue;
+    map.set(e.user_id, {
+      user_id: e.user_id,
+      name: e.display_name || e.full_name || e.email || 'User',
+      email: e.email ?? null,
+      avatar_url: null,
+    });
+  }
+
+  // Fallback: include any chat participant we don't have a name for yet,
+  // so @mention works even before employees are seeded.
+  const { data: members } = await supabase
+    .from('chat_channel_members')
+    .select('user_id');
+  for (const m of members ?? []) {
+    if (m.user_id && !map.has(m.user_id)) {
+      map.set(m.user_id, {
+        user_id: m.user_id,
+        name: `User ${m.user_id.slice(0, 8)}`,
+        email: null,
+        avatar_url: null,
+      });
+    }
+  }
+
+  // Enrich the current user from auth metadata so @-ing yourself works nicely.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const name =
+      (meta.name as string) ||
+      (meta.full_name as string) ||
+      (user.email ? user.email.split('@')[0] : null) ||
+      `User ${user.id.slice(0, 8)}`;
+    map.set(user.id, {
+      user_id: user.id,
+      name,
+      email: user.email ?? null,
+      avatar_url: (meta.avatar_url as string | undefined) ?? null,
+    });
+  }
+
+  return Array.from(map.values());
 }
 
 export async function fetchDirectoryUser(userId: string): Promise<DirectoryUser | null> {
