@@ -22,7 +22,7 @@ export function useChannels() {
 
   useEffect(() => {
     const ch = supabase
-      .channel('rt-chat-channels')
+      .channel(`rt-chat-channels-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_channels' }, () => {
         qc.invalidateQueries({ queryKey: chatKeys.channels() });
       })
@@ -63,7 +63,7 @@ export function useMessages(channelId: string | undefined) {
   useEffect(() => {
     if (!channelId) return;
     const ch = supabase
-      .channel(`rt-chat-messages-${channelId}`)
+      .channel(`rt-chat-messages-${channelId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'chat_messages', filter: `channel_id=eq.${channelId}` },
