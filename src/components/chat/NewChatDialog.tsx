@@ -11,6 +11,7 @@ import { useCreateChannel, useDirectory } from '@/hooks/chat';
 import { findOrCreateDM } from '@/lib/services/chat/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Users } from 'lucide-react';
 
 type ChatType = 'channel' | 'group' | 'dm';
 
@@ -37,6 +38,8 @@ export function NewChatDialog({
     const q = search.trim().toLowerCase();
     return directory.filter((d) => d.user_id !== user?.id && (!q || d.name.toLowerCase().includes(q)));
   }, [directory, search, user?.id]);
+
+  const noOtherUsers = directory.filter((d) => d.user_id !== user?.id).length === 0;
 
   const reset = () => { setType('channel'); setName(''); setDescription(''); setSelected([]); setSearch(''); };
 
@@ -108,13 +111,28 @@ export function NewChatDialog({
             <Input placeholder="Search people" value={search} onChange={(e) => setSearch(e.target.value)} className="mt-1" />
             <ScrollArea className="h-48 mt-2 border rounded-md">
               <div className="p-2 space-y-1">
-                {filtered.map((d) => (
+                {!noOtherUsers && filtered.map((d) => (
                   <label key={d.user_id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer">
                     <Checkbox checked={selected.includes(d.user_id)} onCheckedChange={() => toggle(d.user_id)} />
                     <span className="text-sm">{d.name}</span>
                   </label>
                 ))}
-                {filtered.length === 0 && (
+                {noOtherUsers ? (
+                  <div className="p-4 text-center space-y-3">
+                    <Users className="h-8 w-8 text-muted-foreground mx-auto" />
+                    <p className="text-sm text-muted-foreground">
+                      You need to add employees first or have other users sign up. Go to Employees → Directory to add team members.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { onOpenChange(false); reset(); navigate('/employees/directory'); }}
+                    >
+                      Open Employees Directory
+                    </Button>
+                  </div>
+                ) : filtered.length === 0 && (
                   <div className="text-sm text-muted-foreground p-3 text-center">No people found</div>
                 )}
               </div>
