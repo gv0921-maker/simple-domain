@@ -14,6 +14,8 @@ import {
   LogOut,
   Menu,
   Home,
+  Clock,
+  MessageCircle,
 } from 'lucide-react';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { NotificationsBell } from '@/components/layout/NotificationsBell';
@@ -55,6 +57,7 @@ export function TopNav({ title, subtitle }: TopNavProps) {
     { label: 'Leave', href: '/leave/my-leaves' },
     { label: 'Payroll', href: '/payroll' },
     { label: 'Appraisals', href: '/appraisals' },
+    { label: 'Chat', href: '/chat' },
     { label: 'Settings', href: '/settings', icon: Settings },
   ].filter((item) => (user ? canAccessRoute(user.id, item.href) : false));
 
@@ -81,22 +84,63 @@ export function TopNav({ title, subtitle }: TopNavProps) {
                 <span className="font-bold text-foreground">GLF ERP</span>
               </SheetTitle>
             </SheetHeader>
-            <nav className="p-2 space-y-1">
-              {mobileNavItems.map((item) => {
-                const Icon = item.icon;
-                return (
+            <div className="flex flex-col h-[calc(100vh-65px)]">
+              {/* Quick shortcuts */}
+              <div className="p-2 space-y-1 border-b border-border">
+                {user && canAccessRoute(user.id, '/attendance/clock-in') && (
                   <Button
-                    key={item.href}
-                    variant="ghost"
+                    variant="secondary"
                     className="w-full justify-start gap-2"
-                    onClick={() => navigate(item.href)}
+                    onClick={() => navigate('/attendance/clock-in')}
                   >
-                    {Icon ? <Icon className="h-4 w-4" /> : null}
-                    {item.label}
+                    <Clock className="h-4 w-4" />
+                    Clock In / Out
                   </Button>
-                );
-              })}
-            </nav>
+                )}
+                {user && canAccessRoute(user.id, '/chat') && (
+                  <Button
+                    variant="secondary"
+                    className="w-full justify-start gap-2"
+                    onClick={() => navigate('/chat')}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Chat
+                  </Button>
+                )}
+              </div>
+              {/* Module list */}
+              <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
+                {mobileNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Button
+                      key={item.href}
+                      variant="ghost"
+                      className="w-full justify-start gap-2"
+                      onClick={() => navigate(item.href)}
+                    >
+                      {Icon ? <Icon className="h-4 w-4" /> : null}
+                      {item.label}
+                    </Button>
+                  );
+                })}
+              </nav>
+              {/* Profile section */}
+              <div className="border-t border-border p-2 space-y-1">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium truncate">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 text-destructive"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Log out
+                </Button>
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
 
