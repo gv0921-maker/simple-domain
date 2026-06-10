@@ -1,26 +1,26 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Hash, Lock, Users, MessageCircle, Plus, Menu, Search, AtSign } from 'lucide-react';
+import { Hash, Lock, Users, MessageCircle, Plus, Menu, AtSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChannels, useUnreadMentionCount } from '@/hooks/chat';
 import { cn } from '@/lib/utils';
 import { NewChatDialog } from './NewChatDialog';
+import { ChatSearchDropdown } from './ChatSearchDropdown';
 
 export function ChatSidebar({ onPick }: { onPick?: () => void }) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { data: channels = [] } = useChannels();
   const { data: unreadMentions = 0 } = useUnreadMentionCount();
-  const [search, setSearch] = useState('');
+  const [filter] = useState('');
   const [newOpen, setNewOpen] = useState(false);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = filter.trim().toLowerCase();
     if (!q) return channels;
     return channels.filter((c) => c.name.toLowerCase().includes(q));
-  }, [channels, search]);
+  }, [channels, filter]);
 
   const channelList = filtered.filter((c) => c.type === 'channel');
   const dms = filtered.filter((c) => c.type === 'dm');
@@ -61,10 +61,7 @@ export function ChatSidebar({ onPick }: { onPick?: () => void }) {
             <Plus className="h-4 w-4 mr-1" /> New
           </Button>
         </div>
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input className="pl-7 h-8" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
+        <ChatSearchDropdown onResultClick={onPick} />
       </div>
       <ScrollArea className="flex-1">
         <div className="py-3">
