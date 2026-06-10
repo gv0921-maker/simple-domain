@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import {
   useAppraisalTemplates, useCreateTemplate, useDeleteTemplate,
   useAppraisalCriteria, useCreateCriterion, useDeleteCriterion,
@@ -29,7 +29,7 @@ export default function AdminTemplates() {
   const totalWeight = crit.reduce((s, r) => s + Number(r.weightage_percentage || 0), 0);
 
   return (
-    <AppLayout title="Appraisals" subtitle="Templates" moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle="Templates" moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-6xl mx-auto grid md:grid-cols-3 gap-4">
         <Card className="p-4 space-y-3">
           <h3 className="font-semibold">Templates</h3>

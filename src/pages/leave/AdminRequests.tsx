@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useLeaveRequests, useEmployees, useLeaveTypes } from '@/hooks/hr';
 
 export default function AdminRequests() {
@@ -20,7 +20,7 @@ export default function AdminRequests() {
     return ((e?.full_name ?? '') + ' ' + r.request_number).toLowerCase().includes(q.toLowerCase());
   });
   return (
-    <AppLayout title="Leave Requests (Admin)" moduleNav={HR_NAV}>
+    <AppLayout title="Leave Requests (Admin)" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-3">
         <div className="flex gap-2">
           <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />

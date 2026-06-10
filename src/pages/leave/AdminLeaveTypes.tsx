@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useLeaveTypes, useCreateLeaveType, useUpdateLeaveType, useDeleteLeaveType } from '@/hooks/hr';
 import { Trash2 } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export default function AdminLeaveTypes() {
   const [form, setForm] = useState({ name: '', code: '', default_days_per_year: 0 });
 
   return (
-    <AppLayout title="Leave Types" moduleNav={HR_NAV}>
+    <AppLayout title="Leave Types" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-3">
         <Card className="p-4 flex gap-2 items-end">
           <div><label className="text-xs">Name</label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>

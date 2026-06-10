@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { useLeaveTypes, useSubmitLeave, useEmployeeLeaveBalance } from '@/hooks/hr';
 import { calculateLeaveDays } from '@/lib/services/hr/leaves';
@@ -69,7 +69,7 @@ export default function ApplyLeave() {
   }
 
   return (
-    <AppLayout title="Apply Leave" moduleNav={HR_NAV}>
+    <AppLayout title="Apply Leave" moduleNav={LEAVE_NAV}>
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <Card className="p-6 space-y-4">
           <div>

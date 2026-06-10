@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useCompOffCredits, useEmployees, useGrantCompOff, useWorkedOnWeeklyOff } from '@/hooks/hr';
 import { toast } from 'sonner';
 
@@ -17,7 +17,7 @@ export default function AdminCompOff() {
   const grant = useGrantCompOff();
 
   return (
-    <AppLayout title="Comp Off" moduleNav={HR_NAV}>
+    <AppLayout title="Comp Off" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-4">
         <Card className="p-4">
           <div className="flex gap-2 items-end mb-3">

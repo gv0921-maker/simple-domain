@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { ArrowLeft, Save } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import {
   useDepartments, useEmployee, useEmployees, useCreateEmployee, useUpdateEmployee,
 } from '@/hooks/hr';
@@ -97,7 +97,7 @@ export default function EmployeeForm() {
   };
 
   return (
-    <AppLayout title="Employees" subtitle={isEdit ? 'Edit' : 'New'} moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle={isEdit ? 'Edit' : 'New'} moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-5xl mx-auto">
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">

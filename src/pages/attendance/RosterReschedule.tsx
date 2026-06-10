@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useWorkedOnWeeklyOff, useEmployees, useRescheduleWeeklyOff, useGrantCompOff } from '@/hooks/hr';
 import { toast } from 'sonner';
 
@@ -19,7 +19,7 @@ export default function RosterReschedule() {
   const [newDates, setNewDates] = useState<Record<string, string>>({});
 
   return (
-    <AppLayout title="Roster Reschedule" moduleNav={HR_NAV}>
+    <AppLayout title="Roster Reschedule" moduleNav={ATTENDANCE_NAV}>
       <div className="p-6 space-y-3">
         <div className="flex gap-2 items-end">
           <div><label className="text-xs">From</label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>

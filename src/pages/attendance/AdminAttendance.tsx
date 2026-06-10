@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useEmployees, useRangeAttendance, useDeleteSession } from '@/hooks/hr';
 import { ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -54,7 +54,7 @@ export default function AdminAttendance() {
     [sessions, selected]);
 
   return (
-    <AppLayout title="Attendance" subtitle="Admin Grid" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Admin Grid" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

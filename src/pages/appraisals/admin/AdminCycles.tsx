@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisalCycles, useCreateAppraisalCycle, useDeleteAppraisalCycle } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -29,7 +29,7 @@ export default function AdminCycles() {
   };
 
   return (
-    <AppLayout title="Appraisals" subtitle="Cycles" moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle="Cycles" moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
         <div className="flex justify-between">
           <h2 className="text-lg font-semibold">Appraisal Cycles</h2>

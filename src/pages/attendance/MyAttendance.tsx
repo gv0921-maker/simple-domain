@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { useMonthlyAttendance } from '@/hooks/hr';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -48,7 +48,7 @@ export default function MyAttendance() {
   const dayBreak = dayList.filter((s) => s.session_type === 'break').reduce((a, s) => a + (s.duration_minutes ?? 0), 0);
 
   return (
-    <AppLayout title="Attendance" subtitle="My History" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="My History" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-4">
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">

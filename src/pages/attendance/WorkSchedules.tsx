@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useEmployees, useSchedules, useUpsertSchedule } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -42,7 +42,7 @@ export default function WorkSchedulesPage() {
   }
 
   return (
-    <AppLayout title="Attendance" subtitle="Work Schedules" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Work Schedules" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
         <Card className="p-4">
           <Label>Employee</Label>

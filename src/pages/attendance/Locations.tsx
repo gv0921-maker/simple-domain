@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useLocations, useCreateLocation, useUpdateLocation, useDeleteLocation } from '@/hooks/hr';
 import { getCurrentPosition, type AttendanceLocation } from '@/lib/services/hr/api';
 import { toast } from '@/hooks/use-toast';
@@ -39,7 +39,7 @@ export default function LocationsPage() {
   }
 
   return (
-    <AppLayout title="Attendance" subtitle="Geofence Locations" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Geofence Locations" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="font-semibold">Locations</h2>

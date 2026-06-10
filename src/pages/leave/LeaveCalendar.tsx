@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useLeaveRequests, useEmployees, useRosters } from '@/hooks/hr';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -19,7 +19,7 @@ export default function LeaveCalendar() {
   const days = Array.from({ length: last.getDate() }, (_, i) => i + 1);
 
   return (
-    <AppLayout title="Leave Calendar" moduleNav={HR_NAV}>
+    <AppLayout title="Leave Calendar" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-3">
         <div className="flex items-center gap-2">
           <Button size="icon" variant="outline" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}><ChevronLeft className="h-4 w-4" /></Button>

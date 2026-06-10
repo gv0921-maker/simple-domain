@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useDepartment, useEmployees } from '@/hooks/hr';
 
 export default function DepartmentDetail() {
@@ -20,11 +20,11 @@ export default function DepartmentDetail() {
     [employees, id]
   );
 
-  if (isLoading) return <AppLayout title="Departments" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
-  if (!department) return <AppLayout title="Departments" moduleNav={HR_NAV}><div className="p-6">Not found.</div></AppLayout>;
+  if (isLoading) return <AppLayout title="Departments" moduleNav={EMPLOYEES_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!department) return <AppLayout title="Departments" moduleNav={EMPLOYEES_NAV}><div className="p-6">Not found.</div></AppLayout>;
 
   return (
-    <AppLayout title="Departments" subtitle={department.name} moduleNav={HR_NAV}>
+    <AppLayout title="Departments" subtitle={department.name} moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
         <Button variant="ghost" size="sm" onClick={() => navigate('/employees/departments')} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> Departments

@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Search, UserPlus } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useEmployees, useDepartments } from '@/hooks/hr';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -49,7 +49,7 @@ export default function EmployeesDirectory() {
   );
 
   return (
-    <AppLayout title="Employees" subtitle="Directory" moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle="Directory" moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-7xl mx-auto">
         <div className="flex flex-wrap items-center gap-2 justify-between">
           <div className="flex flex-wrap gap-2 items-center flex-1">

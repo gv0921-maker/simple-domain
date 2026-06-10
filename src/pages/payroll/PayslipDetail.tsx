@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import { usePayslip } from '@/hooks/hr';
 import { generatePayslipPDF } from '@/lib/payroll/pdf';
 import { Download } from 'lucide-react';
@@ -14,7 +14,7 @@ const fmt = (n: number) =>
 export default function PayslipDetail() {
   const { id } = useParams();
   const { data: psl } = usePayslip(id);
-  if (!psl) return <AppLayout title="Payslip" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!psl) return <AppLayout title="Payslip" moduleNav={PAYROLL_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   const emp: any = (psl as any).employees;
   const period: any = (psl as any).payroll_periods;
@@ -24,7 +24,7 @@ export default function PayslipDetail() {
   const employer = comps.filter((c) => c.salary_components?.type === 'employer_contribution');
 
   return (
-    <AppLayout title={`Payslip · ${period?.period_label}`} moduleNav={HR_NAV}>
+    <AppLayout title={`Payslip · ${period?.period_label}`} moduleNav={PAYROLL_NAV}>
       <div className="p-6 max-w-4xl mx-auto space-y-4">
         <div className="flex justify-between items-center">
           <div>

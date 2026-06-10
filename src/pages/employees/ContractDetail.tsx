@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Ban, Clock } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useContract, useEmployee, useUpdateContract } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -35,11 +35,11 @@ export default function ContractDetail() {
     }
   };
 
-  if (isLoading) return <AppLayout title="Contracts" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
-  if (!contract) return <AppLayout title="Contracts" moduleNav={HR_NAV}><div className="p-6">Not found.</div></AppLayout>;
+  if (isLoading) return <AppLayout title="Contracts" moduleNav={EMPLOYEES_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!contract) return <AppLayout title="Contracts" moduleNav={EMPLOYEES_NAV}><div className="p-6">Not found.</div></AppLayout>;
 
   return (
-    <AppLayout title="Contracts" subtitle={contract.contract_number ?? ''} moduleNav={HR_NAV}>
+    <AppLayout title="Contracts" subtitle={contract.contract_number ?? ''} moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-4xl mx-auto">
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate('/employees/contracts')} className="gap-2">

@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useEmployees, useDepartments, useRosters, useUpsertRoster } from '@/hooks/hr';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -46,7 +46,7 @@ export default function RosterPlanning() {
   }
 
   return (
-    <AppLayout title="Roster Planning" moduleNav={HR_NAV}>
+    <AppLayout title="Roster Planning" moduleNav={ATTENDANCE_NAV}>
       <div className="p-6 space-y-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">

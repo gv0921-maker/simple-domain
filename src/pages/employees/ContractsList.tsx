@@ -12,7 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { FileText, Search } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useContracts, useEmployees } from '@/hooks/hr';
 
 const fmtINR = (n: number) =>
@@ -49,7 +49,7 @@ export default function ContractsList() {
   }, [contracts, status, search, empById]);
 
   return (
-    <AppLayout title="Employees" subtitle="Contracts" moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle="Contracts" moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-7xl mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex gap-2 items-center flex-1">

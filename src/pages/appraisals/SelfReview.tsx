@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisal, useAppraisalRatings, useUpsertRating, useSubmitSelfReview, useUpdateAppraisal } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -28,7 +28,7 @@ export default function SelfReview() {
     }
   }, [appraisal]);
 
-  if (!id || !appraisal) return <AppLayout title="Appraisals" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!id || !appraisal) return <AppLayout title="Appraisals" moduleNav={APPRAISALS_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   const handleRate = async (criterionId: string, field: 'self_rating' | 'self_comments', val: any) => {
     await upsert.mutateAsync({ appraisal_id: id, criterion_id: criterionId, [field]: val } as any);
@@ -45,7 +45,7 @@ export default function SelfReview() {
   };
 
   return (
-    <AppLayout title="Appraisals" subtitle="Self Review" moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle="Self Review" moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-4">
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold">Criteria</h2>

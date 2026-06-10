@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { ArrowLeft, Save } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useEmployees, useCreateContract } from '@/hooks/hr';
 import type { ContractInsert } from '@/lib/services/hr/api';
 import { toast } from '@/hooks/use-toast';
@@ -71,7 +71,7 @@ export default function ContractForm() {
   };
 
   return (
-    <AppLayout title="Employees" subtitle="New Contract" moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle="New Contract" moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-4xl mx-auto">
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">

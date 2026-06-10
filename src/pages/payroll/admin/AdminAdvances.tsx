@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import { useAdvances, useAddAdvance, useUpdateAdvance, useEmployees } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -19,7 +19,7 @@ export default function AdminAdvances() {
   const [form, setForm] = useState({ employee_id: '', advance_amount: 0, deduction_month: new Date().toISOString().slice(0, 10) });
 
   return (
-    <AppLayout title="Employee Advances" moduleNav={HR_NAV}>
+    <AppLayout title="Employee Advances" moduleNav={PAYROLL_NAV}>
       <div className="p-6 space-y-4">
         <Card className="p-4 grid md:grid-cols-5 gap-2 items-end">
           <div className="md:col-span-2"><label className="text-xs">Employee</label>
