@@ -2,7 +2,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useLeaveRequests, useEmployees } from '@/hooks/hr';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 
@@ -14,7 +14,7 @@ export default function TeamLeaves() {
   const requests = all.filter((r) => reportIds.has(r.employee_id));
 
   return (
-    <AppLayout title="Team Leaves" moduleNav={HR_NAV}>
+    <AppLayout title="Team Leaves" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-4">
         <Card>
           <table className="w-full text-sm">

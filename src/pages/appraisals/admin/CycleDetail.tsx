@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisalCycle, useAppraisalsByCycle, useLaunchAppraisalCycle, useUpdateAppraisalCycle } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -32,10 +32,10 @@ export default function CycleDetail() {
     URL.revokeObjectURL(url);
   };
 
-  if (!cycle) return <AppLayout title="Appraisals" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!cycle) return <AppLayout title="Appraisals" moduleNav={APPRAISALS_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   return (
-    <AppLayout title="Appraisals" subtitle={cycle.name} moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle={cycle.name} moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
         <Card className="p-6 flex justify-between items-start">
           <div>

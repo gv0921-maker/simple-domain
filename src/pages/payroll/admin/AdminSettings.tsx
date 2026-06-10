@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import { usePayrollSettings, useUpdatePayrollSettings, useTaxSlabs, useUpsertTaxSlab, useDeleteTaxSlab } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function AdminSettings() {
   const delSlab = useDeleteTaxSlab();
   const [newSlab, setNewSlab] = useState({ from_amount: 0, to_amount: 0, rate_percentage: 0, slab_order: 1 });
 
-  if (!settings) return <AppLayout title="Payroll Settings" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!settings) return <AppLayout title="Payroll Settings" moduleNav={PAYROLL_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   const setField = (k: string, v: any) => setForm({ ...form, [k]: v });
   const Num = ({ label, k }: { label: string; k: string }) => (
@@ -34,7 +34,7 @@ export default function AdminSettings() {
   );
 
   return (
-    <AppLayout title="Payroll Settings" moduleNav={HR_NAV}>
+    <AppLayout title="Payroll Settings" moduleNav={PAYROLL_NAV}>
       <div className="p-6 space-y-6">
         <Card className="p-6 grid md:grid-cols-3 gap-4">
           <Txt label="Financial Year" k="financial_year" />

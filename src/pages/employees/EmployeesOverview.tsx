@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, UserPlus, Building2, Cake, Briefcase } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useEmployees, useDepartments } from '@/hooks/hr';
 
 const COLORS = ['#1D9E75', '#FF7043', '#1976D2', '#AD1457', '#F59E0B', '#00838F', '#616161'];
@@ -55,7 +55,7 @@ export default function EmployeesOverview() {
   const maxDeptCount = Math.max(1, ...stats.deptBreakdown.map((d) => d.count));
 
   return (
-    <AppLayout title="Employees" subtitle="Overview" moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle="Overview" moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">HR Overview</h1>

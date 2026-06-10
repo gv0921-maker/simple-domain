@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MapPin, Play, Pause, Square, Loader2, Coffee, Briefcase } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import {
   useActiveSession, useDailyAttendance, usePunchIn, usePunchOut, useSchedules,
@@ -110,11 +110,11 @@ export default function ClockIn() {
   }
 
   if (isLoading) {
-    return <AppLayout title="Attendance" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+    return <AppLayout title="Attendance" moduleNav={ATTENDANCE_NAV}><div className="p-6">Loading…</div></AppLayout>;
   }
   if (!employee) {
     return (
-      <AppLayout title="Attendance" moduleNav={HR_NAV}>
+      <AppLayout title="Attendance" moduleNav={ATTENDANCE_NAV}>
         <div className="p-6 max-w-md mx-auto">
           <Card className="p-6">
             <h2 className="font-semibold mb-2">No employee profile linked</h2>
@@ -131,7 +131,7 @@ export default function ClockIn() {
   const liveDur = active ? Math.floor((now - new Date(active.check_in_time).getTime()) / 60_000) : 0;
 
   return (
-    <AppLayout title="Attendance" subtitle="Clock In / Out" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Clock In / Out" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-md mx-auto space-y-4">
         <Card className="p-4 flex items-center gap-3">
           <Avatar className="h-12 w-12">

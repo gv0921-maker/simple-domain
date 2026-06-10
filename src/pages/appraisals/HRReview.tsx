@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisal, useAppraisalRatings, useUpsertRating, useFinalizeAppraisal, useUpdateAppraisal } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -21,7 +21,7 @@ export default function HRReview() {
   const [hrComments, setHrComments] = useState('');
 
   useEffect(() => { if (appraisal) setHrComments(appraisal.hr_comments ?? ''); }, [appraisal]);
-  if (!id || !appraisal) return <AppLayout title="Appraisals" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!id || !appraisal) return <AppLayout title="Appraisals" moduleNav={APPRAISALS_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   const onFinalize = async () => {
     await updateA.mutateAsync({ id, patch: { hr_comments: hrComments } });
@@ -31,7 +31,7 @@ export default function HRReview() {
   };
 
   return (
-    <AppLayout title="Appraisals" subtitle="HR Finalization" moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle="HR Finalization" moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold">Criteria (Self · Manager · Final)</h2>

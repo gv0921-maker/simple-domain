@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import { usePayrollPeriods, useCreatePayrollPeriod, useEmployees } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,7 @@ export default function PayrollDashboard() {
   );
 
   return (
-    <AppLayout title="Payroll" subtitle="Dashboard" moduleNav={HR_NAV}>
+    <AppLayout title="Payroll" subtitle="Dashboard" moduleNav={PAYROLL_NAV}>
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Stat label="Current Period" value={current?.period_label ?? `${now.toLocaleString('default', { month: 'short' })} ${now.getFullYear()}`} sub={current?.status ?? 'not created'} />

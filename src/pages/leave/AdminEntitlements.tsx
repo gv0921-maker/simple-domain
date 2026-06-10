@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useEntitlements, useEmployees, useLeaveTypes, useDepartments, useUpsertEntitlement } from '@/hooks/hr';
 
 export default function AdminEntitlements() {
@@ -21,7 +21,7 @@ export default function AdminEntitlements() {
   }
 
   return (
-    <AppLayout title="Leave Entitlements (GLF)" moduleNav={HR_NAV}>
+    <AppLayout title="Leave Entitlements (GLF)" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-3">
         <div className="flex gap-3">
           <Input type="number" value={year} onChange={(e) => setYear(parseInt(e.target.value) || year)} className="w-28" />

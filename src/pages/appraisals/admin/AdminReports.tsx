@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisalCycles, useAppraisalsByCycle, useDepartments, useEmployees } from '@/hooks/hr';
 
 export default function AdminReports() {
@@ -42,7 +42,7 @@ export default function AdminReports() {
   }, [list, emps, depts]);
 
   return (
-    <AppLayout title="Appraisals" subtitle="Reports" moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle="Reports" moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-4">
         <Card className="p-6">
           <h3 className="font-semibold mb-3">Rating Distribution</h3>

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Edit, FileText, Trash2, Users } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import {
   useEmployee, useEmployees, useDepartments,
   useContractsByEmployee, useDeleteEmployee,
@@ -76,11 +76,11 @@ export default function EmployeeDetail() {
     }
   };
 
-  if (isLoading) return <AppLayout title="Employees" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
-  if (!employee) return <AppLayout title="Employees" moduleNav={HR_NAV}><div className="p-6">Not found.</div></AppLayout>;
+  if (isLoading) return <AppLayout title="Employees" moduleNav={EMPLOYEES_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!employee) return <AppLayout title="Employees" moduleNav={EMPLOYEES_NAV}><div className="p-6">Not found.</div></AppLayout>;
 
   return (
-    <AppLayout title="Employees" subtitle={employee.full_name} moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle={employee.full_name} moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-5xl mx-auto">
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate('/employees/directory')} className="gap-2">

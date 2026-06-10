@@ -53,6 +53,10 @@ export function TopNav({ title, subtitle, moduleNav }: TopNavProps) {
     { label: 'Invoices', href: '/invoicing' },
     { label: 'CRM', href: '/crm' },
     { label: 'Employees', href: '/employees' },
+    { label: 'Attendance', href: '/attendance/clock-in' },
+    { label: 'Leave', href: '/leave/my-leaves' },
+    { label: 'Payroll', href: '/payroll' },
+    { label: 'Appraisals', href: '/appraisals' },
     { label: 'Settings', href: '/settings', icon: Settings },
   ].filter((item) => (user ? canAccessRoute(user.id, item.href) : false));
 

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { useEmployees, useRangeAttendance } from '@/hooks/hr';
 
@@ -37,7 +37,7 @@ export default function TeamAttendance() {
   }, [sessions, ids, today]);
 
   return (
-    <AppLayout title="Attendance" subtitle="Team" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Team" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
         {reports.length === 0 ? (
           <Card className="p-6 text-sm text-muted-foreground">You have no direct reports.</Card>

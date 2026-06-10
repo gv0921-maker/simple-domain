@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useEmployees, useBulkInsertSessions } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 import type { AttendanceSessionInsert } from '@/lib/services/hr/api';
@@ -79,7 +79,7 @@ export default function AdminImport() {
   const fields = ['employee_code','session_date','session_type','check_in_time','check_out_time'];
 
   return (
-    <AppLayout title="Attendance" subtitle="Import CSV" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Import CSV" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
         <Card className="p-4 space-y-3">
           <div>

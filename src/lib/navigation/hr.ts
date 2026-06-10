@@ -1,38 +1,8 @@
-// Shared navigation items for the HR/Employees module
-export const HR_NAV = [
-  { label: 'Overview', href: '/employees' },
-  { label: 'Directory', href: '/employees/directory' },
-  { label: 'Departments', href: '/employees/departments' },
-  { label: 'Contracts', href: '/employees/contracts' },
-  { label: 'Clock In/Out', href: '/attendance/clock-in' },
-  { label: 'My Attendance', href: '/attendance/my' },
-  { label: 'Team Attendance', href: '/attendance/team' },
-  { label: 'Admin', href: '/attendance/admin' },
-  { label: 'Locations', href: '/attendance/locations' },
-  { label: 'Holidays', href: '/attendance/holidays' },
-  { label: 'Work Schedules', href: '/attendance/work-schedules' },
-  { label: 'Roster Planning', href: '/attendance/roster' },
-  { label: 'Roster Reschedule', href: '/attendance/roster/reschedule' },
-  { label: 'My Leaves', href: '/leave/my-leaves' },
-  { label: 'Apply Leave', href: '/leave/apply' },
-  { label: 'Team Leaves', href: '/leave/team' },
-  { label: 'Leave Calendar', href: '/leave/calendar' },
-  { label: 'Leave Requests (Admin)', href: '/leave/admin/requests' },
-  { label: 'Leave Balances (Admin)', href: '/leave/admin/balances' },
-  { label: 'Leave Entitlements (Admin)', href: '/leave/admin/entitlements' },
-  { label: 'Leave Types (Admin)', href: '/leave/admin/types' },
-  { label: 'Comp Off (Admin)', href: '/leave/admin/comp-off' },
-  { label: 'Payroll Dashboard', href: '/payroll' },
-  { label: 'Payroll Periods', href: '/payroll/periods' },
-  { label: 'My Payslips', href: '/payroll/my-payslips' },
-  { label: 'Components (Admin)', href: '/payroll/admin/components' },
-  { label: 'Payroll Settings (Admin)', href: '/payroll/admin/settings' },
-  { label: 'Loans (Admin)', href: '/payroll/admin/loans' },
-  { label: 'Advances (Admin)', href: '/payroll/admin/advances' },
-  { label: 'My Appraisals', href: '/appraisals/my-appraisals' },
-  { label: 'Team Appraisals', href: '/appraisals/team' },
-  { label: 'Appraisals Overview', href: '/appraisals' },
-  { label: 'Cycles (Admin)', href: '/appraisals/admin/cycles' },
-  { label: 'Templates (Admin)', href: '/appraisals/admin/templates' },
-  { label: 'Appraisal Reports', href: '/appraisals/admin/reports' },
-];
+// DEPRECATED: The HR module is now split into 5 separate top-level modules.
+// Use the module-specific nav constants instead:
+//   - EMPLOYEES_NAV  from '@/lib/navigation/employees'
+//   - ATTENDANCE_NAV from '@/lib/navigation/attendance'
+//   - LEAVE_NAV      from '@/lib/navigation/leave'
+//   - PAYROLL_NAV    from '@/lib/navigation/payroll'
+//   - APPRAISALS_NAV from '@/lib/navigation/appraisals'
+export {};

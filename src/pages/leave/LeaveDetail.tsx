@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useLeaveRequest, useApprovalLog, useApproveLeave, useRejectLeave, useCancelLeave, useLeaveTypes, useEmployees } from '@/hooks/hr';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { toast } from 'sonner';
@@ -23,14 +23,14 @@ export default function LeaveDetail() {
   const cancel = useCancelLeave();
   const [reason, setReason] = useState('');
 
-  if (!req) return <AppLayout title="Leave Request" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!req) return <AppLayout title="Leave Request" moduleNav={LEAVE_NAV}><div className="p-6">Loading…</div></AppLayout>;
   const type = types.find((t) => t.id === req.leave_type_id);
   const emp = employees.find((e) => e.id === req.employee_id);
   const isOwn = me?.id === req.employee_id;
   const canApprove = !isOwn && emp?.reports_to === me?.id && req.status === 'pending';
 
   return (
-    <AppLayout title={`Leave ${req.request_number}`} moduleNav={HR_NAV}>
+    <AppLayout title={`Leave ${req.request_number}`} moduleNav={LEAVE_NAV}>
       <div className="p-6 max-w-4xl mx-auto space-y-4">
         <Card className="p-6 space-y-3">
           <div className="flex justify-between items-start">

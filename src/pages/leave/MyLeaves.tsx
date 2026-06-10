@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { useEmployeeLeaveBalance, useLeaveRequests, useCancelLeave } from '@/hooks/hr';
 import { Plus } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function MyLeaves() {
   const cancel = useCancelLeave();
 
   return (
-    <AppLayout title="My Leaves" moduleNav={HR_NAV}>
+    <AppLayout title="My Leaves" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Leave Balances — {year}</h2>

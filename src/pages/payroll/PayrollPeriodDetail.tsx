@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import {
   usePayrollPeriod, usePeriodPayslips, useProcessPayroll, useRecalculatePayslip,
   useFinalizePayslip, useBulkFinalizePayroll, useLockPayrollPeriod, useMarkPaid,
@@ -29,7 +29,7 @@ export default function PayrollPeriodDetail() {
   const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10));
   const [payRef, setPayRef] = useState('');
 
-  if (!period) return <AppLayout title="Payroll" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!period) return <AppLayout title="Payroll" moduleNav={PAYROLL_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   const locked = period.status === 'locked' || period.status === 'paid';
 
@@ -46,7 +46,7 @@ export default function PayrollPeriodDetail() {
   };
 
   return (
-    <AppLayout title={`Payroll · ${period.period_label}`} moduleNav={HR_NAV}>
+    <AppLayout title={`Payroll · ${period.period_label}`} moduleNav={PAYROLL_NAV}>
       <div className="p-6 space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-2 items-center">

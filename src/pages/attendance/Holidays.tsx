@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
 import { useHolidays, useCreateHoliday, useDeleteHoliday } from '@/hooks/hr';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -29,7 +29,7 @@ export default function HolidaysPage() {
   }
 
   return (
-    <AppLayout title="Attendance" subtitle="Holidays" moduleNav={HR_NAV}>
+    <AppLayout title="Attendance" subtitle="Holidays" moduleNav={ATTENDANCE_NAV}>
       <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="font-semibold">Holidays</h2>

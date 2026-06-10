@@ -5,7 +5,7 @@ import { CustomizationState, DEFAULT_CUSTOMIZATION } from './types';
 
 const CUSTOMIZATION_KEY = 'customization';
 const CUSTOMIZATION_VERSION_KEY = 'customization_version';
-const CURRENT_VERSION = 5; // Bump to force refresh when module structure changes
+const CURRENT_VERSION = 6; // Bump to force refresh when module structure changes
 
 export function getCustomization(): CustomizationState {
   // Force reset if version changed (e.g. modules were restructured)

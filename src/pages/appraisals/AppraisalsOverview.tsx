@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisalCycles, useAppraisalsByCycle, usePendingIncrements } from '@/hooks/hr';
 
 export default function AppraisalsOverview() {
@@ -24,7 +24,7 @@ export default function AppraisalsOverview() {
   }, [appraisals]);
 
   return (
-    <AppLayout title="Appraisals" subtitle={active?.name} moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle={active?.name} moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
         {!active ? (
           <Card className="p-6 text-sm text-muted-foreground">

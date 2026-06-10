@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { APPRAISALS_NAV } from '@/lib/navigation/appraisals';
 import { useAppraisal, useAppraisalRatings, useUpsertRating, useSubmitManagerReview, useUpdateAppraisal } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -36,7 +36,7 @@ export default function ManagerReview() {
     }
   }, [appraisal]);
 
-  if (!id || !appraisal) return <AppLayout title="Appraisals" moduleNav={HR_NAV}><div className="p-6">Loading…</div></AppLayout>;
+  if (!id || !appraisal) return <AppLayout title="Appraisals" moduleNav={APPRAISALS_NAV}><div className="p-6">Loading…</div></AppLayout>;
 
   const saveDraft = async () => {
     await updateA.mutateAsync({ id, patch: {
@@ -54,7 +54,7 @@ export default function ManagerReview() {
   };
 
   return (
-    <AppLayout title="Appraisals" subtitle={`Manager Review: ${(appraisal as any).employees?.full_name ?? ''}`} moduleNav={HR_NAV}>
+    <AppLayout title="Appraisals" subtitle={`Manager Review: ${(appraisal as any).employees?.full_name ?? ''}`} moduleNav={APPRAISALS_NAV}>
       <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold">Criteria (Self vs Manager)</h2>

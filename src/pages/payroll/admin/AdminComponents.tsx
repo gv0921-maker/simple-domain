@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import { useSalaryComponents, useCreateSalaryComponent, useUpdateSalaryComponent, useDeleteSalaryComponent } from '@/hooks/hr';
 import { Trash2 } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export default function AdminComponents() {
   const [form, setForm] = useState({ code: '', name: '', type: 'earning', calculation_type: 'fixed', default_value: 0 });
 
   return (
-    <AppLayout title="Salary Components" moduleNav={HR_NAV}>
+    <AppLayout title="Salary Components" moduleNav={PAYROLL_NAV}>
       <div className="p-6 space-y-4">
         <Card className="p-4 flex flex-wrap gap-2 items-end">
           <div><label className="text-xs">Code</label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} className="w-32" /></div>

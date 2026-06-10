@@ -12,7 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Plus } from 'lucide-react';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { EMPLOYEES_NAV } from '@/lib/navigation/employees';
 import { useDepartments, useEmployees, useCreateDepartment } from '@/hooks/hr';
 import { toast } from '@/hooks/use-toast';
 
@@ -50,7 +50,7 @@ export default function DepartmentsList() {
   };
 
   return (
-    <AppLayout title="Employees" subtitle="Departments" moduleNav={HR_NAV}>
+    <AppLayout title="Employees" subtitle="Departments" moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Departments</h1>

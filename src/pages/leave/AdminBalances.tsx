@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useBalances, useEmployees, useLeaveTypes, useUpsertBalance, useCarryForward } from '@/hooks/hr';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ export default function AdminBalances() {
   }
 
   return (
-    <AppLayout title="Leave Balances (Admin)" moduleNav={HR_NAV}>
+    <AppLayout title="Leave Balances (Admin)" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-3">
         <div className="flex justify-between items-center">
           <Input type="number" value={year} onChange={(e) => setYear(parseInt(e.target.value) || year)} className="w-32" />

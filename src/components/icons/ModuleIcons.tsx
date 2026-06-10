@@ -148,6 +148,40 @@ export const CalendarIcon = () => (
   </svg>
 );
 
+export const AttendanceIcon = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full">
+    <circle cx="24" cy="24" r="16" fill="#0ea5e9" />
+    <circle cx="24" cy="24" r="12" fill="#38bdf8" />
+    <path d="M24 16V24L30 28" stroke="#e0f2fe" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+export const LeaveIcon = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full">
+    <rect x="8" y="14" width="32" height="26" rx="3" fill="#16a34a" />
+    <rect x="8" y="14" width="32" height="8" fill="#22c55e" />
+    <rect x="14" y="10" width="4" height="8" rx="1" fill="#86efac" />
+    <rect x="30" y="10" width="4" height="8" rx="1" fill="#86efac" />
+    <path d="M16 30L22 36L34 24" stroke="#f0fdf4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </svg>
+);
+
+export const PayrollIcon = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full">
+    <rect x="6" y="14" width="36" height="22" rx="3" fill="#15803d" />
+    <rect x="6" y="14" width="36" height="22" rx="3" fill="none" stroke="#22c55e" strokeWidth="1" />
+    <circle cx="24" cy="25" r="6" fill="#bbf7d0" />
+    <text x="24" y="29" textAnchor="middle" fill="#15803d" fontSize="10" fontWeight="bold">₹</text>
+  </svg>
+);
+
+export const AppraisalsIcon = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full">
+    <path d="M24 6L29 18L42 19L32 28L35 41L24 34L13 41L16 28L6 19L19 18L24 6Z" fill="#f59e0b" />
+    <path d="M24 6L29 18L42 19L32 28L35 41L24 34V6Z" fill="#fbbf24" />
+  </svg>
+);
+
 
 // Icon map for easy lookup
 export const MODULE_ICONS: Record<string, React.FC> = {
@@ -167,4 +201,8 @@ export const MODULE_ICONS: Record<string, React.FC> = {
   invoicing: InvoicingIcon,
   maintenance: MaintenanceIcon,
   calendar: CalendarIcon,
+  attendance: AttendanceIcon,
+  leave: LeaveIcon,
+  payroll: PayrollIcon,
+  appraisals: AppraisalsIcon,
 };

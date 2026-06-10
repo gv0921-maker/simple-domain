@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { HR_NAV } from '@/lib/navigation/hr';
+import { PAYROLL_NAV } from '@/lib/navigation/payroll';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { useEmployeePayslips } from '@/hooks/hr';
 
@@ -15,7 +15,7 @@ export default function MyPayslips() {
   const { data: payslips = [] } = useEmployeePayslips(employee?.id);
 
   return (
-    <AppLayout title="My Payslips" moduleNav={HR_NAV}>
+    <AppLayout title="My Payslips" moduleNav={PAYROLL_NAV}>
       <div className="p-6">
         {!employee && <Card className="p-6 text-sm text-muted-foreground">Your account is not linked to an employee record.</Card>}
         <Card>
