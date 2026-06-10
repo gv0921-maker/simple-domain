@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ATTENDANCE_NAV } from '@/lib/navigation/attendance';
+import { MobileScrollHint } from '@/components/layout/MobileScrollHint';
 import { useEmployees, useRangeAttendance, useDeleteSession } from '@/hooks/hr';
 import { ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -73,8 +74,9 @@ export default function AdminAttendance() {
           </Button>
         </div>
 
-        <Card className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <MobileScrollHint />
+        <Card className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-md">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-muted/40">
               <tr>
                 <th className="text-left p-2 sticky left-0 bg-muted/40">Employee</th>
