@@ -184,13 +184,13 @@ export async function markChannelRead(channelId: string): Promise<void> {
 export async function fetchDirectory(): Promise<DirectoryUser[]> {
   const { data, error } = await supabase
     .from('employees')
-    .select('user_id, first_name, last_name, work_email')
+    .select('user_id, full_name, display_name, email')
     .not('user_id', 'is', null);
   if (error) throw error;
   return (data ?? []).map((e: any) => ({
     user_id: e.user_id,
-    name: [e.first_name, e.last_name].filter(Boolean).join(' ') || e.work_email || 'User',
-    email: e.work_email ?? null,
+    name: e.display_name || e.full_name || e.email || 'User',
+    email: e.email ?? null,
     avatar_url: null,
   }));
 }
@@ -198,15 +198,15 @@ export async function fetchDirectory(): Promise<DirectoryUser[]> {
 export async function fetchDirectoryUser(userId: string): Promise<DirectoryUser | null> {
   const { data, error } = await supabase
     .from('employees')
-    .select('user_id, first_name, last_name, work_email')
+    .select('user_id, full_name, display_name, email')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   return {
     user_id: data.user_id!,
-    name: [data.first_name, data.last_name].filter(Boolean).join(' ') || data.work_email || 'User',
-    email: data.work_email ?? null,
+    name: data.display_name || data.full_name || data.email || 'User',
+    email: data.email ?? null,
     avatar_url: null,
   };
 }
