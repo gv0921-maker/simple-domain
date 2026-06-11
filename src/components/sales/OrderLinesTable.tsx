@@ -485,7 +485,87 @@ export function OrderLinesTable<L extends AnyLine>({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="w-full overflow-x-auto">
+        {/* Mobile card layout */}
+        <div className="md:hidden px-3 pt-2 space-y-2">
+          {lines.length === 0 && (
+            <p className="text-center text-muted-foreground py-4 text-sm">
+              No lines yet. Tap "Add a product" below.
+            </p>
+          )}
+          {lines.map((line) => {
+            const finalAmount = line.finalAmount || line.total || 0;
+            return (
+              <div key={`m-${line.id}`} className="border rounded-md p-3 space-y-2 bg-card">
+                <ProductCombobox
+                  products={products}
+                  value={line.productId}
+                  selectedName={line.productName}
+                  onSelect={(id) => onProductSelect(line, id)}
+                  disabled={disabled}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px] uppercase text-muted-foreground">Qty</Label>
+                    <Input
+                      type="number" min={0} step="0.01"
+                      value={line.units ?? 0}
+                      onChange={(e) => updateLine(line.id, { units: Number(e.target.value), quantity: Number(e.target.value) } as Partial<L>)}
+                      className="h-9"
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-muted-foreground">Unit Price</Label>
+                    <Input
+                      type="number" min={0} step="0.01"
+                      value={line.unitPrice ?? 0}
+                      onChange={(e) => updateLine(line.id, { unitPrice: Number(e.target.value) } as Partial<L>)}
+                      className="h-9"
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-muted-foreground">Discount %</Label>
+                    <Input
+                      type="number" min={0} step="0.01"
+                      value={line.discountValue ?? 0}
+                      onChange={(e) => updateLine(line.id, { discountValue: Number(e.target.value) } as Partial<L>)}
+                      className="h-9"
+                      disabled={disabled || !canDiscount}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-muted-foreground">GST %</Label>
+                    <Input
+                      type="number" min={0} max={50}
+                      value={line.gstRate ?? 0}
+                      onChange={(e) => updateLine(line.id, { gstRate: Number(e.target.value) } as Partial<L>)}
+                      className="h-9"
+                      disabled={disabled}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-foreground">Line total</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm">{formatINR(finalAmount)}</span>
+                    <Button
+                      variant="ghost" size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => removeLine(line.id)}
+                      disabled={disabled}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop table */}
+        <div className="w-full overflow-x-auto hidden md:block">
           <table className="w-full min-w-[640px] table-fixed border-collapse">
             <colgroup>
               <col style={{ width: 24 }} />
@@ -518,8 +598,9 @@ export function OrderLinesTable<L extends AnyLine>({
               {lines.map((line, idx) => renderRow(line, idx))}
             </tbody>
           </table>
+        </div>
 
-          <div className="px-4 py-3">
+        <div className="px-4 py-3">
             <button
               type="button"
               onClick={addLine}
@@ -615,7 +696,6 @@ export function OrderLinesTable<L extends AnyLine>({
               </div>
             </div>
           </div>
-        </div>
       </CardContent>
     </Card>
   );
