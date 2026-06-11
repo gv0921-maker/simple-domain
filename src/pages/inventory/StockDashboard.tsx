@@ -282,7 +282,9 @@ export default function StockDashboard() {
             {reservations.filter((r) => r.status === 'reserved').length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">No active reservations</p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+                <p className="md:hidden text-xs text-muted-foreground mb-2">Scroll horizontally to see more →</p>
+                <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Sales Order</TableHead>
@@ -316,6 +318,7 @@ export default function StockDashboard() {
                   })}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

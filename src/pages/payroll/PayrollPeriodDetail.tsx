@@ -101,7 +101,7 @@ export default function PayrollPeriodDetail() {
           <table className="w-full text-sm min-w-[720px]">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-left p-3">Employee</th>
+                <th className="text-left p-3 sticky left-0 bg-muted/50 z-10">Employee</th>
                 <th className="text-right p-3">Paid Days</th>
                 <th className="text-right p-3">Gross</th>
                 <th className="text-right p-3">Deductions</th>
@@ -113,7 +113,7 @@ export default function PayrollPeriodDetail() {
             <tbody>
               {payslips.map((p: any) => (
                 <tr key={p.id} className="border-t hover:bg-accent">
-                  <td className="p-3"><div className="font-medium">{p.employees?.full_name}</div><div className="text-xs text-muted-foreground">{p.employees?.employee_code}</div></td>
+                  <td className="p-3 sticky left-0 bg-card z-10"><div className="font-medium">{p.employees?.full_name}</div><div className="text-xs text-muted-foreground">{p.employees?.employee_code}</div></td>
                   <td className="p-3 text-right">{p.paid_days}/{p.total_working_days}</td>
                   <td className="p-3 text-right">{fmt(Number(p.gross_earnings))}</td>
                   <td className="p-3 text-right">{fmt(Number(p.total_deductions))}</td>

@@ -33,13 +33,13 @@ export default function AdminBalances() {
         <Card className="overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-md">
           <table className="w-full text-xs min-w-[640px]">
             <thead className="bg-muted/40">
-              <tr><th className="text-left p-2">Employee</th>
+              <tr><th className="text-left p-2 sticky left-0 bg-muted/40 z-10">Employee</th>
                 {types.map((t) => <th key={t.id} className="text-left p-2">{t.code}</th>)}</tr>
             </thead>
             <tbody>
               {employees.map((emp) => (
                 <tr key={emp.id} className="border-t">
-                  <td className="p-2 font-medium">{emp.full_name}</td>
+                  <td className="p-2 font-medium sticky left-0 bg-card z-10">{emp.full_name}</td>
                   {types.map((t) => {
                     const b = get(emp.id, t.id);
                     return (
