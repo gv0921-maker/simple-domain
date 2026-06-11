@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -784,7 +785,8 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
       </div>
 
       {/* Kanban board */}
-      <div className="flex-1 overflow-x-scroll overflow-y-hidden px-3 pb-3 pt-2 bg-muted/20 crm-kanban-scroll">
+      {/* Desktop: horizontal kanban */}
+      <div className="hidden md:block flex-1 overflow-x-scroll overflow-y-hidden px-3 pb-3 pt-2 bg-muted/20 crm-kanban-scroll">
         <div className="flex gap-1 h-full min-w-max">
           {groupedView ? groupedView.map((g) => (
             <div key={g.label} className="w-[280px] flex flex-col shrink-0">
@@ -827,6 +829,45 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             />
           ))}
         </div>
+      </div>
+
+      {/* Mobile: vertical accordion of stages */}
+      <div className="md:hidden flex-1 overflow-y-auto bg-muted/20 px-3 pt-2 pb-3">
+        <Accordion type="multiple" defaultValue={activeStages.map((s) => s.id)} className="space-y-2">
+          {activeStages.map((stage) => {
+            const opps = opportunitiesByStage[stage.id] || [];
+            const total = opps.reduce((s, o) => s + o.expectedRevenue, 0);
+            return (
+              <AccordionItem key={stage.id} value={stage.id} className="border rounded-md bg-card">
+                <AccordionTrigger className="px-3 py-2 hover:no-underline">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <span className="font-semibold text-sm">{stage.name}</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {opps.length} • ₹{(total / 1000).toFixed(0)}k
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-2 pb-2 space-y-1">
+                  {opps.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">No opportunities</p>
+                  ) : (
+                    opps.map((opp) => (
+                      <KanbanCard
+                        key={opp.id}
+                        opportunity={opp}
+                        onPriorityChange={(p) => handlePriorityChange(opp.id, p)}
+                        isFocused={false}
+                        onFocus={() => {}}
+                        onKeyboardMove={() => {}}
+                        userId={user?.id}
+                      />
+                    ))
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
       </div>
     </div>
   );
