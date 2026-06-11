@@ -57,9 +57,9 @@ export default function EmployeesOverview() {
   return (
     <AppLayout title="Employees" subtitle="Overview" moduleNav={EMPLOYEES_NAV}>
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <h1 className="text-2xl font-semibold">HR Overview</h1>
-          <Button onClick={() => navigate('/employees/new')} className="gap-2">
+          <Button onClick={() => navigate('/employees/new')} className="gap-2 shrink-0 self-start">
             <UserPlus className="h-4 w-4" /> New Employee
           </Button>
         </div>

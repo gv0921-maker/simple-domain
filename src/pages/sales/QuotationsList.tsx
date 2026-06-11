@@ -307,7 +307,7 @@ ${quotation.termsAndConditions || ''}
         </div>
 
         {/* Table */}
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -468,6 +468,38 @@ ${quotation.termsAndConditions || ''}
             </TableBody>
           </Table>
         </Card>
+
+        {/* Mobile card list */}
+        <div className="md:hidden space-y-3">
+          {filteredQuotations.length === 0 ? (
+            <Card className="p-8 text-center text-muted-foreground">
+              <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
+              <p>No quotations found</p>
+            </Card>
+          ) : (
+            filteredQuotations.map((quotation) => (
+              <Card
+                key={quotation.id}
+                onClick={() => navigate(`/sales/quotations/${quotation.id}`)}
+                className="cursor-pointer hover:bg-accent/50"
+              >
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="font-medium text-sm truncate">{quotation.reference}</div>
+                    <Badge variant="outline" className={cn('shrink-0 text-xs', STATUS_CONFIG[quotation.status].className)}>
+                      {STATUS_CONFIG[quotation.status].label}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground truncate">{quotation.customerName}</div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Valid {format(parseISO(quotation.validUntil), 'MMM d, yyyy')}</span>
+                    <span className="font-semibold">{`₹${quotation.total.toLocaleString('en-IN')}`}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation */}

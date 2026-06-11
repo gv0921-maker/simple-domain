@@ -68,12 +68,12 @@ export default function SalesOverview() {
     <AppLayout title="Sales" moduleNav={SALES_NAV}>
       <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Sales Overview</h1>
             <p className="text-muted-foreground">Track quotations, orders and revenue</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0 flex-wrap">
             <Button variant="outline" onClick={() => navigate('/sales/quotations/new')}>
               New Quotation
             </Button>

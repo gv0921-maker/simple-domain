@@ -33,12 +33,12 @@ export default function ManufacturingOverview() {
     <AppLayout title="Manufacturing" moduleNav={MANUFACTURING_NAV}>
       <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Manufacturing Overview</h1>
             <p className="text-muted-foreground">Monitor production and manage work orders</p>
           </div>
-          <Button onClick={() => navigate('/manufacturing/work-orders/new')}>
+          <Button onClick={() => navigate('/manufacturing/work-orders/new')} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
             New Work Order
           </Button>

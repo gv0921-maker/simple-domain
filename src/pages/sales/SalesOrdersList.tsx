@@ -266,7 +266,7 @@ export default function SalesOrdersList() {
         </div>
 
         {/* Table */}
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -431,6 +431,38 @@ export default function SalesOrdersList() {
             </TableBody>
           </Table>
         </Card>
+
+        {/* Mobile card list */}
+        <div className="md:hidden space-y-3">
+          {filteredOrders.length === 0 ? (
+            <Card className="p-8 text-center text-muted-foreground">
+              <ShoppingCart className="h-10 w-10 mx-auto mb-2 opacity-30" />
+              <p>No orders found</p>
+            </Card>
+          ) : (
+            filteredOrders.map((order) => (
+              <Card
+                key={order.id}
+                onClick={() => navigate(`/sales/orders/${order.id}`)}
+                className="cursor-pointer hover:bg-accent/50"
+              >
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="font-medium text-sm truncate">{order.reference}</div>
+                    <Badge variant="outline" className={cn('shrink-0 text-xs', STATUS_CONFIG[order.status].className)}>
+                      {STATUS_CONFIG[order.status].label}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground truncate">{order.customerName}</div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{format(parseISO(order.orderDate), 'MMM d, yyyy')}</span>
+                    <span className="font-semibold">{`₹${order.total.toLocaleString('en-IN')}`}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation */}
