@@ -105,6 +105,7 @@ export default function ProductDetail() {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [newVariant, setNewVariant] = useState({ name: '', sku: '', additionalPrice: 0 });
   const [hasChanges, setHasChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
     if (!isNew && existingProduct) {
@@ -326,7 +327,20 @@ export default function ProductDetail() {
           </div>
         )}
 
-        <Tabs defaultValue="general" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="md:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General Information</SelectItem>
+                <SelectItem value="pricing">Pricing & Inventory</SelectItem>
+                <SelectItem value="variants">Variants</SelectItem>
+                {!isNew && <SelectItem value="qc">QC History</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
           <TabsList className="hidden md:flex">
             <TabsTrigger value="general">General Information</TabsTrigger>
             <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
