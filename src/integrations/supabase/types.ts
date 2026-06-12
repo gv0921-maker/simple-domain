@@ -2786,6 +2786,50 @@ export type Database = {
           },
         ]
       }
+      label_prints: {
+        Row: {
+          barcode_value: string
+          goods_receipt_id: string | null
+          id: string
+          label_format: string
+          print_count: number
+          printed_at: string
+          printed_by: string | null
+          product_id: string
+          serial_number: string
+        }
+        Insert: {
+          barcode_value: string
+          goods_receipt_id?: string | null
+          id?: string
+          label_format?: string
+          print_count?: number
+          printed_at?: string
+          printed_by?: string | null
+          product_id: string
+          serial_number: string
+        }
+        Update: {
+          barcode_value?: string
+          goods_receipt_id?: string | null
+          id?: string
+          label_format?: string
+          print_count?: number
+          printed_at?: string
+          printed_by?: string | null
+          product_id?: string
+          serial_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "label_prints_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_approval_log: {
         Row: {
           action: string
@@ -4804,6 +4848,102 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      scan_queue: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          document_id: string
+          document_reference: string
+          document_type: string
+          expected_items_count: number
+          id: string
+          notes: string | null
+          priority: string
+          scan_status: string
+          scanned_items_count: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          document_id: string
+          document_reference: string
+          document_type: string
+          expected_items_count?: number
+          id?: string
+          notes?: string | null
+          priority?: string
+          scan_status?: string
+          scanned_items_count?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          document_id?: string
+          document_reference?: string
+          document_type?: string
+          expected_items_count?: number
+          id?: string
+          notes?: string | null
+          priority?: string
+          scan_status?: string
+          scanned_items_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scan_records: {
+        Row: {
+          barcode: string
+          id: string
+          notes: string | null
+          product_id: string | null
+          scan_queue_id: string
+          scan_result: string
+          scanned_at: string
+          scanned_by: string | null
+          serial_number: string | null
+        }
+        Insert: {
+          barcode: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          scan_queue_id: string
+          scan_result?: string
+          scanned_at?: string
+          scanned_by?: string | null
+          serial_number?: string | null
+        }
+        Update: {
+          barcode?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          scan_queue_id?: string
+          scan_result?: string
+          scanned_at?: string
+          scanned_by?: string | null
+          serial_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_records_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_records_scan_queue_id_fkey"
+            columns: ["scan_queue_id"]
+            isOneToOne: false
+            referencedRelation: "scan_queue"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_reports: {
         Row: {

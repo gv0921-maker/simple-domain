@@ -27,9 +27,13 @@ import InventoryReporting from "@/pages/inventory/InventoryReporting";
 import InventoryAdjustments from "@/pages/inventory/InventoryAdjustments";
 import ReorderRules from "@/pages/inventory/ReorderRules";
 import ReorderRuleForm from "@/pages/inventory/ReorderRuleForm";
-import BarcodeOperations from "@/pages/inventory/BarcodeOperations";
-import BarcodeLabels from "@/pages/inventory/BarcodeLabels";
 import ProductScanLookup from "@/pages/inventory/ProductScanLookup";
+
+// Barcode workspace (Phase 1 Batch 2)
+import ScanQueueDashboard from "@/pages/barcode/ScanQueueDashboard";
+import ScanWorkspace from "@/pages/barcode/ScanWorkspace";
+import LabelsPage from "@/pages/barcode/LabelsPage";
+import ScanHistoryPage from "@/pages/barcode/ScanHistoryPage";
 import StockDashboard from "@/pages/inventory/StockDashboard";
 import DeliveryNotesList from "@/pages/inventory/DeliveryNotesList";
 import DeliveryNoteDetail from "@/pages/inventory/DeliveryNoteDetail";
@@ -229,8 +233,10 @@ const App = () => (
             <Route path="/inventory/delivery-notes/:id/print" element={<ProtectedRoute><DeliveryNotePrint /></ProtectedRoute>} />
 
             {/* Barcode module */}
-            <Route path="/barcode" element={<ProtectedRoute><BarcodeOperations /></ProtectedRoute>} />
-            <Route path="/barcode/labels" element={<ProtectedRoute><BarcodeLabels /></ProtectedRoute>} />
+            <Route path="/barcode" element={<ProtectedRoute><ScanQueueDashboard /></ProtectedRoute>} />
+            <Route path="/barcode/scan/:queueId" element={<ProtectedRoute><ScanWorkspace /></ProtectedRoute>} />
+            <Route path="/barcode/labels" element={<ProtectedRoute><LabelsPage /></ProtectedRoute>} />
+            <Route path="/barcode/history" element={<ProtectedRoute><ScanHistoryPage /></ProtectedRoute>} />
             <Route path="/barcode/scan-lookup" element={<ProtectedRoute><ProductScanLookup /></ProtectedRoute>} />
 
             {/* Sales module */}
