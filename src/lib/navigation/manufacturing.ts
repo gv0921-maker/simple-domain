@@ -6,6 +6,7 @@ export const MANUFACTURING_NAV = [
   { label: 'Work Centers', href: '/manufacturing/work-centers' },
   { label: 'Planning', href: '/manufacturing/planning' },
   { label: 'Shop Floor', href: '/shop-floor' },
+  { label: 'Reports', href: '/manufacturing/reports' },
 ];
 
 // PLM Module navigation

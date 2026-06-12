@@ -4,4 +4,5 @@ export const EMPLOYEES_NAV = [
   { label: 'Directory', href: '/employees/directory' },
   { label: 'Departments', href: '/employees/departments' },
   { label: 'Contracts', href: '/employees/contracts' },
+  { label: 'Reports', href: '/employees/reports' },
 ];

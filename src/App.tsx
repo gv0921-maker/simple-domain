@@ -172,6 +172,22 @@ import AdminCycleDetail from "@/pages/appraisals/admin/CycleDetail";
 import AdminAppraisalTemplates from "@/pages/appraisals/admin/AdminTemplates";
 import AdminAppraisalReports from "@/pages/appraisals/admin/AdminReports";
 
+// Reports module
+import ReportsHub from "@/pages/reports/ReportsHub";
+import ReportPage from "@/pages/reports/ReportPage";
+import {
+  SalesReportsLanding,
+  InventoryReportsLanding,
+  ManufacturingReportsLanding,
+  InvoicingReportsLanding,
+  EmployeesReportsLanding,
+  AttendanceReportsLanding,
+  LeaveReportsLanding,
+  PayrollReportsLanding,
+  AppraisalsReportsLanding,
+  CRMReportsLanding,
+} from "@/pages/reports/modulePages";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -232,7 +248,9 @@ const App = () => (
             <Route path="/sales/pricelists" element={<ProtectedRoute><PricelistsPage /></ProtectedRoute>} />
             <Route path="/sales/pricelists/new" element={<ProtectedRoute><PricelistForm /></ProtectedRoute>} />
             <Route path="/sales/pricelists/:id/edit" element={<ProtectedRoute><PricelistForm /></ProtectedRoute>} />
-            <Route path="/sales/reports" element={<ProtectedRoute><SalesReports /></ProtectedRoute>} />
+            <Route path="/sales/reports" element={<ProtectedRoute><SalesReportsLanding /></ProtectedRoute>} />
+            <Route path="/sales/reports/legacy" element={<ProtectedRoute><SalesReports /></ProtectedRoute>} />
+            <Route path="/sales/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
             <Route path="/sales/promotions" element={<ProtectedRoute><PromotionsPage /></ProtectedRoute>} />
             <Route path="/sales/customers" element={<ProtectedRoute><CustomersList /></ProtectedRoute>} />
             <Route path="/sales/customers/new" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
@@ -365,7 +383,28 @@ const App = () => (
             <Route path="/invoicing/payments" element={<ProtectedRoute><PaymentsList /></ProtectedRoute>} />
             <Route path="/invoicing/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
             <Route path="/invoicing/invoices/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
+            <Route path="/invoicing/reports" element={<ProtectedRoute><InvoicingReportsLanding /></ProtectedRoute>} />
+            <Route path="/invoicing/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
             <Route path="/invoicing/*" element={<ProtectedRoute><InvoicesList /></ProtectedRoute>} />
+
+            {/* Reports module */}
+            <Route path="/reports" element={<ProtectedRoute><ReportsHub /></ProtectedRoute>} />
+            <Route path="/inventory/reports" element={<ProtectedRoute><InventoryReportsLanding /></ProtectedRoute>} />
+            <Route path="/inventory/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/manufacturing/reports" element={<ProtectedRoute><ManufacturingReportsLanding /></ProtectedRoute>} />
+            <Route path="/manufacturing/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/employees/reports" element={<ProtectedRoute><EmployeesReportsLanding /></ProtectedRoute>} />
+            <Route path="/employees/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/attendance/reports" element={<ProtectedRoute><AttendanceReportsLanding /></ProtectedRoute>} />
+            <Route path="/attendance/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/leave/reports" element={<ProtectedRoute><LeaveReportsLanding /></ProtectedRoute>} />
+            <Route path="/leave/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/payroll/reports" element={<ProtectedRoute><PayrollReportsLanding /></ProtectedRoute>} />
+            <Route path="/payroll/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/appraisals/reports" element={<ProtectedRoute><AppraisalsReportsLanding /></ProtectedRoute>} />
+            <Route path="/appraisals/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+            <Route path="/crm/reports" element={<ProtectedRoute><CRMReportsLanding /></ProtectedRoute>} />
+            <Route path="/crm/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

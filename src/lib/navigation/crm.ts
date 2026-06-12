@@ -2,4 +2,5 @@
 export const CRM_NAV = [
   { label: 'Pipeline', href: '/crm' },
   { label: 'Contacts', href: '/crm/contacts' },
+  { label: 'Reports', href: '/crm/reports' },
 ];

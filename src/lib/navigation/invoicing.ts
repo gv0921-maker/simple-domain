@@ -4,4 +4,5 @@ export const INVOICING_NAV = [
   { label: 'Warranty Bills', href: '/invoicing/warranty-bills' },
   { label: 'Factory Bills', href: '/invoicing/factory-bills' },
   { label: 'Payments', href: '/invoicing/payments' },
+  { label: 'Reports', href: '/invoicing/reports' },
 ];

@@ -10,4 +10,5 @@ export const ATTENDANCE_NAV = [
   { label: 'Work Schedules', href: '/attendance/work-schedules' },
   { label: 'Roster Planning', href: '/attendance/roster' },
   { label: 'Roster Reschedule', href: '/attendance/roster/reschedule' },
+  { label: 'Reports', href: '/attendance/reports' },
 ];

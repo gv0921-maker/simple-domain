@@ -7,4 +7,5 @@ export const PAYROLL_NAV = [
   { label: 'Admin Settings', href: '/payroll/admin/settings' },
   { label: 'Admin Loans', href: '/payroll/admin/loans' },
   { label: 'Admin Advances', href: '/payroll/admin/advances' },
+  { label: 'Reports', href: '/payroll/reports' },
 ];
