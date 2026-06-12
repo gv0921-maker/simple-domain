@@ -305,11 +305,7 @@ const serialTracking: ReportDef = {
   },
 };
 
-// dummy placeholder to keep diff anchored
-const __anchorPlaceholder1 = (() => {
-  const { data } = { data: null as any };
-    return (data || []) as Record<string, unknown>[];
-})();
+// ----- Manufacturing -----
 
 // ----- Manufacturing -----
 const workOrderSummary: ReportDef = {
