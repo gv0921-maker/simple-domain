@@ -1,0 +1,22 @@
+import { ModuleReportsLanding } from "./ModuleReportsLanding";
+import { SALES_NAV } from "@/lib/navigation/sales";
+import { INVENTORY_NAV } from "@/lib/navigation";
+import { MANUFACTURING_NAV } from "@/lib/navigation/manufacturing";
+import { INVOICING_NAV } from "@/lib/navigation/invoicing";
+import { EMPLOYEES_NAV } from "@/lib/navigation/employees";
+import { ATTENDANCE_NAV } from "@/lib/navigation/attendance";
+import { LEAVE_NAV } from "@/lib/navigation/leave";
+import { PAYROLL_NAV } from "@/lib/navigation/payroll";
+import { APPRAISALS_NAV } from "@/lib/navigation/appraisals";
+import { CRM_NAV } from "@/lib/navigation/crm";
+
+export const SalesReportsLanding = () => <ModuleReportsLanding modulePath="/sales" moduleTitle="Sales" moduleNav={SALES_NAV} />;
+export const InventoryReportsLanding = () => <ModuleReportsLanding modulePath="/inventory" moduleTitle="Inventory" moduleNav={INVENTORY_NAV} />;
+export const ManufacturingReportsLanding = () => <ModuleReportsLanding modulePath="/manufacturing" moduleTitle="Manufacturing" moduleNav={MANUFACTURING_NAV} />;
+export const InvoicingReportsLanding = () => <ModuleReportsLanding modulePath="/invoicing" moduleTitle="Invoicing" moduleNav={INVOICING_NAV} />;
+export const EmployeesReportsLanding = () => <ModuleReportsLanding modulePath="/employees" moduleTitle="Employees" moduleNav={EMPLOYEES_NAV} />;
+export const AttendanceReportsLanding = () => <ModuleReportsLanding modulePath="/attendance" moduleTitle="Attendance" moduleNav={ATTENDANCE_NAV} />;
+export const LeaveReportsLanding = () => <ModuleReportsLanding modulePath="/leave" moduleTitle="Leave" moduleNav={LEAVE_NAV} />;
+export const PayrollReportsLanding = () => <ModuleReportsLanding modulePath="/payroll" moduleTitle="Payroll" moduleNav={PAYROLL_NAV} />;
+export const AppraisalsReportsLanding = () => <ModuleReportsLanding modulePath="/appraisals" moduleTitle="Appraisals" moduleNav={APPRAISALS_NAV} />;
+export const CRMReportsLanding = () => <ModuleReportsLanding modulePath="/crm" moduleTitle="CRM" moduleNav={CRM_NAV} />;
