@@ -41,7 +41,9 @@ export function CameraScannerDialog({ open, onOpenChange, onScanned }: Props) {
       const s = scannerRef.current;
       scannerRef.current = null;
       if (s) {
-        s.stop().catch(() => undefined).finally(() => s.clear().catch(() => undefined));
+        Promise.resolve(s.stop()).catch(() => undefined).finally(() => {
+          try { s.clear(); } catch { /* ignore */ }
+        });
       }
     };
   }, [open, onScanned, onOpenChange]);
