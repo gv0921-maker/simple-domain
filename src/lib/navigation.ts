@@ -12,6 +12,7 @@ export const INVENTORY_NAV = [
   { label: 'Reorder Rules', href: '/inventory/reorder-rules' },
   { label: 'Reporting', href: '/inventory/reporting' },
   { label: 'Configuration', href: '/inventory/configuration' },
+  { label: 'Reports', href: '/inventory/reports' },
 ];
 
 // Shared navigation items for the Barcode module
