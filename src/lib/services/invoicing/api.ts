@@ -263,15 +263,9 @@ export async function generateInvoiceFromOrder(orderId: string): Promise<{ invoi
     .order('created_at', { ascending: true });
   if (linesErr) throw linesErr;
 
-  // 2. Sequential reference INV-YYYY-NNNNN
-  const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
-  const { count } = await supabase
-    .from('invoices')
-    .select('id', { count: 'exact', head: true })
-    .eq('type', 'regular')
-    .like('reference', `${prefix}%`);
-  const reference = `${prefix}${String((count ?? 0) + 1).padStart(5, '0')}`;
+  // 2. FY-based reference (e.g. INV-2526-0001)
+  const { generateDocumentNumber } = await import('@/lib/services/numbering/api');
+  const reference = await generateDocumentNumber('invoice');
 
   const today = new Date().toISOString().slice(0, 10);
   const subtotal = Number(order.subtotal ?? 0);
