@@ -1,41 +1,45 @@
-# Fix Customer Unification (Sales ↔ CRM)
+## Build Polish Batch 3 — Reports & Exports Module
 
-## Problem
-`quotations.customer_id` and `sales_orders.customer_id` are FKs to `customers`, but `QuotationForm`/`SalesOrderForm` populate `customerId` from `crm_contacts` via `useContacts()`. Every save fails with an FK violation. Saving a customer in `CustomerForm` doesn't show up in CRM, and saving a CRM contact doesn't show up in Sales.
+This is a large, multi-module addition (~40+ report pages, framework, migration, hub, exports). Before I start writing code, I want to confirm scope and sequencing so we don't end up with a half-built framework.
 
-## Part 1 — Forms read from `customers`
+### What I'll build
 
-**`src/components/sales/CustomerSelector.tsx`**
-- Replace `useContacts()` with `useCustomers()` from `@/hooks/sales`.
-- Update displayed fields: use `name`, `email`, `phone`, `company` from `SbCustomer`.
-- Keep the same onChange contract (emit full row) and `onCreateNew` slot.
+**1. Database (1 migration)**
+- `saved_reports` (user_id, report_key, name, description, filters_json, columns_json, sort_by, sort_dir, is_shared, shared_with_role)
+- `scheduled_reports` (saved_report_id, schedule, schedule_day, schedule_date, delivery_email, last_run_at, next_run_at, is_active, created_by)
+- RLS: users manage their own; shared reports visible by matching role; GRANTs to authenticated + service_role.
 
-**`src/pages/sales/QuotationForm.tsx` and `src/pages/sales/SalesOrderForm.tsx`**
-- Replace `useContacts()` import/call with `useCustomers()`.
-- When a customer is picked, set `customerId = customer.id` (real `customers.id` UUID) and `customerName = customer.name`.
-- Auto-populate billing/contact fields from the `customers` row (email, phone, address, gstin).
-- Leave the rest of the form, lines, totals, and save mutations unchanged.
-- `onCreateNew` should navigate to `/sales/customers/new` (CustomerForm) instead of CRM ContactForm.
+**2. Framework (shared)**
+- `src/lib/reports/exporters.ts` — CSV (no dep), Excel (`xlsx`), PDF (`jspdf` + `jspdf-autotable`) with GLF letterhead.
+- `src/components/reports/ReportShell.tsx` — title, filter chips, expandable filter panel, desktop table + mobile cards, sticky export toolbar, Save Filter / Schedule dialogs, drill-down via `onRowClick`.
+- `src/hooks/reports/useSavedReports.ts`, `useScheduledReports.ts` (TanStack Query).
+- Filter primitives: date range, select, multi-select, text.
 
-## Part 2 — Two-way CRM ↔ Customers sync (email as match key)
+**3. Reports Hub**
+- `/reports` — grouped by module, search, favorites (localStorage), recent (localStorage), saved reports section.
+- Avatar menu entry "Reports".
 
-Add a small helper module `src/lib/sales/customerCrmSync.ts` exporting:
-- `upsertCustomerFromContact(contact)` — looks up `customers` by lowercase email, updates if found, inserts otherwise. Maps:
-  - `name` ← `${firstName} ${lastName}`.trim() (fallback to `companyName`)
-  - `email`, `phone`, `company` (from `companyName`), `contactPerson` (full name when company present)
-- `upsertContactFromCustomer(customer)` — looks up `crm_contacts` by lowercase email, updates if found, inserts otherwise. Splits `name` into first/last; sets `type='individual'`, copies `email`, `phone`, `companyName` from `company`.
-- Both helpers no-op when `email` is empty (can't match safely).
+**4. Per-module Reports** (each is a route + page using ReportShell, plus a "Reports" landing page per module that lists its reports)
+- Sales (6), Inventory (5), Manufacturing (3), Invoicing (5), Employees (3), Attendance (3), Leave (2), Payroll (3), Appraisals (2), CRM (2). **34 report pages + 10 module-reports landing pages**.
+- Add "Reports" link to each `*_NAV` array.
 
-**Wire-up**
-- `src/pages/crm/ContactForm.tsx`: after `saveContactMutation.mutateAsync(...)` succeeds, call `upsertCustomerFromContact(saved)` (fire-and-forget with try/catch toast; invalidate `salesKeys.customers()`).
-- `src/pages/sales/CustomerForm.tsx`: after `saveMut.mutate` succeeds, call `upsertContactFromCustomer(saved)` (try/catch; invalidate CRM contacts query).
-- Also do the same sync from `src/components/crm/CRMFormDialogs.tsx` `ContactFormDialog.handleSubmit` so dialog-created contacts appear in Sales too.
+**5. RBAC gating**
+- Use existing `has_any_role` / `RoleGate`. Sales reports → sales_rep+; financial (aging, GST, payment, price approvals) → accountant/admin+; HR/Payroll/Leave/Attendance/Appraisal → hr_manager/admin+; Inventory → warehouse_operator+; Manufacturing → admin+; CRM → sales_rep+.
 
-## Verification
-- `tsc --noEmit` clean.
-- Manual save: create a CRM contact → appears in Sales customer dropdown → create quotation with that customer → save succeeds (no 23503 FK error). Same in reverse from CustomerForm.
+**6. Mobile**
+- Collapsed filter bar with Expand button, cards on mobile (`md:hidden`/`hidden md:block`), sticky bottom export toolbar on mobile.
 
-## Out of scope
-- Backfill of existing `crm_contacts` not yet mirrored to `customers` (one-off; can be a separate task if needed).
-- Deduplication beyond email match.
-- Changing the FK target of `quotations.customer_id` (keeping `customers` as the system of record for transactions).
+### What I want to confirm before starting
+
+This batch will touch ~60 new files and edit ~12 navigation/app files. To keep it shippable and reviewable I'd like to confirm two things:
+
+**A. Data depth per report.** Many of these (GST summary, PF/ESI, TDS, aging buckets, pipeline conversion, BOM material consumption) require non-trivial aggregations against existing tables. Two options:
+
+1. **Real aggregations now** — write the SQL/JS aggregation logic for every report against existing schema. Higher value, but some reports (PF/ESI, TDS, GSTR-1 style) need fields we may not have and will end up partially empty. ~2× the work.
+2. **Framework + working reports for what the schema already supports cleanly, stubs for the rest** — every report page exists, uses ReportShell, has filters/exports wired up, but data-thin reports show an "Insufficient data" empty state with a note about which fields are missing. Then we iterate. *Recommended* — gets the framework + exports + hub shipped cleanly without faking numbers.
+
+**B. Saved/Scheduled reports execution.** Per spec, actual email delivery is out of scope — we just store the schedule and expose "Send Now" (which triggers a client-side export download). Confirming that's what you want, vs. wiring an edge function now.
+
+**C. Excel/PDF deps.** `xlsx`, `jspdf`, `jspdf-autotable` — I'll add these. `xlsx` from npm has a known CVE for old versions; I'll install the latest. OK?
+
+If you say "go with A2, B as stated, C yes" I'll execute end-to-end in one pass.
