@@ -16,6 +16,7 @@ import {
   Home,
   Clock,
   MessageCircle,
+  FileBarChart,
 } from 'lucide-react';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { NotificationsBell } from '@/components/layout/NotificationsBell';
@@ -183,6 +184,11 @@ export function TopNav({ title, subtitle }: TopNavProps) {
               <p className="text-sm font-medium">{user?.name}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/reports')}>
+              <FileBarChart className="mr-2 h-4 w-4" />
+              <span>Reports</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {user && canAccessRoute(user.id, '/settings') && (
               <>
