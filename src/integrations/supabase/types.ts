@@ -4709,6 +4709,104 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_reports: {
+        Row: {
+          columns_json: Json
+          created_at: string
+          description: string | null
+          filters_json: Json
+          id: string
+          is_shared: boolean
+          name: string
+          report_key: string
+          shared_with_role: string | null
+          sort_by: string | null
+          sort_dir: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          columns_json?: Json
+          created_at?: string
+          description?: string | null
+          filters_json?: Json
+          id?: string
+          is_shared?: boolean
+          name: string
+          report_key: string
+          shared_with_role?: string | null
+          sort_by?: string | null
+          sort_dir?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          columns_json?: Json
+          created_at?: string
+          description?: string | null
+          filters_json?: Json
+          id?: string
+          is_shared?: boolean
+          name?: string
+          report_key?: string
+          shared_with_role?: string | null
+          sort_by?: string | null
+          sort_dir?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scheduled_reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          delivery_email: string
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          next_run_at: string
+          saved_report_id: string
+          schedule: string
+          schedule_date: number | null
+          schedule_day: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          delivery_email: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          next_run_at?: string
+          saved_report_id: string
+          schedule: string
+          schedule_date?: number | null
+          schedule_day?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          delivery_email?: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          next_run_at?: string
+          saved_report_id?: string
+          schedule?: string
+          schedule_date?: number | null
+          schedule_day?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_reports_saved_report_id_fkey"
+            columns: ["saved_report_id"]
+            isOneToOne: false
+            referencedRelation: "saved_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       serial_numbers: {
         Row: {
           created_at: string
