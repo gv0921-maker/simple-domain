@@ -51,6 +51,9 @@ import { OrderStatusChevrons, canTransition } from '@/components/sales/OrderStat
 import { getContact, saveContact } from '@/lib/services/crm';
 import { processOrderDelivery, tierLabel } from '@/lib/sales/loyaltyService';
 import { ReservationsSection, useOrderReservationBadge } from '@/components/sales/ReservationsSection';
+import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
+import { logRecordCreated, logStatusChange } from '@/lib/services/activityLog';
+import { trackChanges } from '@/lib/services/activityLogHelpers';
 
 const PAYMENT_TERMS = [
   { value: 'immediate', label: 'Immediate Payment' },
@@ -230,6 +233,17 @@ export default function SalesOrderForm() {
   const persist = useCallback(async (statusOverride?: SalesOrderStatus, extraActivityNote?: string) => {
     const newStatus = statusOverride || formData.status || 'estimate';
     const reference = formData.reference || await generateOrderReferenceRich();
+    const wasNew = isNew;
+    const prevSnapshot: Record<string, unknown> = {
+      customerName: formData.customerName,
+      orderDate: formData.orderDate,
+      deliveryDate: formData.deliveryDate,
+      paymentTerms: formData.paymentTerms,
+      pricelistId: formData.pricelistId,
+      notes: formData.notes,
+      grandTotal: formData.grandTotal,
+      status: formData.status,
+    };
     const data: SalesOrder = {
       id: isNew ? crypto.randomUUID() : id!,
       reference,
@@ -278,6 +292,28 @@ export default function SalesOrderForm() {
     data.lines = lines;
     data.reference = reference;
     await saveOrderMut.mutateAsync(data);
+    // Activity logging (best-effort; never throws)
+    try {
+      if (wasNew) {
+        await logRecordCreated('sales_order', data.id);
+      } else {
+        const next: Record<string, unknown> = {
+          customerName: data.customerName,
+          orderDate: data.orderDate,
+          deliveryDate: data.deliveryDate,
+          paymentTerms: data.paymentTerms,
+          pricelistId: data.pricelistId,
+          notes: data.notes,
+          grandTotal: data.total,
+        };
+        await trackChanges('sales_order', data.id, prevSnapshot, next);
+        if (prevSnapshot.status && prevSnapshot.status !== newStatus) {
+          await logStatusChange('sales_order', data.id, prevSnapshot.status, newStatus);
+        }
+      }
+    } catch {
+      // swallow
+    }
     return data;
   }, [formData, lines, isNew, id, user, saveOrderMut]);
 
@@ -437,6 +473,9 @@ export default function SalesOrderForm() {
                         onClick={async () => {
                           try {
                             const res = await generateInvoiceMut.mutateAsync(id);
+                            try {
+                              await logStatusChange('sales_order', id, 'paid', 'invoiced');
+                            } catch { /* ignore */ }
                             toast({ title: 'Invoice generated successfully' });
                             navigate(`/invoicing/invoices/${res.invoiceId}`);
                           } catch (e: any) {
@@ -671,6 +710,10 @@ export default function SalesOrderForm() {
                 </div>
               </CardContent>
             </Card>
+
+            {!isNew && id && (
+              <LogNotesPanel recordType="sales_order" recordId={id} />
+            )}
         </div>
       </div>
 

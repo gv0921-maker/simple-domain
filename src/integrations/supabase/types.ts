@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action_type: string
+          changed_at: string
+          changed_by: string
+          deleted_at: string | null
+          deleted_by: string | null
+          field_name: string | null
+          id: string
+          is_deleted: boolean
+          new_value: string | null
+          note_text: string | null
+          old_value: string | null
+          record_id: string
+          record_type: string
+        }
+        Insert: {
+          action_type: string
+          changed_at?: string
+          changed_by: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          field_name?: string | null
+          id?: string
+          is_deleted?: boolean
+          new_value?: string | null
+          note_text?: string | null
+          old_value?: string | null
+          record_id: string
+          record_type: string
+        }
+        Update: {
+          action_type?: string
+          changed_at?: string
+          changed_by?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          field_name?: string | null
+          id?: string
+          is_deleted?: boolean
+          new_value?: string | null
+          note_text?: string | null
+          old_value?: string | null
+          record_id?: string
+          record_type?: string
+        }
+        Relationships: []
+      }
       adjustment_lines: {
         Row: {
           adjustment_id: string

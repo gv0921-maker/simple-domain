@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { salesKeys } from '@/hooks/sales/keys';
+import { logStatusChange } from '@/lib/services/activityLog';
 
 const METHODS = [
   { value: 'cash', label: 'Cash' },
@@ -82,6 +83,10 @@ export function RecordPaymentDialog({
         payment_reference: reference || null,
       } as any).eq('id', orderId);
       if (oErr) throw oErr;
+
+      try {
+        await logStatusChange('sales_order', orderId, 'confirmed', 'paid');
+      } catch { /* ignore */ }
 
       qc.invalidateQueries({ queryKey: salesKeys.order(orderId) });
       qc.invalidateQueries({ queryKey: [...salesKeys.all, 'order-rich', orderId] });
