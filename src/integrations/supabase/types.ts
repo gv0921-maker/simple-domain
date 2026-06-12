@@ -3132,6 +3132,60 @@ export type Database = {
           },
         ]
       }
+      numbering_sequences: {
+        Row: {
+          document_type: string
+          fy_label: string
+          id: string
+          last_number: number
+          updated_at: string
+        }
+        Insert: {
+          document_type: string
+          fy_label: string
+          id?: string
+          last_number?: number
+          updated_at?: string
+        }
+        Update: {
+          document_type?: string
+          fy_label?: string
+          id?: string
+          last_number?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      numbering_settings: {
+        Row: {
+          fy_start_day: number
+          fy_start_month: number
+          id: string
+          prefix_separator: string
+          sequential_padding: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          fy_start_day?: number
+          fy_start_month?: number
+          id?: string
+          prefix_separator?: string
+          sequential_padding?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          fy_start_day?: number
+          fy_start_month?: number
+          id?: string
+          prefix_separator?: string
+          sequential_padding?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       order_activities: {
         Row: {
           action: string
@@ -6032,7 +6086,12 @@ export type Database = {
         Returns: boolean
       }
       can_write_inventory: { Args: never; Returns: boolean }
+      generate_document_number: {
+        Args: { p_document_type: string }
+        Returns: string
+      }
       get_current_employee_id: { Args: never; Returns: string }
+      get_current_fy_label: { Args: never; Returns: string }
       get_dashboard_role: { Args: never; Returns: string }
       has_any_role: {
         Args: {
@@ -6091,6 +6150,10 @@ export type Database = {
       portal_update_quotation_status: {
         Args: { _id: string; _status: string; _token: string }
         Returns: Json
+      }
+      preview_next_document_number: {
+        Args: { p_document_type: string }
+        Returns: string
       }
     }
     Enums: {
