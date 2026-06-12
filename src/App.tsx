@@ -274,6 +274,7 @@ const App = () => (
             <Route path="/settings/roles" element={<ProtectedRoute><RolesManagement /></ProtectedRoute>} />
             <Route path="/settings/audit" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
             <Route path="/settings/backups" element={<ProtectedRoute><BackupsSettings /></ProtectedRoute>} />
+            <Route path="/settings/numbering" element={<ProtectedRoute><NumberingSettings /></ProtectedRoute>} />
             <Route path="/settings/crm-pipelines" element={<ProtectedRoute><CRMPipelinesSettings /></ProtectedRoute>} />
             <Route path="/settings/crm-backup" element={<ProtectedRoute><CRMBackupSettings /></ProtectedRoute>} />
             <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
