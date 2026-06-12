@@ -96,6 +96,16 @@ import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 
 import NotFound from "@/pages/NotFound";
 
+// Dashboards module
+import DashboardsHome from "@/pages/dashboards/DashboardsHome";
+import SuperAdminDashboard from "@/pages/dashboards/SuperAdminDashboard";
+import SalesManagerDashboard from "@/pages/dashboards/SalesManagerDashboard";
+import SalesRepDashboard from "@/pages/dashboards/SalesRepDashboard";
+import WarehouseDashboard from "@/pages/dashboards/WarehouseDashboard";
+import AccountantDashboard from "@/pages/dashboards/AccountantDashboard";
+import HRDashboard from "@/pages/dashboards/HRDashboard";
+import EmployeeDashboard from "@/pages/dashboards/EmployeeDashboard";
+
 // Chat module
 import ChatPage from "@/pages/chat/ChatPage";
 import ChatDMRedirect from "@/pages/chat/ChatDMRedirect";
@@ -246,8 +256,15 @@ const App = () => (
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
 
-            {/* Placeholder routes */}
-            <Route path="/dashboards" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            {/* Dashboards module */}
+            <Route path="/dashboards" element={<ProtectedRoute><DashboardsHome /></ProtectedRoute>} />
+            <Route path="/dashboards/admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+            <Route path="/dashboards/sales-manager" element={<ProtectedRoute><SalesManagerDashboard /></ProtectedRoute>} />
+            <Route path="/dashboards/sales-rep" element={<ProtectedRoute><SalesRepDashboard /></ProtectedRoute>} />
+            <Route path="/dashboards/warehouse" element={<ProtectedRoute><WarehouseDashboard /></ProtectedRoute>} />
+            <Route path="/dashboards/accountant" element={<ProtectedRoute><AccountantDashboard /></ProtectedRoute>} />
+            <Route path="/dashboards/hr" element={<ProtectedRoute><HRDashboard /></ProtectedRoute>} />
+            <Route path="/dashboards/me" element={<ProtectedRoute><EmployeeDashboard /></ProtectedRoute>} />
             <Route path="/dashboards/crm" element={<ProtectedRoute><CRMOverview /></ProtectedRoute>} />
             <Route path="/discuss" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
