@@ -57,7 +57,7 @@ export function MobileCountScreen({ adjustmentId, locationId, onComplete, onBack
   function createNewAdjustment(): InventoryAdjustment {
     return {
       id: '',
-      reference: `ADJ/${new Date().getFullYear()}/${String(Date.now()).slice(-4)}`,
+      reference: '',
       locationId,
       locationName: location?.name || '',
       reason: 'count',
