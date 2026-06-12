@@ -47,7 +47,7 @@ export async function fetchActivityLog(
     .order('changed_at', { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
-  return { entries: (data ?? []) as ActivityLogEntry[], total: count ?? 0 };
+  return { entries: ((data ?? []) as unknown) as ActivityLogEntry[], total: count ?? 0 };
 }
 
 function stringify(v: unknown): string | null {
