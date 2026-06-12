@@ -670,6 +670,12 @@ export async function getTransferAsync(id: string): Promise<InventoryTransfer | 
 }
 export async function saveTransferAsync(t: InventoryTransfer): Promise<InventoryTransfer> {
   const headerRow = transferToRow(t);
+  // Auto-assign FY-based internal_transfer reference on first save when missing or legacy TRF/...
+  const isNewSave = !t.id || t.id.startsWith('new-');
+  if (isNewSave && (!t.reference || /^TRF\//.test(t.reference))) {
+    const { generateDocumentNumber } = await import('@/lib/services/numbering/api');
+    headerRow.reference = await generateDocumentNumber('internal_transfer');
+  }
   let id = t.id;
   if (id && !id.startsWith('new-')) {
     const { error } = await supabase.from('transfers').update(headerRow).eq('id', id);
