@@ -47,7 +47,8 @@ function fyDisplay(label: string): string {
 
 export default function NumberingSettings() {
   const { user } = useAuth();
-  const isSuperAdmin = user?.roles?.includes('super_admin') ?? user?.role === 'super_admin';
+  const isSuperAdmin = (user as any)?.role === 'super_admin'
+    || (Array.isArray((user as any)?.roles) && (user as any).roles.includes('super_admin'));
   const { toast } = useToast();
 
   const { data: fy } = useCurrentFY();
