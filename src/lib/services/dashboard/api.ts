@@ -48,33 +48,33 @@ export async function getSuperAdminMetrics(): Promise<SuperAdminMetrics> {
     ordersMTD, ordersYTD, activeOrdersRes, pendingInvRes, customersRes,
     employeesRes, leavesRes, lowStockRes, mosRes, qcRes, paidInvRes, orderStatusRes,
   ] = await Promise.all([
-    supabase.from('sales_orders').select('total_amount, order_date').gte('order_date', mtdStart),
-    supabase.from('sales_orders').select('total_amount, order_date').gte('order_date', ytdStart),
+    supabase.from('sales_orders').select('total, order_date').gte('order_date', mtdStart),
+    supabase.from('sales_orders').select('total, order_date').gte('order_date', ytdStart),
     supabase.from('sales_orders').select('id', { count: 'exact', head: true }).in('status', ['confirmed', 'in_progress']),
     supabase.from('invoices').select('id', { count: 'exact', head: true }).in('status', ['draft', 'sent', 'overdue']),
     supabase.from('customers').select('id', { count: 'exact', head: true }),
-    supabase.from('employees').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('employees').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('products').select('id, stock_on_hand, reorder_min').not('reorder_min', 'is', null),
+    supabase.from('products').select('id, stock_on_hand, reorder_level').not('reorder_level', 'is', null),
     supabase.from('work_orders').select('id', { count: 'exact', head: true }).in('state', ['confirmed', 'in_progress']),
-    supabase.from('delivery_notes').select('id', { count: 'exact', head: true }).eq('qc_status', 'pending'),
-    supabase.from('invoices').select('total_amount').eq('status', 'paid'),
+    supabase.from('delivery_notes').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('invoices').select('total').eq('status', 'paid'),
     supabase.from('sales_orders').select('status'),
   ]);
 
-  const revenueMTD = (ordersMTD.data ?? []).reduce((s, o: any) => s + Number(o.total_amount ?? 0), 0);
-  const revenueYTD = (ordersYTD.data ?? []).reduce((s, o: any) => s + Number(o.total_amount ?? 0), 0);
-  const cashPosition = (paidInvRes.data ?? []).reduce((s, i: any) => s + Number(i.total_amount ?? 0), 0);
+  const revenueMTD = (ordersMTD.data ?? []).reduce((s, o: any) => s + Number(o.total ?? 0), 0);
+  const revenueYTD = (ordersYTD.data ?? []).reduce((s, o: any) => s + Number(o.total ?? 0), 0);
+  const cashPosition = (paidInvRes.data ?? []).reduce((s, i: any) => s + Number(i.total ?? 0), 0);
 
   const lowStock = (lowStockRes.data ?? []).filter(
-    (p: any) => p.reorder_min != null && Number(p.stock_on_hand ?? 0) <= Number(p.reorder_min)
+    (p: any) => p.reorder_level != null && Number(p.stock_on_hand ?? 0) <= Number(p.reorder_level)
   );
 
   // Revenue trend (last 6 months)
   const sixStart = iso(startOfMonth(subMonths(now, 5)));
   const trendRes = await supabase
     .from('sales_orders')
-    .select('total_amount, order_date')
+    .select('total, order_date')
     .gte('order_date', sixStart);
   const monthlyBuckets = new Map<string, number>();
   for (let i = 5; i >= 0; i--) {
@@ -84,7 +84,7 @@ export async function getSuperAdminMetrics(): Promise<SuperAdminMetrics> {
   (trendRes.data ?? []).forEach((o: any) => {
     const key = format(new Date(o.order_date), 'yyyy-MM');
     if (monthlyBuckets.has(key)) {
-      monthlyBuckets.set(key, (monthlyBuckets.get(key) ?? 0) + Number(o.total_amount ?? 0));
+      monthlyBuckets.set(key, (monthlyBuckets.get(key) ?? 0) + Number(o.total ?? 0));
     }
   });
   const revenueTrend = Array.from(monthlyBuckets.entries()).map(([k, v]) => ({
@@ -132,14 +132,14 @@ export async function getSalesManagerMetrics(): Promise<SalesManagerMetrics> {
   const now = new Date();
   const mtdStart = iso(startOfMonth(now));
   const [ordersRes, quotsRes, pipelineRes] = await Promise.all([
-    supabase.from('sales_orders').select('id, customer_id, customer_name, salesperson_id, salesperson_name, total_amount, order_date').gte('order_date', mtdStart),
+    supabase.from('sales_orders').select('id, customer_id, customer_name, salesperson_id, salesperson_name, total, order_date').gte('order_date', mtdStart),
     supabase.from('quotations').select('id, status'),
     supabase.from('crm_opportunities').select('id, expected_revenue, stage_id, name'),
   ]);
 
   const orders = ordersRes.data ?? [];
   const quotations = quotsRes.data ?? [];
-  const revenueMTD = orders.reduce((s, o: any) => s + Number(o.total_amount ?? 0), 0);
+  const revenueMTD = orders.reduce((s, o: any) => s + Number(o.total ?? 0), 0);
   const confirmedQuotes = quotations.filter((q: any) => ['accepted', 'confirmed'].includes(q.status)).length;
   const conversionRate = quotations.length ? (confirmedQuotes / quotations.length) * 100 : 0;
   const pipelineValue = (pipelineRes.data ?? []).reduce((s, o: any) => s + Number(o.expected_revenue ?? 0), 0);
@@ -150,7 +150,7 @@ export async function getSalesManagerMetrics(): Promise<SalesManagerMetrics> {
   orders.forEach((o: any) => {
     const k = o.customer_id ?? o.customer_name ?? 'unknown';
     const cur = custMap.get(k) ?? { label: o.customer_name ?? 'Unknown', value: 0 };
-    cur.value += Number(o.total_amount ?? 0);
+    cur.value += Number(o.total ?? 0);
     custMap.set(k, cur);
   });
   const topCustomers = Array.from(custMap.entries())
@@ -163,7 +163,7 @@ export async function getSalesManagerMetrics(): Promise<SalesManagerMetrics> {
     if (!o.salesperson_id && !o.salesperson_name) return;
     const k = o.salesperson_id ?? o.salesperson_name;
     const cur = spMap.get(k) ?? { label: o.salesperson_name ?? 'Unknown', value: 0 };
-    cur.value += Number(o.total_amount ?? 0);
+    cur.value += Number(o.total ?? 0);
     spMap.set(k, cur);
   });
   const topSalespeople = Array.from(spMap.entries())
@@ -172,14 +172,14 @@ export async function getSalesManagerMetrics(): Promise<SalesManagerMetrics> {
 
   const { data: actRows } = await supabase
     .from('order_activities')
-    .select('id, activity_type, description, created_at, order_id')
-    .order('created_at', { ascending: false })
+    .select('id, action, details, timestamp, order_id')
+    .order('timestamp', { ascending: false })
     .limit(10);
   const recentActivities = (actRows ?? []).map((a: any) => ({
     id: a.id,
-    title: a.activity_type ?? 'Activity',
-    subtitle: a.description ?? '',
-    timestamp: a.created_at,
+    title: a.action ?? 'Activity',
+    subtitle: a.details ?? '',
+    timestamp: a.timestamp,
   }));
 
   return { revenueMTD, conversionRate, pipelineValue, avgDealSize, topCustomers, topSalespeople, recentActivities };
@@ -202,9 +202,9 @@ export async function getSalesRepMetrics(userId: string): Promise<SalesRepMetric
   const [qRes, oRes, cRes, fRes, aRes] = await Promise.all([
     supabase.from('quotations').select('id', { count: 'exact', head: true }).eq('salesperson_id', userId),
     supabase.from('sales_orders').select('id', { count: 'exact', head: true }).eq('salesperson_id', userId).gte('order_date', mtdStart),
-    supabase.from('crm_contacts').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
-    supabase.from('crm_activities').select('id', { count: 'exact', head: true }).eq('assigned_to', userId).eq('status', 'pending').lte('due_date', today),
-    supabase.from('crm_activities').select('id, type, summary, created_at').eq('assigned_to', userId).order('created_at', { ascending: false }).limit(10),
+    supabase.from('crm_contacts').select('id', { count: 'exact', head: true }).eq('assigned_to', userId),
+    supabase.from('crm_activities').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('completed', false).lte('due_date', today),
+    supabase.from('crm_activities').select('id, type, subject, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
   ]);
 
   return {
@@ -213,7 +213,7 @@ export async function getSalesRepMetrics(userId: string): Promise<SalesRepMetric
     myCustomers: cRes.count ?? 0,
     followUpsDue: fRes.count ?? 0,
     recentActivities: (aRes.data ?? []).map((a: any) => ({
-      id: a.id, title: a.type ?? 'Activity', subtitle: a.summary ?? '', timestamp: a.created_at,
+      id: a.id, title: a.type ?? 'Activity', subtitle: a.subject ?? '', timestamp: a.created_at,
     })),
   };
 }
@@ -235,14 +235,14 @@ export async function getWarehouseOperatorMetrics(): Promise<WarehouseMetrics> {
 
   const [picksRes, qcRes, lowStockRes, delsRes, movesRes] = await Promise.all([
     supabase.from('stock_moves').select('id', { count: 'exact', head: true }).in('state', ['confirmed', 'assigned']).eq('operation_type', 'delivery'),
-    supabase.from('delivery_notes').select('id', { count: 'exact', head: true }).eq('qc_status', 'pending'),
-    supabase.from('products').select('id, name, stock_on_hand, reorder_min').not('reorder_min', 'is', null),
-    supabase.from('delivery_notes').select('id', { count: 'exact', head: true }).gte('scheduled_date', todayStart).lte('scheduled_date', todayEnd),
-    supabase.from('stock_moves').select('id, name, operation_type, state, created_at').order('created_at', { ascending: false }).limit(10),
+    supabase.from('delivery_notes').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('products').select('id, name, stock_on_hand, reorder_level').not('reorder_level', 'is', null),
+    supabase.from('delivery_notes').select('id', { count: 'exact', head: true }).gte('delivery_date', todayStart.slice(0, 10)).lte('delivery_date', todayEnd.slice(0, 10)),
+    supabase.from('stock_moves').select('id, reference, operation_type, state, created_at').order('created_at', { ascending: false }).limit(10),
   ]);
 
   const lowStock = (lowStockRes.data ?? []).filter(
-    (p: any) => p.reorder_min != null && Number(p.stock_on_hand ?? 0) <= Number(p.reorder_min)
+    (p: any) => p.reorder_level != null && Number(p.stock_on_hand ?? 0) <= Number(p.reorder_level)
   );
 
   return {
@@ -251,10 +251,10 @@ export async function getWarehouseOperatorMetrics(): Promise<WarehouseMetrics> {
     lowStockCount: lowStock.length,
     todaysDeliveries: delsRes.count ?? 0,
     lowStockItems: lowStock.slice(0, 8).map((p: any) => ({
-      id: p.id, label: p.name ?? 'Product', value: `${p.stock_on_hand ?? 0} / ${p.reorder_min}`,
+      id: p.id, label: p.name ?? 'Product', value: `${p.stock_on_hand ?? 0} / ${p.reorder_level}`,
     })),
     recentMovements: (movesRes.data ?? []).map((m: any) => ({
-      id: m.id, title: m.name ?? m.operation_type ?? 'Move', subtitle: `${m.operation_type ?? ''} · ${m.state ?? ''}`, timestamp: m.created_at,
+      id: m.id, title: m.reference ?? m.operation_type ?? 'Move', subtitle: `${m.operation_type ?? ''} · ${m.state ?? ''}`, timestamp: m.created_at,
     })),
   };
 }
@@ -276,14 +276,14 @@ export async function getAccountantMetrics(): Promise<AccountantMetrics> {
   const today = dateOnly(now);
 
   const [openInv, paidMTD, recentPaid] = await Promise.all([
-    supabase.from('invoices').select('id, total_amount, due_date, status, invoice_date').in('status', ['draft', 'sent', 'overdue']),
-    supabase.from('invoices').select('id, total_amount, invoice_date').eq('status', 'paid').gte('invoice_date', mtdStart.slice(0, 10)),
-    supabase.from('invoices').select('id, invoice_number, customer_name, total_amount, updated_at').eq('status', 'paid').order('updated_at', { ascending: false }).limit(8),
+    supabase.from('invoices').select('id, total, due_date, status, issue_date').in('status', ['draft', 'sent', 'overdue']),
+    supabase.from('invoices').select('id, total, issue_date').eq('status', 'paid').gte('issue_date', mtdStart.slice(0, 10)),
+    supabase.from('invoices').select('id, reference, total, updated_at').eq('status', 'paid').order('updated_at', { ascending: false }).limit(8),
   ]);
 
-  const toCollect = (openInv.data ?? []).reduce((s, i: any) => s + Number(i.total_amount ?? 0), 0);
-  const overdue = (openInv.data ?? []).filter((i: any) => i.due_date && i.due_date < today).reduce((s, i: any) => s + Number(i.total_amount ?? 0), 0);
-  const collectedMTD = (paidMTD.data ?? []).reduce((s, i: any) => s + Number(i.total_amount ?? 0), 0);
+  const toCollect = (openInv.data ?? []).reduce((s, i: any) => s + Number(i.total ?? 0), 0);
+  const overdue = (openInv.data ?? []).filter((i: any) => i.due_date && i.due_date < today).reduce((s, i: any) => s + Number(i.total ?? 0), 0);
+  const collectedMTD = (paidMTD.data ?? []).reduce((s, i: any) => s + Number(i.total ?? 0), 0);
   const gstMTD = collectedMTD * 0.18 / 1.18; // best-effort estimate
 
   // Aging buckets
@@ -292,10 +292,10 @@ export async function getAccountantMetrics(): Promise<AccountantMetrics> {
   (openInv.data ?? []).forEach((i: any) => {
     if (!i.due_date) return;
     const days = Math.floor((todayMs - new Date(i.due_date).getTime()) / 86400000);
-    if (days < 31) buckets['0-30'] += Number(i.total_amount ?? 0);
-    else if (days < 61) buckets['31-60'] += Number(i.total_amount ?? 0);
-    else if (days < 91) buckets['61-90'] += Number(i.total_amount ?? 0);
-    else buckets['90+'] += Number(i.total_amount ?? 0);
+    if (days < 31) buckets['0-30'] += Number(i.total ?? 0);
+    else if (days < 61) buckets['31-60'] += Number(i.total ?? 0);
+    else if (days < 91) buckets['61-90'] += Number(i.total ?? 0);
+    else buckets['90+'] += Number(i.total ?? 0);
   });
   const agingChart = Object.entries(buckets).map(([label, value]) => ({ label, value }));
 
@@ -303,8 +303,8 @@ export async function getAccountantMetrics(): Promise<AccountantMetrics> {
     toCollect, overdue, collectedMTD, gstMTD,
     recentPaidInvoices: (recentPaid.data ?? []).map((i: any) => ({
       id: i.id,
-      title: i.invoice_number ?? 'Invoice',
-      subtitle: `${i.customer_name ?? ''} · ₹${Number(i.total_amount ?? 0).toLocaleString('en-IN')}`,
+      title: i.reference ?? 'Invoice',
+      subtitle: `₹${Number(i.total ?? 0).toLocaleString('en-IN')}`,
       timestamp: i.updated_at,
     })),
     pendingPriceApprovals: 0,
@@ -329,11 +329,11 @@ export async function getHRManagerMetrics(): Promise<HRMetrics> {
   const next30 = dateOnly(new Date(now.getTime() + 30 * 86400000));
 
   const [empRes, onLeaveRes, pendLeaveRes, attRes, empBdays, contractsRes, apprRes] = await Promise.all([
-    supabase.from('employees').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('employees').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'approved').lte('start_date', today).gte('end_date', today),
     supabase.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('attendance_sessions').select('id', { count: 'exact', head: true }).gte('check_in_time', today + 'T00:00:00').lte('check_in_time', today + 'T23:59:59'),
-    supabase.from('employees').select('id, full_name, date_of_birth').not('date_of_birth', 'is', null).eq('is_active', true).limit(50),
+    supabase.from('employees').select('id, full_name, date_of_birth').not('date_of_birth', 'is', null).eq('status', 'active').limit(50),
     supabase.from('contracts').select('id, contract_number, end_date, employee_id').not('end_date', 'is', null).lte('end_date', next30).gte('end_date', today).limit(10),
     supabase.from('appraisals').select('id', { count: 'exact', head: true }).in('status', ['self_review', 'manager_review', 'hr_review']),
   ]);
@@ -383,8 +383,8 @@ export async function getEmployeeMetrics(userId: string): Promise<EmployeeMetric
 
   const [sessRes, balRes, slipRes, mentRes] = await Promise.all([
     supabase.from('attendance_sessions').select('id, session_type, check_in_time').eq('employee_id', employeeId).is('check_out_time', null).order('check_in_time', { ascending: false }).limit(1).maybeSingle(),
-    supabase.from('leave_balances').select('id, leave_type_id, balance, leave_types(name)').eq('employee_id', employeeId).limit(3),
-    supabase.from('payslips').select('id, payslip_number, net_pay, payroll_period_id, payroll_periods(period_label)').eq('employee_id', employeeId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('leave_balances').select('id, leave_type_id, available_balance, leave_types(name)').eq('employee_id', employeeId).limit(3),
+    supabase.from('payslips').select('id, payslip_number, net_pay, payroll_period_id').eq('employee_id', employeeId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('chat_notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false),
   ]);
 
@@ -397,13 +397,12 @@ export async function getEmployeeMetrics(userId: string): Promise<EmployeeMetric
     leaveBalances: (balRes.data ?? []).map((b: any) => ({
       id: b.id,
       label: b.leave_types?.name ?? 'Leave',
-      value: `${Number(b.balance ?? 0)} days`,
+      value: `${Number(b.available_balance ?? 0)} days`,
     })),
     latestPayslip: slip ? {
       id: slip.id,
       payslip_number: slip.payslip_number ?? '',
       net_pay: Number(slip.net_pay ?? 0),
-      period_label: slip.payroll_periods?.period_label,
     } : null,
     pendingMentions: mentRes.count ?? 0,
   };
