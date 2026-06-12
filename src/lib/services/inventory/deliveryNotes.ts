@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { generateDocumentNumber } from '@/lib/services/numbering/api';
 
 export type DeliveryNoteStatus = 'draft' | 'confirmed' | 'delivered';
 
@@ -191,7 +192,10 @@ export async function generateDeliveryNoteFromInvoiceAsync(invoiceId: string): P
   const { data: userRes } = await supabase.auth.getUser();
   const userId = userRes.user?.id ?? null;
 
+  const reference = await generateDocumentNumber('delivery_note');
+
   const insertRow = {
+    reference,
     sales_order_id: invoice.sales_order_id,
     invoice_id: invoiceId,
     warehouse_id: warehouseId,
