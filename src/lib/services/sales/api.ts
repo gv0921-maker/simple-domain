@@ -1360,18 +1360,12 @@ export async function deleteSubscriptionRich(id: string): Promise<void> {
 
 // Reference generators (server-side count to avoid collisions).
 export async function generateQuotationReferenceRich(): Promise<string> {
-  const year = new Date().getFullYear();
-  const { count } = await supabase
-    .from('quotations' as any).select('id', { count: 'exact', head: true })
-    .ilike('reference', `QT-${year}-%`);
-  return `QT-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`;
+  const { generateDocumentNumber } = await import('@/lib/services/numbering/api');
+  return generateDocumentNumber('quotation');
 }
 export async function generateOrderReferenceRich(): Promise<string> {
-  const year = new Date().getFullYear();
-  const { count } = await supabase
-    .from('sales_orders' as any).select('id', { count: 'exact', head: true })
-    .ilike('reference', `SO-${year}-%`);
-  return `SO-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`;
+  const { generateDocumentNumber } = await import('@/lib/services/numbering/api');
+  return generateDocumentNumber('sales_order');
 }
 export async function generateSubscriptionReferenceRich(): Promise<string> {
   const year = new Date().getFullYear();
