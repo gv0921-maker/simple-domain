@@ -6,4 +6,5 @@ export const APPRAISALS_NAV = [
   { label: 'Admin Cycles', href: '/appraisals/admin/cycles' },
   { label: 'Admin Templates', href: '/appraisals/admin/templates' },
   { label: 'Admin Reports', href: '/appraisals/admin/reports' },
+  { label: 'Reports', href: '/appraisals/reports' },
 ];
