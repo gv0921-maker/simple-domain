@@ -5,7 +5,7 @@ export const MANUFACTURING_NAV = [
   { label: 'BOM', href: '/manufacturing/bom' },
   { label: 'Work Centers', href: '/manufacturing/work-centers' },
   { label: 'Planning', href: '/manufacturing/planning' },
-  { label: 'Shop Floor', href: '/shop-floor' },
+  { label: 'Shop Floor', href: '/manufacturing/shop-floor' },
   { label: 'Reports', href: '/manufacturing/reports' },
 ];
 

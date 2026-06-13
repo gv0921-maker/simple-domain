@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ModuleCard } from '@/components/modules/ModuleCard';
 import { useCustomization } from '@/contexts/CustomizationContext';
@@ -20,6 +21,23 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { data: employee } = useCurrentEmployee();
   const { data: activeSession } = useActiveSession(employee?.id);
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from('user_roles' as any).select('role').eq('user_id', user.id);
+      const roles = ((data ?? []) as any[]).map((r) => r.role);
+      const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+      const isFactoryOnly = roles.includes('factory_incharge') && !isAdmin;
+      if (!cancelled && isFactoryOnly) {
+        setRedirecting(true);
+        navigate('/shop-floor', { replace: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, navigate]);
 
   useEffect(() => {
     const state = location.state as { accessDenied?: boolean } | null;
@@ -28,6 +46,8 @@ export default function HomePage() {
     toast({ title: 'Access Denied' });
     navigate('/', { replace: true, state: null });
   }, [location.state, navigate, toast]);
+
+  if (redirecting) return null;
 
   const visibleModules = getVisibleModules().filter((module) =>
     user ? canAccessRoute(user.id, module.href) : false

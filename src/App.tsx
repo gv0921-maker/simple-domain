@@ -77,6 +77,9 @@ import WorkCenters from "@/pages/manufacturing/WorkCenters";
 import WorkCenterForm from "@/pages/manufacturing/WorkCenterForm";
 import ProductionPlanning from "@/pages/manufacturing/ProductionPlanning";
 import ShopFloor from "@/pages/manufacturing/ShopFloor";
+import ShopFloorHome from "@/pages/shopfloor/ShopFloorHome";
+import ShopFloorWorkOrderDetail from "@/pages/shopfloor/ShopFloorWorkOrderDetail";
+import FactoryInventoryPage from "@/pages/shopfloor/FactoryInventory";
 
 // CRM pages
 import CRMOverview from "@/pages/crm/CRMOverview";
@@ -416,7 +419,10 @@ const App = () => (
             <Route path="/manufacturing/work-centers/new" element={<ProtectedRoute><WorkCenterForm /></ProtectedRoute>} />
             <Route path="/manufacturing/work-centers/:id/edit" element={<ProtectedRoute><WorkCenterForm /></ProtectedRoute>} />
             <Route path="/manufacturing/planning" element={<ProtectedRoute><ProductionPlanning /></ProtectedRoute>} />
-            <Route path="/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
+            <Route path="/shop-floor" element={<ProtectedRoute><ShopFloorHome /></ProtectedRoute>} />
+            <Route path="/shop-floor/work-orders/:id" element={<ProtectedRoute><ShopFloorWorkOrderDetail /></ProtectedRoute>} />
+            <Route path="/shop-floor/factory-inventory" element={<ProtectedRoute><FactoryInventoryPage /></ProtectedRoute>} />
+            <Route path="/manufacturing/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
 
             {/* Invoices module */}
             <Route path="/invoicing" element={<ProtectedRoute><BillsList /></ProtectedRoute>} />

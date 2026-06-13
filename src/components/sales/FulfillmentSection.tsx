@@ -20,6 +20,7 @@ import {
 } from '@/hooks/inventory/internalTransfers';
 import type { ITOSuggestionLine, ProductSource, ITOLineStatus } from '@/lib/services/inventory/internalTransfers';
 import { logFieldChange } from '@/lib/services/activityLog';
+import { useFactoryProgressForSO } from '@/hooks/shopfloor';
 
 interface Props {
   salesOrderId: string;
@@ -73,6 +74,7 @@ export function FulfillmentSection({ salesOrderId, salesOrderStatus, salesOrderC
   const { data: itoDetail } = useITODetail(activeITO?.id);
   const { data: queueId } = useITOQueueId(activeITO?.id);
   const { data: readyToInvoice } = useSOReadyToInvoice(salesOrderId);
+  const { data: factoryWOs = [] } = useFactoryProgressForSO(salesOrderId);
 
   const suggestMut = useSuggestITO();
   const createMut = useCreateITO();
@@ -225,6 +227,17 @@ export function FulfillmentSection({ salesOrderId, salesOrderStatus, salesOrderC
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
+          {factoryWOs.length > 0 && (
+            <div className="border rounded-md p-3 space-y-2 bg-purple-50/40">
+              <div className="text-xs font-medium text-purple-900">Factory Progress</div>
+              {factoryWOs.map((w) => (
+                <div key={w.id} className="flex items-center justify-between text-sm">
+                  <span className="font-mono">{w.wo_number}</span>
+                  <Badge variant="outline" className="capitalize">{w.current_stage.replace('_', ' ')}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between gap-3">
             <div className="text-sm">
               <div className="font-medium">{activeITO.ito_number}</div>

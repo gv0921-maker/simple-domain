@@ -163,6 +163,10 @@ export function canAccessRoute(userId: string, pathname: string): boolean {
   const normalized = normalizePathname(pathname);
 
   if (normalized === '/') return true;
+  // Shop Floor and Chat are accessible to any authenticated user (incl. factory_incharge);
+  // database RLS gates the actual data access.
+  if (normalized === '/shop-floor' || normalized.startsWith('/shop-floor/')) return true;
+  if (normalized === '/chat' || normalized.startsWith('/chat/')) return true;
 
   const moduleId = getModuleForPath(normalized);
   if (!moduleId) return false;
