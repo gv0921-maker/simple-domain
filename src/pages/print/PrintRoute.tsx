@@ -27,6 +27,21 @@ import type { PrintableDocumentType } from '@/components/print/PrintableDocument
 
 const PRINT_ELEMENT_ID = 'printable-document';
 
+function InvoiceWithSO({ invoice }: { invoice: any }) {
+  const { data: soRef } = useQuery({
+    queryKey: ['print-invoice-so-ref', invoice?.sales_order_id],
+    queryFn: async () => {
+      if (!invoice?.sales_order_id) return null;
+      const { data } = await supabase
+        .from('sales_orders').select('reference').eq('id', invoice.sales_order_id).maybeSingle();
+      return (data as any)?.reference ?? null;
+    },
+    enabled: !!invoice?.sales_order_id,
+  });
+  const enriched = { ...invoice, sales_order_reference: soRef ?? undefined };
+  return <InvoicePrint invoice={enriched} isDraft={invoice?.status === 'draft'} />;
+}
+
 function usePayment(id: string | undefined) {
   return useQuery({
     queryKey: ['payment', id],
