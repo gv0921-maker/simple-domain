@@ -1282,6 +1282,66 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string
+          country: string
+          email: string | null
+          gstin: string | null
+          id: string
+          letterhead_footer: string | null
+          logo_url: string | null
+          phone: string | null
+          pincode: string | null
+          standard_terms: string | null
+          state: string | null
+          thermal_width_mm: number
+          updated_at: string
+          updated_by: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name?: string
+          country?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          letterhead_footer?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          pincode?: string | null
+          standard_terms?: string | null
+          state?: string | null
+          thermal_width_mm?: number
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string
+          country?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          letterhead_footer?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          pincode?: string | null
+          standard_terms?: string | null
+          state?: string | null
+          thermal_width_mm?: number
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           basic_salary: number
