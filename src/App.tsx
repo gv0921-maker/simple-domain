@@ -116,6 +116,7 @@ import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 import CompanySettings from "@/pages/settings/CompanySettings";
 import PaymentAccountsSettings from "@/pages/settings/PaymentAccountsSettings";
 import VendorsSettings from "@/pages/settings/VendorsSettings";
+import WorkSchedulesSettings from "@/pages/settings/WorkSchedulesSettings";
 
 // Vendor Orders module
 import VendorOrdersList from "@/pages/vendor-orders/VendorOrdersList";
@@ -333,6 +334,7 @@ const App = () => (
             <Route path="/settings/company" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
             <Route path="/settings/payment-accounts" element={<ProtectedRoute><PaymentAccountsSettings /></ProtectedRoute>} />
             <Route path="/settings/vendors" element={<ProtectedRoute><VendorsSettings /></ProtectedRoute>} />
+            <Route path="/settings/work-schedules" element={<ProtectedRoute><WorkSchedulesSettings /></ProtectedRoute>} />
 
             {/* Vendor Orders module */}
             <Route path="/vendor-orders" element={<ProtectedRoute><VendorOrdersList /></ProtectedRoute>} />

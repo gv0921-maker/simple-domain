@@ -5,6 +5,7 @@ export const SETTINGS_NAV = [
   { label: 'Users', href: '/settings/users' },
   { label: 'Roles', href: '/settings/roles' },
   { label: 'Vendors', href: '/settings/vendors' },
+  { label: 'Work Schedules', href: '/settings/work-schedules' },
   { label: 'Customization', href: '/settings/customization' },
   { label: 'CRM Pipelines', href: '/settings/crm-pipelines' },
   { label: 'CRM Backup', href: '/settings/crm-backup' },
