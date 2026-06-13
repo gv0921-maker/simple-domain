@@ -5465,6 +5465,221 @@ export type Database = {
           },
         ]
       }
+      return_request_items: {
+        Row: {
+          condition_grade: string | null
+          created_at: string
+          customization_details: Json | null
+          delivery_note_id: string | null
+          delivery_note_line_id: string | null
+          goods_receipt_serial_id: string
+          id: string
+          invoice_line_id: string
+          is_customized: boolean
+          original_unit_price: number
+          product_id: string
+          qc_checked_at: string | null
+          qc_checked_by: string | null
+          qc_images: Json
+          qc_notes: string | null
+          qc_status: string
+          quantity: number
+          resolution_status: string
+          resolution_type: string | null
+          return_request_id: string
+          serial_number: string
+          updated_at: string
+        }
+        Insert: {
+          condition_grade?: string | null
+          created_at?: string
+          customization_details?: Json | null
+          delivery_note_id?: string | null
+          delivery_note_line_id?: string | null
+          goods_receipt_serial_id: string
+          id?: string
+          invoice_line_id: string
+          is_customized?: boolean
+          original_unit_price?: number
+          product_id: string
+          qc_checked_at?: string | null
+          qc_checked_by?: string | null
+          qc_images?: Json
+          qc_notes?: string | null
+          qc_status?: string
+          quantity?: number
+          resolution_status?: string
+          resolution_type?: string | null
+          return_request_id: string
+          serial_number: string
+          updated_at?: string
+        }
+        Update: {
+          condition_grade?: string | null
+          created_at?: string
+          customization_details?: Json | null
+          delivery_note_id?: string | null
+          delivery_note_line_id?: string | null
+          goods_receipt_serial_id?: string
+          id?: string
+          invoice_line_id?: string
+          is_customized?: boolean
+          original_unit_price?: number
+          product_id?: string
+          qc_checked_at?: string | null
+          qc_checked_by?: string | null
+          qc_images?: Json
+          qc_notes?: string | null
+          qc_status?: string
+          quantity?: number
+          resolution_status?: string
+          resolution_type?: string | null
+          return_request_id?: string
+          serial_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_request_items_delivery_note_id_fkey"
+            columns: ["delivery_note_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_request_items_delivery_note_line_id_fkey"
+            columns: ["delivery_note_line_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_note_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_request_items_goods_receipt_serial_id_fkey"
+            columns: ["goods_receipt_serial_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_serials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_request_items_invoice_line_id_fkey"
+            columns: ["invoice_line_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_request_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_request_items_return_request_id_fkey"
+            columns: ["return_request_id"]
+            isOneToOne: false
+            referencedRelation: "return_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          customer_id: string | null
+          customer_name_snapshot: string | null
+          customer_photos: Json
+          customer_reported_issue_description: string | null
+          customer_reported_reason: string
+          id: string
+          notes: string | null
+          received_at: string | null
+          received_by: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          request_status: string
+          requested_at: string
+          requested_by: string
+          rt_number: string
+          source_invoice_id: string
+          source_sales_order_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name_snapshot?: string | null
+          customer_photos?: Json
+          customer_reported_issue_description?: string | null
+          customer_reported_reason: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          request_status?: string
+          requested_at?: string
+          requested_by: string
+          rt_number: string
+          source_invoice_id: string
+          source_sales_order_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name_snapshot?: string | null
+          customer_photos?: Json
+          customer_reported_issue_description?: string | null
+          customer_reported_reason?: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          request_status?: string
+          requested_at?: string
+          requested_by?: string
+          rt_number?: string
+          source_invoice_id?: string
+          source_sales_order_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_requests_source_invoice_id_fkey"
+            columns: ["source_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_requests_source_sales_order_id_fkey"
+            columns: ["source_sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salary_components: {
         Row: {
           affects_lop: boolean
@@ -7932,6 +8147,7 @@ export type Database = {
         Args: { p_month: number; p_reason: string; p_year: number }
         Returns: string
       }
+      approve_return_request: { Args: { p_rt_id: string }; Returns: undefined }
       approve_vendor_order: { Args: { p_vo_id: string }; Returns: undefined }
       approve_work_order: { Args: { p_wo_id: string }; Returns: Json }
       approve_write_off: { Args: { p_wf_id: string }; Returns: Json }
@@ -8003,6 +8219,15 @@ export type Database = {
           p_override_reason?: string
           p_payment_account_id: string
           p_so_id: string
+        }
+        Returns: string
+      }
+      create_return_request: {
+        Args: {
+          p_invoice_id: string
+          p_issue_description: string
+          p_items: Json
+          p_reason: string
         }
         Returns: string
       }
@@ -8108,6 +8333,19 @@ export type Database = {
         Args: { p_count_id: string; p_item_reconciliations: Json }
         Returns: Json
       }
+      record_return_qc: {
+        Args: {
+          p_condition_grade: string
+          p_images: Json
+          p_item_id: string
+          p_notes: string
+        }
+        Returns: undefined
+      }
+      reject_return_request: {
+        Args: { p_reason: string; p_rt_id: string }
+        Returns: undefined
+      }
       reject_work_order: {
         Args: { p_reason: string; p_wo_id: string }
         Returns: Json
@@ -8117,6 +8355,10 @@ export type Database = {
       suggest_ito_for_so: { Args: { p_so_id: string }; Returns: Json }
       validate_invoice_type_against_so: {
         Args: { p_invoice_type: string; p_so_id: string }
+        Returns: Json
+      }
+      validate_return_eligibility: {
+        Args: { p_serial_id: string }
         Returns: Json
       }
       validate_so_linked_eta: {

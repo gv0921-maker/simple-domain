@@ -122,6 +122,11 @@ import VendorOrdersList from "@/pages/vendor-orders/VendorOrdersList";
 import VendorOrderForm from "@/pages/vendor-orders/VendorOrderForm";
 import VendorOrderDetail from "@/pages/vendor-orders/VendorOrderDetail";
 
+// Returns module
+import ReturnsList from "@/pages/returns/ReturnsList";
+import ReturnNew from "@/pages/returns/ReturnNew";
+import ReturnDetail from "@/pages/returns/ReturnDetail";
+
 // Print framework (Phase 1 Batch 4)
 import PrintRoute from "@/pages/print/PrintRoute";
 
@@ -327,6 +332,11 @@ const App = () => (
             <Route path="/vendor-orders" element={<ProtectedRoute><VendorOrdersList /></ProtectedRoute>} />
             <Route path="/vendor-orders/new" element={<ProtectedRoute><VendorOrderForm /></ProtectedRoute>} />
             <Route path="/vendor-orders/:id" element={<ProtectedRoute><VendorOrderDetail /></ProtectedRoute>} />
+
+            {/* Returns module */}
+            <Route path="/returns" element={<ProtectedRoute><ReturnsList /></ProtectedRoute>} />
+            <Route path="/returns/new" element={<ProtectedRoute><ReturnNew /></ProtectedRoute>} />
+            <Route path="/returns/:id" element={<ProtectedRoute><ReturnDetail /></ProtectedRoute>} />
 
             {/* Universal Print routes */}
             <Route path="/print/:documentType/:documentId" element={<ProtectedRoute><PrintRoute /></ProtectedRoute>} />

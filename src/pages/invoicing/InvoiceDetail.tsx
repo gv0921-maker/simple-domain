@@ -12,6 +12,7 @@ import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryQC } from '@/hooks/qc';
 import { useGenerateDeliveryNote } from '@/hooks/inventory/deliveryNotes';
 import { InvoiceDeliverySection } from '@/components/invoicing/InvoiceDeliverySection';
+import { InvoiceReturnsSection } from '@/components/invoicing/InvoiceReturnsSection';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
@@ -328,6 +329,8 @@ export default function InvoiceDetail() {
           salesOrderId={invoice.sales_order_id}
           invoiceStatus={invoice.status}
         />
+
+        <InvoiceReturnsSection invoiceId={invoice.id} />
       </div>
     </AppLayout>
   );
