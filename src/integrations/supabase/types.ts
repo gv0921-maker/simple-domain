@@ -3108,6 +3108,7 @@ export type Database = {
           gender: string | null
           id: string
           ifsc_code: string | null
+          is_manager: boolean
           marital_status: string | null
           notes: string | null
           pan_number: string | null
@@ -3146,6 +3147,7 @@ export type Database = {
           gender?: string | null
           id?: string
           ifsc_code?: string | null
+          is_manager?: boolean
           marital_status?: string | null
           notes?: string | null
           pan_number?: string | null
@@ -3184,6 +3186,7 @@ export type Database = {
           gender?: string | null
           id?: string
           ifsc_code?: string | null
+          is_manager?: boolean
           marital_status?: string | null
           notes?: string | null
           pan_number?: string | null
@@ -3667,27 +3670,39 @@ export type Database = {
       holidays: {
         Row: {
           created_at: string
+          created_by: string | null
+          description: string | null
           holiday_date: string
           id: string
+          is_active: boolean
           is_optional: boolean
           name: string
           type: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
+          description?: string | null
           holiday_date: string
           id?: string
+          is_active?: boolean
           is_optional?: boolean
           name: string
           type?: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
+          description?: string | null
           holiday_date?: string
           id?: string
+          is_active?: boolean
           is_optional?: boolean
           name?: string
           type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -8795,6 +8810,14 @@ export type Database = {
         Returns: Json
       }
       get_so_invoice_summary: { Args: { p_so_id: string }; Returns: Json }
+      get_unified_calendar: {
+        Args: {
+          p_employee_id?: string
+          p_end_date: string
+          p_start_date: string
+        }
+        Returns: Json
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]

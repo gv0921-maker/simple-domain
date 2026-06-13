@@ -117,6 +117,9 @@ import CompanySettings from "@/pages/settings/CompanySettings";
 import PaymentAccountsSettings from "@/pages/settings/PaymentAccountsSettings";
 import VendorsSettings from "@/pages/settings/VendorsSettings";
 import WorkSchedulesSettings from "@/pages/settings/WorkSchedulesSettings";
+import HolidaysSettings from "@/pages/settings/HolidaysSettings";
+import OrgChartPage from "@/pages/employees/OrgChart";
+import UnifiedCalendarPage from "@/pages/calendar/UnifiedCalendarPage";
 
 // Vendor Orders module
 import VendorOrdersList from "@/pages/vendor-orders/VendorOrdersList";
@@ -338,6 +341,7 @@ const App = () => (
             <Route path="/settings/payment-accounts" element={<ProtectedRoute><PaymentAccountsSettings /></ProtectedRoute>} />
             <Route path="/settings/vendors" element={<ProtectedRoute><VendorsSettings /></ProtectedRoute>} />
             <Route path="/settings/work-schedules" element={<ProtectedRoute><WorkSchedulesSettings /></ProtectedRoute>} />
+            <Route path="/settings/holidays" element={<ProtectedRoute><HolidaysSettings /></ProtectedRoute>} />
 
             {/* Vendor Orders module */}
             <Route path="/vendor-orders" element={<ProtectedRoute><VendorOrdersList /></ProtectedRoute>} />
@@ -383,6 +387,8 @@ const App = () => (
             {/* HR / Employees module */}
             <Route path="/employees" element={<ProtectedRoute><EmployeesOverview /></ProtectedRoute>} />
             <Route path="/employees/directory" element={<ProtectedRoute><EmployeesDirectory /></ProtectedRoute>} />
+            <Route path="/employees/org-chart" element={<ProtectedRoute><OrgChartPage /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><UnifiedCalendarPage /></ProtectedRoute>} />
             <Route path="/employees/new" element={<ProtectedRoute><EmployeeForm /></ProtectedRoute>} />
             <Route path="/employees/departments" element={<ProtectedRoute><DepartmentsList /></ProtectedRoute>} />
             <Route path="/employees/departments/:id" element={<ProtectedRoute><DepartmentDetail /></ProtectedRoute>} />

@@ -2,6 +2,8 @@
 export const EMPLOYEES_NAV = [
   { label: 'Overview', href: '/employees' },
   { label: 'Directory', href: '/employees/directory' },
+  { label: 'Org Chart', href: '/employees/org-chart' },
+  { label: 'Calendar', href: '/calendar' },
   { label: 'Departments', href: '/employees/departments' },
   { label: 'Contracts', href: '/employees/contracts' },
   { label: 'Reports', href: '/employees/reports' },

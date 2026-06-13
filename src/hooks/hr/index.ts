@@ -5,6 +5,9 @@ import * as hr from '@/lib/services/hr/api';
 
 export * from './leaveAllotments';
 export * from './sundayRoster';
+export * from './holidaysX';
+export * from './unifiedCalendar';
+export * from './employeesExt';
 
 export const hrKeys = {
   all: ['hr'] as const,
