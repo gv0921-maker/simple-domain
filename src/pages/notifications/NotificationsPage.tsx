@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ModuleLayout } from '@/components/layout/ModuleLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -63,10 +63,9 @@ export default function NotificationsPage() {
   };
 
   return (
-    <ModuleLayout
-      title="Notifications"
-      actions={
-        <div className="flex items-center gap-2">
+    <AppLayout title="Notifications">
+      <div className="p-4 space-y-4">
+        <div className="flex items-center justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => markAll.mutate()}>
             <Check className="h-4 w-4 mr-1" /> Mark all read
           </Button>
@@ -74,9 +73,6 @@ export default function NotificationsPage() {
             <SettingsIcon className="h-4 w-4 mr-1" /> Settings
           </Button>
         </div>
-      }
-    >
-      <div className="p-4 space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <Tabs value={tab} onValueChange={(v) => setTab(v as 'all' | 'unread')}>
             <TabsList>
@@ -142,6 +138,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
-    </ModuleLayout>
+    </AppLayout>
   );
 }
