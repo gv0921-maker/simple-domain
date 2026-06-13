@@ -127,6 +127,12 @@ import ReturnsList from "@/pages/returns/ReturnsList";
 import ReturnNew from "@/pages/returns/ReturnNew";
 import ReturnDetail from "@/pages/returns/ReturnDetail";
 
+// Credit Notes & Refunds
+import CreditNotesList from "@/pages/credit-notes/CreditNotesList";
+import CreditNoteDetail from "@/pages/credit-notes/CreditNoteDetail";
+import RefundsList from "@/pages/refunds/RefundsList";
+import RefundDetail from "@/pages/refunds/RefundDetail";
+
 // Print framework (Phase 1 Batch 4)
 import PrintRoute from "@/pages/print/PrintRoute";
 
@@ -337,6 +343,14 @@ const App = () => (
             <Route path="/returns" element={<ProtectedRoute><ReturnsList /></ProtectedRoute>} />
             <Route path="/returns/new" element={<ProtectedRoute><ReturnNew /></ProtectedRoute>} />
             <Route path="/returns/:id" element={<ProtectedRoute><ReturnDetail /></ProtectedRoute>} />
+
+            {/* Credit Notes module */}
+            <Route path="/credit-notes" element={<ProtectedRoute><CreditNotesList /></ProtectedRoute>} />
+            <Route path="/credit-notes/:id" element={<ProtectedRoute><CreditNoteDetail /></ProtectedRoute>} />
+
+            {/* Refunds module */}
+            <Route path="/refunds" element={<ProtectedRoute><RefundsList /></ProtectedRoute>} />
+            <Route path="/refunds/:id" element={<ProtectedRoute><RefundDetail /></ProtectedRoute>} />
 
             {/* Universal Print routes */}
             <Route path="/print/:documentType/:documentId" element={<ProtectedRoute><PrintRoute /></ProtectedRoute>} />
