@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LEAVE_NAV } from '@/lib/navigation/leave';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
-import { useEmployeeLeaveBalance, useLeaveRequests, useCancelLeave } from '@/hooks/hr';
+import { useEmployeeLeaveBalance, useLeaveRequests, useCancelLeave, useEmployeeMonthlyBalance } from '@/hooks/hr';
 import { Plus } from 'lucide-react';
 
 function StatusBadge({ status }: { status: string }) {
@@ -23,7 +23,9 @@ function StatusBadge({ status }: { status: string }) {
 export default function MyLeaves() {
   const { data: employee } = useCurrentEmployee();
   const [year] = useState(new Date().getFullYear());
+  const month = new Date().getMonth() + 1;
   const { data: balances = [] } = useEmployeeLeaveBalance(employee?.id, year);
+  const { data: monthly } = useEmployeeMonthlyBalance(employee?.id, year, month);
   const { data: requests = [] } = useLeaveRequests({ employeeId: employee?.id });
   const cancel = useCancelLeave();
 
@@ -31,10 +33,21 @@ export default function MyLeaves() {
     <AppLayout title="My Leaves" moduleNav={LEAVE_NAV}>
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Leave Balances — {year}</h2>
+          <h2 className="text-lg font-semibold">My Leaves</h2>
           <Button asChild><Link to="/leave/apply"><Plus className="h-4 w-4 mr-1" />Apply Leave</Link></Button>
         </div>
         {!employee && <Card className="p-6 text-sm text-muted-foreground">Your account is not linked to an employee record.</Card>}
+        {monthly && (
+          <Card className="p-4">
+            <div className="text-sm font-medium mb-3">This Month's Balance</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div><div className="text-xs text-muted-foreground">Paid Allotted</div><div className="text-lg font-semibold">{monthly.paid_allotted}</div></div>
+              <div><div className="text-xs text-muted-foreground">Paid Used</div><div className="text-lg font-semibold">{monthly.paid_used}</div></div>
+              <div><div className="text-xs text-muted-foreground">Paid Remaining</div><div className="text-lg font-semibold text-emerald-700">{monthly.paid_remaining}</div></div>
+              <div><div className="text-xs text-muted-foreground">Unpaid Used</div><div className="text-lg font-semibold">{monthly.unpaid_used}</div></div>
+            </div>
+          </Card>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {balances.map((b) => (
             <Card key={b.leave_type.id} className="p-4">
