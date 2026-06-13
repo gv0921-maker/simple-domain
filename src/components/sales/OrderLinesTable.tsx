@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2, Plus, GripVertical, Lock, ShoppingCart } from 'lucide-react';
+import { Trash2, Plus, GripVertical, Lock, ShoppingCart, Settings2, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProductCombobox } from './ProductCombobox';
 import {
@@ -20,9 +20,11 @@ import type {
   OrderDiscountType,
   QuotationLine,
   SalesOrderLine,
+  ProductSource,
 } from '@/lib/services/sales/types';
 import { useProducts } from '@/hooks/inventory';
 import { getSeasonalDiscountPct } from '@/lib/sales/seasonalPricing';
+import { CustomizationPicker, type CustomizationValue } from './CustomizationPicker';
 
 export type AnyLine = QuotationLine | SalesOrderLine;
 
@@ -148,6 +150,7 @@ export function OrderLinesTable<L extends AnyLine>({
 
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
+  const [expandedCustomization, setExpandedCustomization] = useState<Record<string, boolean>>({});
 
   const updateLine = useCallback(
     (id: string, patch: Partial<L>) => {
@@ -235,8 +238,51 @@ export function OrderLinesTable<L extends AnyLine>({
     const gstAmount = (line.cgstAmount || 0) + (line.sgstAmount || 0) + (line.igstAmount || 0);
     const discAmount = line.discountAmount || 0;
     const finalAmount = line.finalAmount || line.total || 0;
+    const anySalesLine = line as unknown as SalesOrderLine;
+    const productSource: ProductSource = (anySalesLine.productSource ?? 'warehouse') as ProductSource;
+    const lineEta = anySalesLine.lineEta ?? '';
+    const hasStructuredCustomization = !!(
+      anySalesLine.customizationSize ||
+      anySalesLine.customizationColour ||
+      anySalesLine.customizationFabric ||
+      anySalesLine.customizationPolish ||
+      anySalesLine.customizationNotes ||
+      (anySalesLine.customizationReferenceImages && anySalesLine.customizationReferenceImages.length)
+    );
+    const showPicker = expandedCustomization[line.id] || hasStructuredCustomization;
+
+    const onCustomizationChange = (v: CustomizationValue) => {
+      const patch: Partial<SalesOrderLine> = {
+        customizationSize: v.size,
+        customizationColour: v.colour,
+        customizationFabric: v.fabric,
+        customizationPolish: v.polish,
+        customizationNotes: v.notes,
+        customizationReferenceImages: v.referenceImages,
+      };
+      // Apply price adjustment over the line's base unit price (stored
+      // separately in `description` would be ideal; for now we re-derive on
+      // each change by adding to current unitPrice only when delta exists).
+      const currentAdj = (anySalesLine as any).__customizationAdj ?? 0;
+      const newAdj = v.priceAdjustment ?? 0;
+      const newUnit = (line.unitPrice || 0) - currentAdj + newAdj;
+      (patch as any).__customizationAdj = newAdj;
+      (patch as any).unitPrice = newUnit;
+      updateLine(line.id, patch as Partial<L>);
+    };
+
+    const customizationValue: CustomizationValue = {
+      size: anySalesLine.customizationSize,
+      colour: anySalesLine.customizationColour,
+      fabric: anySalesLine.customizationFabric,
+      polish: anySalesLine.customizationPolish,
+      notes: anySalesLine.customizationNotes,
+      referenceImages: anySalesLine.customizationReferenceImages,
+      priceAdjustment: (anySalesLine as any).__customizationAdj ?? 0,
+    };
 
     return (
+      <>
       <tr
         key={line.id}
         className={cn(
@@ -473,6 +519,64 @@ export function OrderLinesTable<L extends AnyLine>({
           )}
         </td>
       </tr>
+      <tr key={`${line.id}-detail`} className={cn('border-b border-border', isActive && 'bg-muted/30')}>
+        <td colSpan={7} className="px-4 pb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs items-end">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-muted-foreground">Source</Label>
+              <Select
+                value={productSource}
+                onValueChange={(v) => updateLine(line.id, { productSource: v as ProductSource } as Partial<L>)}
+                disabled={disabled}
+              >
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="warehouse">Warehouse</SelectItem>
+                  <SelectItem value="display">Display</SelectItem>
+                  <SelectItem value="vendor">Vendor</SelectItem>
+                  <SelectItem value="factory">Factory</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                <CalendarIcon className="h-3 w-3" /> Line ETA
+              </Label>
+              <Input
+                type="date"
+                className="h-8"
+                value={lineEta || ''}
+                onChange={(e) => updateLine(line.id, { lineEta: e.target.value } as Partial<L>)}
+                disabled={disabled}
+              />
+            </div>
+            <div className="md:text-right">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setExpandedCustomization((s) => ({ ...s, [line.id]: !s[line.id] }))}
+                disabled={disabled || !line.productId}
+              >
+                <Settings2 className="h-3.5 w-3.5 mr-1" />
+                {showPicker ? 'Hide customization' : 'Add customization'}
+              </Button>
+            </div>
+          </div>
+          {showPicker && line.productId && (
+            <div className="mt-2">
+              <CustomizationPicker
+                productId={line.productId}
+                value={customizationValue}
+                onChange={onCustomizationChange}
+                disabled={disabled}
+              />
+            </div>
+          )}
+        </td>
+      </tr>
+      </>
     );
   };
 
