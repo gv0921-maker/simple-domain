@@ -7,25 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCompanySettings, useUpdateCompanySettings } from '@/hooks/companySettings';
-import { useAuth } from '@/contexts/AuthContext';
-import { useUserRoleAssignments } from '@/hooks/settings';
 import { toast } from 'sonner';
 import type { CompanySettings as CS } from '@/lib/services/companySettings/api';
 
 export default function CompanySettings() {
   const { data, isLoading } = useCompanySettings();
   const update = useUpdateCompanySettings();
-  const { user } = useAuth();
-  const { data: assignments } = useUserRoleAssignments();
   const [form, setForm] = useState<Partial<CS>>({});
 
   useEffect(() => { if (data) setForm(data); }, [data]);
 
-  const isSuperAdmin = !!user && (assignments ?? []).some(
-    (a) => a.user_id === user.id && (a as any).role === 'super_admin',
-  );
-  // Fallback: also allow via has_role at the database level — UI still blocks for safety
-  const readOnly = !isSuperAdmin;
+  // Edit access is enforced by RLS (Super Admin only). UI shows banner.
+  const readOnly = false;
 
   function update_(field: keyof CS, value: any) {
     setForm((f) => ({ ...f, [field]: value }));
