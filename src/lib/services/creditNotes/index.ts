@@ -139,7 +139,7 @@ export async function redeemCreditNote(args: {
 export async function voidCreditNote(cnId: string, reason: string): Promise<void> {
   const { error } = await sb.rpc('void_credit_note', { p_cn_id: cnId, p_reason: reason });
   if (error) throw error;
-  await addManualNote('return_request', cnId, `Credit note voided: ${reason}`);
+  await addManualNote('credit_note', cnId, `Credit note voided: ${reason}`);
 }
 
 export async function getExpiringCreditNotes(daysAhead = 30): Promise<CreditNote[]> {
