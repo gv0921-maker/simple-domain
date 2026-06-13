@@ -38,6 +38,8 @@ import StockDashboard from "@/pages/inventory/StockDashboard";
 import DeliveryNotesList from "@/pages/inventory/DeliveryNotesList";
 import DeliveryNoteDetail from "@/pages/inventory/DeliveryNoteDetail";
 import DeliveryNotePrint from "@/pages/inventory/DeliveryNotePrint";
+import GoodsReceiptsList from "@/pages/inventory/GoodsReceiptsList";
+import GoodsReceiptWizard from "@/pages/inventory/GoodsReceiptWizard";
 
 // Sales pages
 import SalesOverview from "@/pages/sales/SalesOverview";
@@ -237,6 +239,9 @@ const App = () => (
             <Route path="/inventory/delivery-notes" element={<ProtectedRoute><DeliveryNotesList /></ProtectedRoute>} />
             <Route path="/inventory/delivery-notes/:id" element={<ProtectedRoute><DeliveryNoteDetail /></ProtectedRoute>} />
             <Route path="/inventory/delivery-notes/:id/print" element={<ProtectedRoute><DeliveryNotePrint /></ProtectedRoute>} />
+            <Route path="/inventory/goods-receipts" element={<ProtectedRoute><GoodsReceiptsList /></ProtectedRoute>} />
+            <Route path="/inventory/goods-receipts/new" element={<ProtectedRoute><GoodsReceiptWizard /></ProtectedRoute>} />
+            <Route path="/inventory/goods-receipts/:id" element={<ProtectedRoute><GoodsReceiptWizard /></ProtectedRoute>} />
 
             {/* Barcode module */}
             <Route path="/barcode" element={<ProtectedRoute><ScanQueueDashboard /></ProtectedRoute>} />
