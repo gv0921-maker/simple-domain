@@ -287,6 +287,7 @@ const App = () => (
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
             <Route path="/settings/company" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
+            <Route path="/settings/payment-accounts" element={<ProtectedRoute><PaymentAccountsSettings /></ProtectedRoute>} />
 
             {/* Universal Print routes */}
             <Route path="/print/:documentType/:documentId" element={<ProtectedRoute><PrintRoute /></ProtectedRoute>} />
