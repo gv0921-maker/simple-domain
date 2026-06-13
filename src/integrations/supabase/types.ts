@@ -6994,6 +6994,44 @@ export type Database = {
           },
         ]
       }
+      wo_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          type: string
+          user_id: string
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          type: string
+          user_id: string
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          type?: string
+          user_id?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wo_notifications_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_centers: {
         Row: {
           capacity: number
@@ -7082,52 +7120,124 @@ export type Database = {
         Row: {
           actual_end: string | null
           actual_start: string | null
+          approval_required: boolean
+          approved_at: string | null
+          approved_by: string | null
+          assigned_factory_incharge_id: string | null
+          bom_entered_at: string | null
           bom_id: string | null
+          cancellation_reason: string | null
+          colour_polish_spec: string | null
           created_at: string
+          created_by: string | null
+          current_stage: string
+          customization_notes: string | null
+          eta_date: string | null
+          fabric_spec: string | null
+          factory_completion_at: string | null
           id: string
+          linked_goods_receipt_id: string | null
+          linked_sales_order_id: string | null
+          linked_sales_order_line_id: string | null
+          materials_consumed_at: string | null
           notes: string | null
+          placed_at: string | null
           planned_qty: number
           produced_qty: number
           product_id: string
-          reference: string
+          quantity: number
+          received_at_store_at: string | null
+          reference: string | null
+          reference_images: Json
+          rejection_reason: string | null
           scheduled_end: string | null
           scheduled_start: string | null
+          size_spec: string | null
           state: string
           updated_at: string
+          wo_number: string | null
           work_center_id: string | null
         }
         Insert: {
           actual_end?: string | null
           actual_start?: string | null
+          approval_required?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_factory_incharge_id?: string | null
+          bom_entered_at?: string | null
           bom_id?: string | null
+          cancellation_reason?: string | null
+          colour_polish_spec?: string | null
           created_at?: string
+          created_by?: string | null
+          current_stage?: string
+          customization_notes?: string | null
+          eta_date?: string | null
+          fabric_spec?: string | null
+          factory_completion_at?: string | null
           id?: string
+          linked_goods_receipt_id?: string | null
+          linked_sales_order_id?: string | null
+          linked_sales_order_line_id?: string | null
+          materials_consumed_at?: string | null
           notes?: string | null
+          placed_at?: string | null
           planned_qty?: number
           produced_qty?: number
           product_id: string
-          reference: string
+          quantity?: number
+          received_at_store_at?: string | null
+          reference?: string | null
+          reference_images?: Json
+          rejection_reason?: string | null
           scheduled_end?: string | null
           scheduled_start?: string | null
+          size_spec?: string | null
           state?: string
           updated_at?: string
+          wo_number?: string | null
           work_center_id?: string | null
         }
         Update: {
           actual_end?: string | null
           actual_start?: string | null
+          approval_required?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_factory_incharge_id?: string | null
+          bom_entered_at?: string | null
           bom_id?: string | null
+          cancellation_reason?: string | null
+          colour_polish_spec?: string | null
           created_at?: string
+          created_by?: string | null
+          current_stage?: string
+          customization_notes?: string | null
+          eta_date?: string | null
+          fabric_spec?: string | null
+          factory_completion_at?: string | null
           id?: string
+          linked_goods_receipt_id?: string | null
+          linked_sales_order_id?: string | null
+          linked_sales_order_line_id?: string | null
+          materials_consumed_at?: string | null
           notes?: string | null
+          placed_at?: string | null
           planned_qty?: number
           produced_qty?: number
           product_id?: string
-          reference?: string
+          quantity?: number
+          received_at_store_at?: string | null
+          reference?: string | null
+          reference_images?: Json
+          rejection_reason?: string | null
           scheduled_end?: string | null
           scheduled_start?: string | null
+          size_spec?: string | null
           state?: string
           updated_at?: string
+          wo_number?: string | null
           work_center_id?: string | null
         }
         Relationships: [
@@ -7136,6 +7246,20 @@ export type Database = {
             columns: ["bom_id"]
             isOneToOne: false
             referencedRelation: "bom"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_linked_sales_order_id_fkey"
+            columns: ["linked_sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_linked_sales_order_line_id_fkey"
+            columns: ["linked_sales_order_line_id"]
+            isOneToOne: false
+            referencedRelation: "order_lines"
             referencedColumns: ["id"]
           },
           {
@@ -7345,6 +7469,7 @@ export type Database = {
         Args: { p_month: number; p_reason: string; p_year: number }
         Returns: string
       }
+      approve_work_order: { Args: { p_wo_id: string }; Returns: Json }
       approve_write_off: { Args: { p_wf_id: string }; Returns: Json }
       auto_create_correction_order: {
         Args: { p_gr_id: string }
@@ -7355,6 +7480,10 @@ export type Database = {
         Returns: number
       }
       can_write_inventory: { Args: never; Returns: boolean }
+      cancel_work_order: {
+        Args: { p_reason: string; p_wo_id: string }
+        Returns: Json
+      }
       cancel_write_off: {
         Args: { p_reason: string; p_wf_id: string }
         Returns: Json
@@ -7460,6 +7589,7 @@ export type Database = {
       is_employee_self: { Args: { _employee_id: string }; Returns: boolean }
       is_manager_of: { Args: { target_employee_id: string }; Returns: boolean }
       is_reviewer_for: { Args: { _reviewer_id: string }; Returns: boolean }
+      place_work_order: { Args: { p_wo_id: string }; Returns: Json }
       portal_get_quotation: {
         Args: { _id: string; _token: string }
         Returns: Json
@@ -7477,6 +7607,10 @@ export type Database = {
       }
       reconcile_stock_count: {
         Args: { p_count_id: string; p_item_reconciliations: Json }
+        Returns: Json
+      }
+      reject_work_order: {
+        Args: { p_reason: string; p_wo_id: string }
         Returns: Json
       }
       suggest_ito_for_so: { Args: { p_so_id: string }; Returns: Json }
