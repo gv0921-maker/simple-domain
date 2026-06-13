@@ -21,6 +21,8 @@ import {
 import type { ITOSuggestionLine, ProductSource, ITOLineStatus } from '@/lib/services/inventory/internalTransfers';
 import { logFieldChange } from '@/lib/services/activityLog';
 import { useFactoryProgressForSO } from '@/hooks/shopfloor';
+import { useVendorOrdersForSO } from '@/hooks/vendor-orders';
+import { VO_STATUS_LABEL } from '@/lib/services/vendor-orders';
 
 interface Props {
   salesOrderId: string;
@@ -75,6 +77,7 @@ export function FulfillmentSection({ salesOrderId, salesOrderStatus, salesOrderC
   const { data: queueId } = useITOQueueId(activeITO?.id);
   const { data: readyToInvoice } = useSOReadyToInvoice(salesOrderId);
   const { data: factoryWOs = [] } = useFactoryProgressForSO(salesOrderId);
+  const { data: vendorOrders = [] } = useVendorOrdersForSO(salesOrderId);
 
   const suggestMut = useSuggestITO();
   const createMut = useCreateITO();
@@ -235,6 +238,22 @@ export function FulfillmentSection({ salesOrderId, salesOrderStatus, salesOrderC
                   <span className="font-mono">{w.wo_number}</span>
                   <Badge variant="outline" className="capitalize">{w.current_stage.replace('_', ' ')}</Badge>
                 </div>
+              ))}
+            </div>
+          )}
+          {vendorOrders.length > 0 && (
+            <div className="border rounded-md p-3 space-y-2 bg-amber-50/40">
+              <div className="text-xs font-medium text-amber-900">Vendor Orders</div>
+              {vendorOrders.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => navigate(`/vendor-orders/${v.id}`)}
+                  className="w-full flex items-center justify-between text-sm hover:underline"
+                >
+                  <span className="font-mono">{v.vo_number}</span>
+                  <span className="text-xs text-muted-foreground">{v.vendor?.name ?? ''}</span>
+                  <Badge variant="outline" className="capitalize">{VO_STATUS_LABEL[v.status]}</Badge>
+                </button>
               ))}
             </div>
           )}

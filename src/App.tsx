@@ -117,6 +117,11 @@ import CompanySettings from "@/pages/settings/CompanySettings";
 import PaymentAccountsSettings from "@/pages/settings/PaymentAccountsSettings";
 import VendorsSettings from "@/pages/settings/VendorsSettings";
 
+// Vendor Orders module
+import VendorOrdersList from "@/pages/vendor-orders/VendorOrdersList";
+import VendorOrderForm from "@/pages/vendor-orders/VendorOrderForm";
+import VendorOrderDetail from "@/pages/vendor-orders/VendorOrderDetail";
+
 // Print framework (Phase 1 Batch 4)
 import PrintRoute from "@/pages/print/PrintRoute";
 
@@ -317,6 +322,11 @@ const App = () => (
             <Route path="/settings/company" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
             <Route path="/settings/payment-accounts" element={<ProtectedRoute><PaymentAccountsSettings /></ProtectedRoute>} />
             <Route path="/settings/vendors" element={<ProtectedRoute><VendorsSettings /></ProtectedRoute>} />
+
+            {/* Vendor Orders module */}
+            <Route path="/vendor-orders" element={<ProtectedRoute><VendorOrdersList /></ProtectedRoute>} />
+            <Route path="/vendor-orders/new" element={<ProtectedRoute><VendorOrderForm /></ProtectedRoute>} />
+            <Route path="/vendor-orders/:id" element={<ProtectedRoute><VendorOrderDetail /></ProtectedRoute>} />
 
             {/* Universal Print routes */}
             <Route path="/print/:documentType/:documentId" element={<ProtectedRoute><PrintRoute /></ProtectedRoute>} />

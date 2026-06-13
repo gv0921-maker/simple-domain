@@ -11,6 +11,7 @@ import { InternalMovementPrint } from '@/components/print/templates/InternalMove
 import { StockCountPrint } from '@/components/print/templates/StockCountPrint';
 import { WriteOffPrint } from '@/components/print/templates/WriteOffPrint';
 import { WorkOrderPrint } from '@/components/print/templates/WorkOrderPrint';
+import { VendorOrderPrint } from '@/components/print/templates/VendorOrderPrint';
 import { useSalesOrderRich, useQuotationRich } from '@/hooks/sales';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryNote } from '@/hooks/inventory/deliveryNotes';
@@ -19,6 +20,7 @@ import { useInternalMovement } from '@/hooks/inventory/internalMovements';
 import { useStockCount } from '@/hooks/inventory/stockCounts';
 import { useWriteOff } from '@/hooks/inventory/writeOffs';
 import { useWorkOrderV2 } from '@/hooks/manufacturing/workOrders';
+import { useVendorOrder } from '@/hooks/vendor-orders';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -74,6 +76,7 @@ export default function PrintRoute() {
   const stockCount = useStockCount(type === 'stock_count' ? documentId : undefined);
   const writeOff = useWriteOff(type === 'write_off' ? documentId : undefined);
   const workOrder = useWorkOrderV2(type === 'work_order' ? documentId : undefined);
+  const vendorOrder = useVendorOrder(type === 'vendor_order' ? documentId : undefined);
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -81,7 +84,7 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading || vendorOrder.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -122,6 +125,10 @@ export default function PrintRoute() {
     const w = workOrder.data;
     docNumber = w.wo_number ?? docNumber;
     body = <WorkOrderPrint wo={w} isDraft={w.current_stage === 'draft'} />;
+  } else if (type === 'vendor_order' && vendorOrder.data?.vo) {
+    const v = vendorOrder.data.vo;
+    docNumber = v.vo_number ?? docNumber;
+    body = <VendorOrderPrint vo={v} lines={vendorOrder.data.lines} isDraft={v.status === 'draft'} />;
   }
 
   if (loading) {
