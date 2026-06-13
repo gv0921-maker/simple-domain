@@ -3500,6 +3500,8 @@ export type Database = {
           invoice_id: string
           product_id: string | null
           quantity: number
+          quantity_from_so_line: number | null
+          sales_order_line_id: string | null
           sgst_amount: number | null
           subtotal: number
           tax_rate: number
@@ -3519,6 +3521,8 @@ export type Database = {
           invoice_id: string
           product_id?: string | null
           quantity?: number
+          quantity_from_so_line?: number | null
+          sales_order_line_id?: string | null
           sgst_amount?: number | null
           subtotal?: number
           tax_rate?: number
@@ -3538,6 +3542,8 @@ export type Database = {
           invoice_id?: string
           product_id?: string | null
           quantity?: number
+          quantity_from_so_line?: number | null
+          sales_order_line_id?: string | null
           sgst_amount?: number | null
           subtotal?: number
           tax_rate?: number
@@ -3559,6 +3565,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoice_lines_sales_order_line_id_fkey"
+            columns: ["sales_order_line_id"]
+            isOneToOne: false
+            referencedRelation: "order_lines"
+            referencedColumns: ["id"]
+          },
         ]
       }
       invoices: {
@@ -3569,14 +3582,20 @@ export type Database = {
           discount_amount: number
           due_date: string | null
           id: string
+          invoice_sequence_in_so: number
+          invoice_type_override_by: string | null
+          invoice_type_override_reason: string | null
+          is_partial: boolean
           issue_date: string
           notes: string | null
           paid_amount: number
+          payment_account_id: string | null
           price_approval_status: string
           reference: string
           sales_order_id: string | null
           status: string
           subtotal: number
+          superseded_by_credit_note_id: string | null
           tax_amount: number
           total: number
           type: string
@@ -3589,14 +3608,20 @@ export type Database = {
           discount_amount?: number
           due_date?: string | null
           id?: string
+          invoice_sequence_in_so?: number
+          invoice_type_override_by?: string | null
+          invoice_type_override_reason?: string | null
+          is_partial?: boolean
           issue_date?: string
           notes?: string | null
           paid_amount?: number
+          payment_account_id?: string | null
           price_approval_status?: string
           reference: string
           sales_order_id?: string | null
           status?: string
           subtotal?: number
+          superseded_by_credit_note_id?: string | null
           tax_amount?: number
           total?: number
           type?: string
@@ -3609,14 +3634,20 @@ export type Database = {
           discount_amount?: number
           due_date?: string | null
           id?: string
+          invoice_sequence_in_so?: number
+          invoice_type_override_by?: string | null
+          invoice_type_override_reason?: string | null
+          is_partial?: boolean
           issue_date?: string
           notes?: string | null
           paid_amount?: number
+          payment_account_id?: string | null
           price_approval_status?: string
           reference?: string
           sales_order_id?: string | null
           status?: string
           subtotal?: number
+          superseded_by_credit_note_id?: string | null
           tax_amount?: number
           total?: number
           type?: string
@@ -3628,6 +3659,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -4109,6 +4147,8 @@ export type Database = {
           product_name: string | null
           product_source: string | null
           quantity: number
+          quantity_invoiced: number
+          quantity_remaining_to_invoice: number | null
           reserved_stock: boolean
           sgst_amount: number | null
           subtotal: number
@@ -4152,6 +4192,8 @@ export type Database = {
           product_name?: string | null
           product_source?: string | null
           quantity?: number
+          quantity_invoiced?: number
+          quantity_remaining_to_invoice?: number | null
           reserved_stock?: boolean
           sgst_amount?: number | null
           subtotal?: number
@@ -4195,6 +4237,8 @@ export type Database = {
           product_name?: string | null
           product_source?: string | null
           quantity?: number
+          quantity_invoiced?: number
+          quantity_remaining_to_invoice?: number | null
           reserved_stock?: boolean
           sgst_amount?: number | null
           subtotal?: number
@@ -7858,6 +7902,16 @@ export type Database = {
         Args: { p_confirmed_by: string; p_so_id: string }
         Returns: string
       }
+      create_partial_invoice: {
+        Args: {
+          p_invoice_type: string
+          p_line_quantities: Json
+          p_override_reason?: string
+          p_payment_account_id: string
+          p_so_id: string
+        }
+        Returns: string
+      }
       enter_bom: {
         Args: { p_entries: Json; p_wo_id: string }
         Returns: undefined
@@ -7881,6 +7935,7 @@ export type Database = {
         Args: { p_so_id: string }
         Returns: Json
       }
+      get_so_invoice_summary: { Args: { p_so_id: string }; Returns: Json }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -7962,6 +8017,10 @@ export type Database = {
       start_polishing: { Args: { p_wo_id: string }; Returns: undefined }
       start_work: { Args: { p_wo_id: string }; Returns: undefined }
       suggest_ito_for_so: { Args: { p_so_id: string }; Returns: Json }
+      validate_invoice_type_against_so: {
+        Args: { p_invoice_type: string; p_so_id: string }
+        Returns: Json
+      }
       validate_so_linked_eta: {
         Args: { p_proposed_eta: string; p_so_id: string }
         Returns: Json
