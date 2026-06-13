@@ -10,6 +10,7 @@ export const INVENTORY_NAV = [
   { label: 'Correction Orders', href: '/inventory/correction-orders' },
   { label: 'Internal Movements', href: '/inventory/internal-movements' },
   { label: 'Stock Counts', href: '/inventory/stock-counts' },
+  { label: 'Write-offs', href: '/inventory/write-offs' },
   { label: 'Warehouses', href: '/inventory/warehouses' },
   { label: 'Locations', href: '/inventory/locations' },
   { label: 'Adjustments', href: '/inventory/adjustments' },

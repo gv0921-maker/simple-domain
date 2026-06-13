@@ -9,12 +9,14 @@ import { PaymentReceiptPrint } from '@/components/print/templates/PaymentReceipt
 import { CorrectionOrderPrint } from '@/components/print/templates/CorrectionOrderPrint';
 import { InternalMovementPrint } from '@/components/print/templates/InternalMovementPrint';
 import { StockCountPrint } from '@/components/print/templates/StockCountPrint';
+import { WriteOffPrint } from '@/components/print/templates/WriteOffPrint';
 import { useSalesOrderRich, useQuotationRich } from '@/hooks/sales';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryNote } from '@/hooks/inventory/deliveryNotes';
 import { useCorrectionOrder } from '@/hooks/inventory/correctionOrders';
 import { useInternalMovement } from '@/hooks/inventory/internalMovements';
 import { useStockCount } from '@/hooks/inventory/stockCounts';
+import { useWriteOff } from '@/hooks/inventory/writeOffs';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -68,6 +70,7 @@ export default function PrintRoute() {
   const correction = useCorrectionOrder(type === 'correction_order' ? documentId : undefined);
   const movement = useInternalMovement(type === 'internal_movement' ? documentId : undefined);
   const stockCount = useStockCount(type === 'stock_count' ? documentId : undefined);
+  const writeOff = useWriteOff(type === 'write_off' ? documentId : undefined);
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -75,7 +78,7 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -108,6 +111,10 @@ export default function PrintRoute() {
     const c = stockCount.data.count as any;
     docNumber = c.count_number ?? docNumber;
     body = <StockCountPrint count={c} items={stockCount.data.items} isDraft={c.status === 'draft'} />;
+  } else if (type === 'write_off' && writeOff.data?.record) {
+    const r = writeOff.data.record;
+    docNumber = r.wf_number ?? docNumber;
+    body = <WriteOffPrint record={r} items={writeOff.data.items} isDraft={r.status === 'draft'} />;
   }
 
   if (loading) {
