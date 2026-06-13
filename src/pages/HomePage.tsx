@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Briefcase, Coffee } from 'lucide-react';
 import { useCurrentEmployee } from '@/hooks/hr/useCurrentEmployee';
 import { useActiveSession } from '@/hooks/hr';
+import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
 
 export default function HomePage() {
   const { getVisibleModules } = useCustomization();
@@ -21,6 +22,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { data: employee } = useCurrentEmployee();
   const { data: activeSession } = useActiveSession(employee?.id);
+  const { isAdmin: isSuperAdmin } = useIsSuperAdmin();
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
@@ -49,9 +51,12 @@ export default function HomePage() {
 
   if (redirecting) return null;
 
-  const visibleModules = getVisibleModules().filter((module) =>
-    user ? canAccessRoute(user.id, module.href) : false
-  );
+  const SUPER_ADMIN_ONLY_MODULES = new Set(['payroll', 'appraisals']);
+  const visibleModules = getVisibleModules().filter((module) => {
+    if (!user) return false;
+    if (SUPER_ADMIN_ONLY_MODULES.has(module.id) && !isSuperAdmin) return false;
+    return canAccessRoute(user.id, module.href);
+  });
 
   return (
     <AppLayout>
