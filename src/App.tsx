@@ -239,6 +239,10 @@ import {
   CRMReportsLanding,
 } from "@/pages/reports/modulePages";
 
+// Notifications
+import NotificationsPage from "@/pages/notifications/NotificationsPage";
+import NotificationSettings from "@/pages/settings/NotificationSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -511,6 +515,8 @@ const App = () => (
             <Route path="/crm/reports/:reportKey" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
 
             {/* Catch-all */}
+            <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+            <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
