@@ -2643,6 +2643,117 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_transfer_order_lines: {
+        Row: {
+          created_at: string
+          id: string
+          internal_transfer_order_id: string
+          line_status: string
+          notes: string | null
+          product_id: string
+          product_source: string
+          quantity_expected: number
+          quantity_scanned: number
+          sales_order_line_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          internal_transfer_order_id: string
+          line_status?: string
+          notes?: string | null
+          product_id: string
+          product_source: string
+          quantity_expected: number
+          quantity_scanned?: number
+          sales_order_line_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          internal_transfer_order_id?: string
+          line_status?: string
+          notes?: string | null
+          product_id?: string
+          product_source?: string
+          quantity_expected?: number
+          quantity_scanned?: number
+          sales_order_line_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_transfer_order_lines_internal_transfer_order_id_fkey"
+            columns: ["internal_transfer_order_id"]
+            isOneToOne: false
+            referencedRelation: "internal_transfer_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_transfer_order_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_transfer_order_lines_sales_order_line_id_fkey"
+            columns: ["sales_order_line_id"]
+            isOneToOne: false
+            referencedRelation: "order_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_transfer_orders: {
+        Row: {
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          ito_number: string
+          notes: string | null
+          sales_order_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ito_number: string
+          notes?: string | null
+          sales_order_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ito_number?: string
+          notes?: string | null
+          sales_order_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_transfer_orders_sales_order_id_fkey"
+            columns: ["sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_adjustments: {
         Row: {
           approved_at: string | null
@@ -6363,6 +6474,11 @@ export type Database = {
       }
       can_write_inventory: { Args: never; Returns: boolean }
       check_advance_gate: { Args: { p_so_id: string }; Returns: boolean }
+      check_so_ready_to_invoice: { Args: { p_so_id: string }; Returns: boolean }
+      create_ito_from_so: {
+        Args: { p_confirmed_by: string; p_so_id: string }
+        Returns: string
+      }
       generate_document_number: {
         Args: { p_document_type: string }
         Returns: string
@@ -6436,6 +6552,7 @@ export type Database = {
         Args: { p_document_type: string }
         Returns: string
       }
+      suggest_ito_for_so: { Args: { p_so_id: string }; Returns: Json }
     }
     Enums: {
       activity_type:
