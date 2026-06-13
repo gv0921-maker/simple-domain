@@ -552,6 +552,13 @@ export default function SalesOrderForm() {
           </Card>
         )}
 
+        {/* Payments — multi-payment ledger (Phase 2 Batch 2) */}
+        {!isNew && id && (
+          <div className="max-w-4xl mx-auto w-full">
+            <PaymentsSection salesOrderId={id} />
+          </div>
+        )}
+
         <div className="max-w-4xl mx-auto flex flex-col gap-3 w-full">
             {/* Customer & Details */}
             <Card>
