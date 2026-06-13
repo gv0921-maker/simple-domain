@@ -2854,6 +2854,96 @@ export type Database = {
           },
         ]
       }
+      factory_inventory_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          current_stock: number
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          min_stock_level: number
+          name: string
+          unit_of_measurement: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          current_stock?: number
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          min_stock_level?: number
+          name: string
+          unit_of_measurement: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          current_stock?: number
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          min_stock_level?: number
+          name?: string
+          unit_of_measurement?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      factory_stock_movements: {
+        Row: {
+          factory_inventory_item_id: string
+          id: string
+          movement_type: string
+          notes: string | null
+          quantity: number
+          recorded_at: string
+          recorded_by: string | null
+          related_work_order_id: string | null
+        }
+        Insert: {
+          factory_inventory_item_id: string
+          id?: string
+          movement_type: string
+          notes?: string | null
+          quantity: number
+          recorded_at?: string
+          recorded_by?: string | null
+          related_work_order_id?: string | null
+        }
+        Update: {
+          factory_inventory_item_id?: string
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          quantity?: number
+          recorded_at?: string
+          recorded_by?: string | null
+          related_work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factory_stock_movements_factory_inventory_item_id_fkey"
+            columns: ["factory_inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "factory_inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factory_stock_movements_related_work_order_id_fkey"
+            columns: ["related_work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_lines: {
         Row: {
           accepted_quantity: number
@@ -7068,6 +7158,54 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_bom_entries: {
+        Row: {
+          created_at: string
+          factory_inventory_item_id: string
+          id: string
+          notes: string | null
+          quantity_consumed: number
+          quantity_required: number
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          factory_inventory_item_id: string
+          id?: string
+          notes?: string | null
+          quantity_consumed?: number
+          quantity_required: number
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          factory_inventory_item_id?: string
+          id?: string
+          notes?: string | null
+          quantity_consumed?: number
+          quantity_required?: number
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_bom_entries_factory_inventory_item_id_fkey"
+            columns: ["factory_inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "factory_inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_bom_entries_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_components: {
         Row: {
           consumed_qty: number
@@ -7145,6 +7283,7 @@ export type Database = {
           planned_qty: number
           produced_qty: number
           product_id: string
+          progress_photos: Json
           quantity: number
           received_at_store_at: string | null
           reference: string | null
@@ -7186,6 +7325,7 @@ export type Database = {
           planned_qty?: number
           produced_qty?: number
           product_id: string
+          progress_photos?: Json
           quantity?: number
           received_at_store_at?: string | null
           reference?: string | null
@@ -7227,6 +7367,7 @@ export type Database = {
           planned_qty?: number
           produced_qty?: number
           product_id?: string
+          progress_photos?: Json
           quantity?: number
           received_at_store_at?: string | null
           reference?: string | null
@@ -7500,6 +7641,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      complete_factory_work: { Args: { p_wo_id: string }; Returns: undefined }
       complete_gr_line_qc: {
         Args: {
           p_failed_notes: string
@@ -7517,6 +7659,10 @@ export type Database = {
       create_ito_from_so: {
         Args: { p_confirmed_by: string; p_so_id: string }
         Returns: string
+      }
+      enter_bom: {
+        Args: { p_entries: Json; p_wo_id: string }
+        Returns: undefined
       }
       generate_document_number: {
         Args: { p_document_type: string }
@@ -7574,6 +7720,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_app_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_assigned_or_admin: { Args: { p_wo_id: string }; Returns: boolean }
       is_chat_channel_admin: {
         Args: { _channel_id: string; _user_id: string }
         Returns: boolean
@@ -7613,6 +7760,8 @@ export type Database = {
         Args: { p_reason: string; p_wo_id: string }
         Returns: Json
       }
+      start_polishing: { Args: { p_wo_id: string }; Returns: undefined }
+      start_work: { Args: { p_wo_id: string }; Returns: undefined }
       suggest_ito_for_so: { Args: { p_so_id: string }; Returns: Json }
     }
     Enums: {
