@@ -1148,6 +1148,17 @@ function mapSalesOrderRich(r: any): SalesOrder {
     pointsRedeemed: NOrUndef(r.points_redeemed),
     pointsEarned: NOrUndef(r.points_earned),
     redemptionAmount: NOrUndef(r.redemption_amount),
+    // Phase 2 — enhanced SO workflow fields
+    noQuoteFlag: !!r.no_quote_flag,
+    advancePercentRequired: NOrUndef(r.advance_percent_required),
+    advancePercentReceived: NOrUndef(r.advance_percent_received),
+    advanceOverrideBy: r.advance_override_by ?? undefined,
+    advanceOverrideReason: r.advance_override_reason ?? undefined,
+    advanceOverrideAt: r.advance_override_at ?? undefined,
+    termsAndConditions: r.terms_and_conditions ?? undefined,
+    customerSignatureReceived: !!r.customer_signature_received,
+    customerSignatureDate: r.customer_signature_date ?? undefined,
+    etaOverall: r.eta_overall ?? undefined,
   } as SalesOrder;
 }
 
@@ -1198,6 +1209,14 @@ function rowFromSalesOrder(o: Partial<SalesOrder> & { reference: string }): any 
     points_redeemed: o.pointsRedeemed ?? null,
     points_earned: o.pointsEarned ?? null,
     redemption_amount: o.redemptionAmount ?? null,
+    // Phase 2 — enhanced SO workflow fields
+    no_quote_flag: !!o.noQuoteFlag,
+    advance_percent_required: o.advancePercentRequired ?? null,
+    advance_percent_received: o.advancePercentReceived ?? null,
+    terms_and_conditions: o.termsAndConditions ?? null,
+    customer_signature_received: !!o.customerSignatureReceived,
+    customer_signature_date: o.customerSignatureDate ?? null,
+    eta_overall: o.etaOverall ?? null,
   };
 }
 
