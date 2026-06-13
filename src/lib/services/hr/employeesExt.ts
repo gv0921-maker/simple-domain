@@ -80,7 +80,7 @@ export async function getTodayStatusMap(employeeIds: string[]): Promise<Map<stri
 
   const [att, lv] = await Promise.all([
     supabase.from('attendance_sessions').select('employee_id')
-      .in('employee_id', employeeIds).gte('check_in_time', `${today}T00:00:00`).lte('check_in_time', `${today}T23:59:59`),
+      .in('employee_id', employeeIds).eq('session_date', today),
     supabase.from('leave_requests').select('employee_id')
       .in('employee_id', employeeIds).eq('status', 'approved')
       .lte('start_date', today).gte('end_date', today),
