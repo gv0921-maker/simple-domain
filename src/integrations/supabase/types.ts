@@ -2382,6 +2382,64 @@ export type Database = {
           },
         ]
       }
+      delivery_note_lines: {
+        Row: {
+          created_at: string
+          delivery_note_id: string
+          id: string
+          invoice_line_id: string | null
+          product_id: string | null
+          product_name: string | null
+          quantity_from_invoice_line: number
+          serial_numbers: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_note_id: string
+          id?: string
+          invoice_line_id?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          quantity_from_invoice_line?: number
+          serial_numbers?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_note_id?: string
+          id?: string
+          invoice_line_id?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          quantity_from_invoice_line?: number
+          serial_numbers?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_note_lines_delivery_note_id_fkey"
+            columns: ["delivery_note_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_note_lines_invoice_line_id_fkey"
+            columns: ["invoice_line_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_note_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_notes: {
         Row: {
           created_at: string
@@ -2390,9 +2448,16 @@ export type Database = {
           customer_delivery_name: string | null
           customer_delivery_phone: string | null
           customer_id: string | null
+          customer_signature_date: string | null
+          customer_signature_received: boolean
+          delivered_at: string | null
+          delivered_by_user_id: string | null
           delivery_date: string | null
+          dispatched_at: string | null
+          dn_sequence_in_invoice: number
           id: string
           invoice_id: string | null
+          is_partial: boolean
           notes: string | null
           products_json: Json
           qc_by: string | null
@@ -2410,9 +2475,16 @@ export type Database = {
           customer_delivery_name?: string | null
           customer_delivery_phone?: string | null
           customer_id?: string | null
+          customer_signature_date?: string | null
+          customer_signature_received?: boolean
+          delivered_at?: string | null
+          delivered_by_user_id?: string | null
           delivery_date?: string | null
+          dispatched_at?: string | null
+          dn_sequence_in_invoice?: number
           id?: string
           invoice_id?: string | null
+          is_partial?: boolean
           notes?: string | null
           products_json?: Json
           qc_by?: string | null
@@ -2430,9 +2502,16 @@ export type Database = {
           customer_delivery_name?: string | null
           customer_delivery_phone?: string | null
           customer_id?: string | null
+          customer_signature_date?: string | null
+          customer_signature_received?: boolean
+          delivered_at?: string | null
+          delivered_by_user_id?: string | null
           delivery_date?: string | null
+          dispatched_at?: string | null
+          dn_sequence_in_invoice?: number
           id?: string
           invoice_id?: string | null
+          is_partial?: boolean
           notes?: string | null
           products_json?: Json
           qc_by?: string | null
@@ -3500,7 +3579,9 @@ export type Database = {
           invoice_id: string
           product_id: string | null
           quantity: number
+          quantity_delivered: number
           quantity_from_so_line: number | null
+          quantity_remaining_to_deliver: number | null
           sales_order_line_id: string | null
           sgst_amount: number | null
           subtotal: number
@@ -3521,7 +3602,9 @@ export type Database = {
           invoice_id: string
           product_id?: string | null
           quantity?: number
+          quantity_delivered?: number
           quantity_from_so_line?: number | null
+          quantity_remaining_to_deliver?: number | null
           sales_order_line_id?: string | null
           sgst_amount?: number | null
           subtotal?: number
@@ -3542,7 +3625,9 @@ export type Database = {
           invoice_id?: string
           product_id?: string | null
           quantity?: number
+          quantity_delivered?: number
           quantity_from_so_line?: number | null
+          quantity_remaining_to_deliver?: number | null
           sales_order_line_id?: string | null
           sgst_amount?: number | null
           subtotal?: number
@@ -7872,6 +7957,7 @@ export type Database = {
         Returns: Json
       }
       check_advance_gate: { Args: { p_so_id: string }; Returns: boolean }
+      check_so_closure_ready: { Args: { p_so_id: string }; Returns: boolean }
       check_so_ready_to_invoice: { Args: { p_so_id: string }; Returns: boolean }
       close_correction_order: { Args: { p_co_id: string }; Returns: Json }
       complete_correction_qc_cycle: {
@@ -7898,8 +7984,16 @@ export type Database = {
         Returns: boolean
       }
       complete_stock_count: { Args: { p_count_id: string }; Returns: Json }
+      confirm_delivery: {
+        Args: { p_dn_id: string; p_signature_received?: boolean }
+        Returns: Json
+      }
       create_ito_from_so: {
         Args: { p_confirmed_by: string; p_so_id: string }
+        Returns: string
+      }
+      create_partial_delivery_note: {
+        Args: { p_invoice_id: string; p_line_items: Json }
         Returns: string
       }
       create_partial_invoice: {
@@ -7927,6 +8021,10 @@ export type Database = {
       get_current_employee_id: { Args: never; Returns: string }
       get_current_fy_label: { Args: never; Returns: string }
       get_dashboard_role: { Args: never; Returns: string }
+      get_invoice_delivery_summary: {
+        Args: { p_invoice_id: string }
+        Returns: Json
+      }
       get_product_stock_breakdown: {
         Args: { p_product_id: string }
         Returns: Json
