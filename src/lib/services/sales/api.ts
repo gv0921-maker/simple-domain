@@ -1062,6 +1062,17 @@ function rowFromOrderLine(l: SalesOrderLine, orderId: string): any {
     discount_value: l.discountValue ?? null,
     discount_amount: l.discountAmount ?? null,
     final_amount: l.finalAmount ?? null,
+    // Phase 2 — sourcing & customization
+    product_source: l.productSource ?? 'warehouse',
+    customization_size: l.customizationSize ?? null,
+    customization_colour: l.customizationColour ?? null,
+    customization_fabric: l.customizationFabric ?? null,
+    customization_polish: l.customizationPolish ?? null,
+    customization_notes: l.customizationNotes ?? null,
+    customization_reference_images: l.customizationReferenceImages ?? [],
+    line_eta: l.lineEta ?? null,
+    vendor_id: uuidOrNull(l.vendorId),
+    factory_work_order_id: uuidOrNull(l.factoryWorkOrderId),
   };
 }
 
