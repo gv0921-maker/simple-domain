@@ -474,7 +474,10 @@ export default function SalesOrderForm() {
                 grandTotal={formData.grandTotal || formData.total || 0}
                 canOverride={userRole === 'admin' || userRole === 'super_admin'}
                 onOpenOverride={() => setOverrideOpen(true)}
-                onConfirmed={(newStatus) => setFormData((prev) => ({ ...prev, status: newStatus }))}
+                onConfirmed={(newStatus) => {
+                  setFormData((prev) => ({ ...prev, status: newStatus }));
+                  window.open(`/print/sales_order/${id}`, '_blank');
+                }}
               />
             )}
             {status === 'paid' && !isNew && id && (
