@@ -12,6 +12,13 @@ export type SalesOrderStatus =
   | 'dispatched'
   | 'delivered'
   | 'cancelled'
+  // Phase 2 — extended workflow states
+  | 'awaiting_advance'
+  | 'fulfilling'
+  | 'ready_to_invoice'
+  | 'invoicing'
+  | 'delivering'
+  | 'closed'
   // Legacy values kept so existing localStorage / DB rows still type-check.
   | 'draft'
   | 'locked';
