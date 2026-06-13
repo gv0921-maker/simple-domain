@@ -115,6 +115,7 @@ import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
 import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 import CompanySettings from "@/pages/settings/CompanySettings";
 import PaymentAccountsSettings from "@/pages/settings/PaymentAccountsSettings";
+import VendorsSettings from "@/pages/settings/VendorsSettings";
 
 // Print framework (Phase 1 Batch 4)
 import PrintRoute from "@/pages/print/PrintRoute";
@@ -315,6 +316,7 @@ const App = () => (
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
             <Route path="/settings/company" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
             <Route path="/settings/payment-accounts" element={<ProtectedRoute><PaymentAccountsSettings /></ProtectedRoute>} />
+            <Route path="/settings/vendors" element={<ProtectedRoute><VendorsSettings /></ProtectedRoute>} />
 
             {/* Universal Print routes */}
             <Route path="/print/:documentType/:documentId" element={<ProtectedRoute><PrintRoute /></ProtectedRoute>} />
