@@ -8,11 +8,13 @@ import { DeliveryNotePrint } from '@/components/print/templates/DeliveryNotePrin
 import { PaymentReceiptPrint } from '@/components/print/templates/PaymentReceiptPrint';
 import { CorrectionOrderPrint } from '@/components/print/templates/CorrectionOrderPrint';
 import { InternalMovementPrint } from '@/components/print/templates/InternalMovementPrint';
+import { StockCountPrint } from '@/components/print/templates/StockCountPrint';
 import { useSalesOrderRich, useQuotationRich } from '@/hooks/sales';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryNote } from '@/hooks/inventory/deliveryNotes';
 import { useCorrectionOrder } from '@/hooks/inventory/correctionOrders';
 import { useInternalMovement } from '@/hooks/inventory/internalMovements';
+import { useStockCount } from '@/hooks/inventory/stockCounts';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -65,6 +67,7 @@ export default function PrintRoute() {
   const payment = usePayment(type === 'payment_receipt' ? documentId : undefined);
   const correction = useCorrectionOrder(type === 'correction_order' ? documentId : undefined);
   const movement = useInternalMovement(type === 'internal_movement' ? documentId : undefined);
+  const stockCount = useStockCount(type === 'stock_count' ? documentId : undefined);
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -72,7 +75,7 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -101,6 +104,10 @@ export default function PrintRoute() {
     const m = movement.data.movement as any;
     docNumber = m.movement_number ?? docNumber;
     body = <InternalMovementPrint movement={m} items={movement.data.items} isDraft={m.status === 'draft'} />;
+  } else if (type === 'stock_count' && stockCount.data?.count) {
+    const c = stockCount.data.count as any;
+    docNumber = c.count_number ?? docNumber;
+    body = <StockCountPrint count={c} items={stockCount.data.items} isDraft={c.status === 'draft'} />;
   }
 
   if (loading) {
