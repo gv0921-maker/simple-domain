@@ -7,6 +7,10 @@ interface Props {
 
 export function DeliveryNotePrint({ note, isDraft = false }: Props) {
   const items = note?.productsJson ?? note?.products_json ?? [];
+  const isPartial = note?.is_partial ?? note?.isPartial;
+  const seq = note?.dn_sequence_in_invoice ?? note?.dnSequenceInInvoice;
+  const invoiceRef = note?.invoice_reference ?? note?.invoiceReference;
+  const soRef = note?.sales_order_reference ?? note?.salesOrderReference;
 
   return (
     <PrintableDocument
@@ -15,6 +19,13 @@ export function DeliveryNotePrint({ note, isDraft = false }: Props) {
       documentDate={note?.deliveryDate ?? note?.delivery_date ?? note?.createdAt ?? note?.created_at ?? ''}
       isDraft={isDraft}
     >
+      {(invoiceRef || soRef || isPartial) && (
+        <div className="mb-4 text-xs flex flex-wrap gap-x-6 gap-y-1 border-b pb-2">
+          {invoiceRef && (<div><span className="text-gray-500">Invoice: </span><span className="font-medium">{invoiceRef}</span></div>)}
+          {soRef && (<div><span className="text-gray-500">Sales Order: </span><span className="font-medium">{soRef}</span></div>)}
+          {isPartial && (<div className="font-semibold text-amber-700">Partial Delivery #{seq ?? ''}</div>)}
+        </div>
+      )}
       <div className="mb-6 text-xs">
         <div className="text-gray-500 uppercase tracking-wide mb-1">Delivered To</div>
         <div className="font-semibold">
