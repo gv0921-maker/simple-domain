@@ -2,13 +2,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useDeliveryNote, useMarkDeliveryNoteDelivered } from '@/hooks/inventory/deliveryNotes';
+import { useConfirmDelivery } from '@/hooks/sales/deliveryNotes';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { ArrowLeft, Printer, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Printer, CheckCircle2, ScanLine } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -23,6 +26,8 @@ export default function DeliveryNoteDetail() {
   const navigate = useNavigate();
   const { data: note, isLoading } = useDeliveryNote(id);
   const markDelivered = useMarkDeliveryNoteDelivered();
+  const confirmDelivery = useConfirmDelivery();
+  const [signature, setSignature] = useState(false);
 
   if (isLoading || !note) {
     return (
@@ -37,6 +42,18 @@ export default function DeliveryNoteDetail() {
       onSuccess: () => toast.success('Delivery complete. Stock updated.'),
       onError: (e: any) => toast.error(e?.message ?? 'Failed to mark as delivered'),
     });
+  };
+
+  const handleConfirmDelivery = () => {
+    confirmDelivery.mutate(
+      { dnId: note.id, signatureReceived: signature },
+      {
+        onSuccess: (r) => toast.success(r.so_closed
+          ? 'Delivery confirmed. Sales order closed.'
+          : 'Delivery confirmed.'),
+        onError: (e: any) => toast.error(e?.message ?? 'Failed to confirm delivery'),
+      },
+    );
   };
 
   return (
@@ -62,6 +79,11 @@ export default function DeliveryNoteDetail() {
             <Button variant="outline" onClick={() => window.open(`/print/delivery_note/${note.id}`, '_blank')}>
               <Printer className="h-4 w-4 mr-2" /> Print
             </Button>
+            {(note as any).invoiceId && (
+              <Button variant="outline" onClick={() => window.open(`/barcode/scan?doc=delivery_note&id=${note.id}`, '_blank')}>
+                <ScanLine className="h-4 w-4 mr-2" /> Pre-delivery Scan
+              </Button>
+            )}
             {note.status !== 'delivered' && (
               <Button onClick={handleMarkDelivered} disabled={markDelivered.isPending}>
                 <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -70,6 +92,25 @@ export default function DeliveryNoteDetail() {
             )}
           </div>
         </div>
+
+        {(note as any).invoiceId && note.status !== 'delivered' && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Customer Signature & Confirmation</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={signature} onCheckedChange={(v) => setSignature(!!v)} />
+                Customer signature received (today)
+              </label>
+              <Button onClick={handleConfirmDelivery} disabled={confirmDelivery.isPending}>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                {confirmDelivery.isPending ? 'Confirming…' : 'Confirm Delivery'}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Marks delivered serials as <span className="font-medium">sold</span>. If this is the last delivery for the linked Sales Order, the order will be closed.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">

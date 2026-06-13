@@ -11,6 +11,7 @@ import { ArrowLeft, CheckCircle2, ExternalLink, Printer } from 'lucide-react';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryQC } from '@/hooks/qc';
 import { useGenerateDeliveryNote } from '@/hooks/inventory/deliveryNotes';
+import { InvoiceDeliverySection } from '@/components/invoicing/InvoiceDeliverySection';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
@@ -321,6 +322,12 @@ export default function InvoiceDetail() {
             </div>
           </CardContent>
         </Card>
+
+        <InvoiceDeliverySection
+          invoiceId={invoice.id}
+          salesOrderId={invoice.sales_order_id}
+          invoiceStatus={invoice.status}
+        />
       </div>
     </AppLayout>
   );
