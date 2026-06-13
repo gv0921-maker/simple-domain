@@ -71,6 +71,7 @@ import CustomerPortalQuotation from "@/pages/sales/CustomerPortalQuotation";
 import ManufacturingOverview from "@/pages/manufacturing/ManufacturingOverview";
 import WorkOrdersList from "@/pages/manufacturing/WorkOrdersList";
 import WorkOrderForm from "@/pages/manufacturing/WorkOrderForm";
+import WorkOrderDetail from "@/pages/manufacturing/WorkOrderDetail";
 import BOMList from "@/pages/manufacturing/BOMList";
 import WorkCenters from "@/pages/manufacturing/WorkCenters";
 import WorkCenterForm from "@/pages/manufacturing/WorkCenterForm";
@@ -409,6 +410,7 @@ const App = () => (
             <Route path="/manufacturing/work-orders" element={<ProtectedRoute><WorkOrdersList /></ProtectedRoute>} />
             <Route path="/manufacturing/work-orders/new" element={<ProtectedRoute><WorkOrderForm /></ProtectedRoute>} />
             <Route path="/manufacturing/work-orders/:id/edit" element={<ProtectedRoute><WorkOrderForm /></ProtectedRoute>} />
+            <Route path="/manufacturing/work-orders/:id" element={<ProtectedRoute><WorkOrderDetail /></ProtectedRoute>} />
             <Route path="/manufacturing/bom" element={<ProtectedRoute><BOMList /></ProtectedRoute>} />
             <Route path="/manufacturing/work-centers" element={<ProtectedRoute><WorkCenters /></ProtectedRoute>} />
             <Route path="/manufacturing/work-centers/new" element={<ProtectedRoute><WorkCenterForm /></ProtectedRoute>} />

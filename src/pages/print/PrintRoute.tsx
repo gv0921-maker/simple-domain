@@ -10,6 +10,7 @@ import { CorrectionOrderPrint } from '@/components/print/templates/CorrectionOrd
 import { InternalMovementPrint } from '@/components/print/templates/InternalMovementPrint';
 import { StockCountPrint } from '@/components/print/templates/StockCountPrint';
 import { WriteOffPrint } from '@/components/print/templates/WriteOffPrint';
+import { WorkOrderPrint } from '@/components/print/templates/WorkOrderPrint';
 import { useSalesOrderRich, useQuotationRich } from '@/hooks/sales';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryNote } from '@/hooks/inventory/deliveryNotes';
@@ -17,6 +18,7 @@ import { useCorrectionOrder } from '@/hooks/inventory/correctionOrders';
 import { useInternalMovement } from '@/hooks/inventory/internalMovements';
 import { useStockCount } from '@/hooks/inventory/stockCounts';
 import { useWriteOff } from '@/hooks/inventory/writeOffs';
+import { useWorkOrderV2 } from '@/hooks/manufacturing/workOrders';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -71,6 +73,7 @@ export default function PrintRoute() {
   const movement = useInternalMovement(type === 'internal_movement' ? documentId : undefined);
   const stockCount = useStockCount(type === 'stock_count' ? documentId : undefined);
   const writeOff = useWriteOff(type === 'write_off' ? documentId : undefined);
+  const workOrder = useWorkOrderV2(type === 'work_order' ? documentId : undefined);
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -78,7 +81,7 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -115,6 +118,10 @@ export default function PrintRoute() {
     const r = writeOff.data.record;
     docNumber = r.wf_number ?? docNumber;
     body = <WriteOffPrint record={r} items={writeOff.data.items} isDraft={r.status === 'draft'} />;
+  } else if (type === 'work_order' && workOrder.data) {
+    const w = workOrder.data;
+    docNumber = w.wo_number ?? docNumber;
+    body = <WorkOrderPrint wo={w} isDraft={w.current_stage === 'draft'} />;
   }
 
   if (loading) {
