@@ -2616,6 +2616,232 @@ export type Database = {
           },
         ]
       }
+      goods_receipt_lines: {
+        Row: {
+          accepted_quantity: number
+          created_at: string
+          expected_quantity: number
+          goods_receipt_id: string
+          id: string
+          notes: string | null
+          product_id: string
+          product_name_cached: string | null
+          product_sku_cached: string | null
+          received_quantity: number
+          rejected_quantity: number
+          source_line_id: string | null
+          under_correction_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          accepted_quantity?: number
+          created_at?: string
+          expected_quantity?: number
+          goods_receipt_id: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          product_name_cached?: string | null
+          product_sku_cached?: string | null
+          received_quantity?: number
+          rejected_quantity?: number
+          source_line_id?: string | null
+          under_correction_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          accepted_quantity?: number
+          created_at?: string
+          expected_quantity?: number
+          goods_receipt_id?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          product_name_cached?: string | null
+          product_sku_cached?: string | null
+          received_quantity?: number
+          rejected_quantity?: number
+          source_line_id?: string | null
+          under_correction_quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_lines_goods_receipt_id_fkey"
+            columns: ["goods_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_receipt_serials: {
+        Row: {
+          barcode_value: string
+          created_at: string
+          current_location: string | null
+          current_warehouse_id: string | null
+          goods_receipt_id: string
+          goods_receipt_line_id: string
+          id: string
+          product_id: string
+          qc_checked_at: string | null
+          qc_checked_by: string | null
+          qc_images: Json
+          qc_notes: string | null
+          qc_status: string
+          serial_number: string
+          stock_status: string
+          updated_at: string
+        }
+        Insert: {
+          barcode_value: string
+          created_at?: string
+          current_location?: string | null
+          current_warehouse_id?: string | null
+          goods_receipt_id: string
+          goods_receipt_line_id: string
+          id?: string
+          product_id: string
+          qc_checked_at?: string | null
+          qc_checked_by?: string | null
+          qc_images?: Json
+          qc_notes?: string | null
+          qc_status?: string
+          serial_number: string
+          stock_status?: string
+          updated_at?: string
+        }
+        Update: {
+          barcode_value?: string
+          created_at?: string
+          current_location?: string | null
+          current_warehouse_id?: string | null
+          goods_receipt_id?: string
+          goods_receipt_line_id?: string
+          id?: string
+          product_id?: string
+          qc_checked_at?: string | null
+          qc_checked_by?: string | null
+          qc_images?: Json
+          qc_notes?: string | null
+          qc_status?: string
+          serial_number?: string
+          stock_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_serials_current_warehouse_id_fkey"
+            columns: ["current_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_serials_goods_receipt_id_fkey"
+            columns: ["goods_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_serials_goods_receipt_line_id_fkey"
+            columns: ["goods_receipt_line_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_receipts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discrepancy_approved_at: string | null
+          discrepancy_approved_by: string | null
+          discrepancy_reason: string | null
+          discrepancy_status: string
+          gr_number: string | null
+          id: string
+          labels_generated: boolean
+          labels_generated_at: string | null
+          notes: string | null
+          received_at: string | null
+          received_by: string | null
+          source_document_id: string | null
+          source_document_reference: string | null
+          source_type: string
+          status: string
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discrepancy_approved_at?: string | null
+          discrepancy_approved_by?: string | null
+          discrepancy_reason?: string | null
+          discrepancy_status?: string
+          gr_number?: string | null
+          id?: string
+          labels_generated?: boolean
+          labels_generated_at?: string | null
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          source_document_id?: string | null
+          source_document_reference?: string | null
+          source_type?: string
+          status?: string
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discrepancy_approved_at?: string | null
+          discrepancy_approved_by?: string | null
+          discrepancy_reason?: string | null
+          discrepancy_status?: string
+          gr_number?: string | null
+          id?: string
+          labels_generated?: boolean
+          labels_generated_at?: string | null
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          source_document_id?: string | null
+          source_document_reference?: string | null
+          source_type?: string
+          status?: string
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       holidays: {
         Row: {
           created_at: string
@@ -6475,6 +6701,15 @@ export type Database = {
       can_write_inventory: { Args: never; Returns: boolean }
       check_advance_gate: { Args: { p_so_id: string }; Returns: boolean }
       check_so_ready_to_invoice: { Args: { p_so_id: string }; Returns: boolean }
+      complete_gr_line_qc: {
+        Args: {
+          p_failed_notes: string
+          p_failed_serial_ids: string[]
+          p_gr_line_id: string
+          p_passed_serial_ids: string[]
+        }
+        Returns: undefined
+      }
       create_ito_from_so: {
         Args: { p_confirmed_by: string; p_so_id: string }
         Returns: string
@@ -6482,6 +6717,10 @@ export type Database = {
       generate_document_number: {
         Args: { p_document_type: string }
         Returns: string
+      }
+      generate_serials_for_gr_line: {
+        Args: { p_gr_line_id: string }
+        Returns: string[]
       }
       get_current_employee_id: { Args: never; Returns: string }
       get_current_fy_label: { Args: never; Returns: string }
