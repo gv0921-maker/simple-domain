@@ -458,3 +458,106 @@ function VoidPaymentDialog({ target, onClose }: {
     </Dialog>
   );
 }
+// ---------------- Redeem Credit Note Dialog ----------------
+
+function RedeemCreditNoteDialog({ open, onOpenChange, salesOrderId, balance }: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  salesOrderId: string;
+  balance: number;
+}) {
+  const { toast } = useToast();
+  const redeemMut = useRedeemCreditNote();
+
+  const { data: so } = useQuery({
+    queryKey: ['so-customer', salesOrderId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('sales_orders').select('customer_id').eq('id', salesOrderId).maybeSingle();
+      if (error) throw error;
+      return data as { customer_id: string | null } | null;
+    },
+    enabled: open,
+  });
+
+  const { data: cns = [] } = useCustomerActiveCreditNotes(so?.customer_id);
+
+  const [selectedCn, setSelectedCn] = useState<string>('');
+  const [amount, setAmount] = useState<number>(0);
+
+  const selected = cns.find((c) => c.id === selectedCn);
+  const maxApply = Math.min(selected?.amount_remaining ?? 0, balance);
+
+  useMemo(() => {
+    if (open) { setSelectedCn(''); setAmount(0); }
+  }, [open]);
+  useMemo(() => {
+    if (selected) setAmount(Math.min(selected.amount_remaining, balance));
+  }, [selectedCn]);
+
+  const submit = async () => {
+    if (!selectedCn) {
+      toast({ title: 'Select a credit note', variant: 'destructive' }); return;
+    }
+    if (!amount || amount <= 0 || amount > maxApply) {
+      toast({ title: `Amount must be between 0 and ${fmtINR(maxApply)}`, variant: 'destructive' }); return;
+    }
+    try {
+      await redeemMut.mutateAsync({ cnId: selectedCn, salesOrderId, amount });
+      toast({ title: 'Credit note applied' });
+      onOpenChange(false);
+    } catch (e: any) {
+      toast({ title: 'Failed to apply credit note', description: e?.message ?? String(e), variant: 'destructive' });
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Use Credit Note</DialogTitle>
+          <DialogDescription>
+            Outstanding balance: {fmtINR(balance)}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          {cns.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded">
+              No active credit notes for this customer.
+            </div>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label>Credit Note *</Label>
+                <Select value={selectedCn} onValueChange={setSelectedCn}>
+                  <SelectTrigger><SelectValue placeholder="Select credit note" /></SelectTrigger>
+                  <SelectContent>
+                    {cns.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.cn_number} · {fmtINR(c.amount_remaining)} remaining · expires {format(parseISO(c.expiry_date), 'MMM d, yyyy')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Amount to Apply (₹) *</Label>
+                <Input
+                  type="number" min={0} max={maxApply} step="0.01" value={amount}
+                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                />
+                <div className="text-xs text-muted-foreground">Max: {fmtINR(maxApply)}</div>
+              </div>
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={redeemMut.isPending}>Cancel</Button>
+          <Button onClick={submit} disabled={redeemMut.isPending || cns.length === 0}>
+            {redeemMut.isPending ? 'Applying…' : 'Apply Credit'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
