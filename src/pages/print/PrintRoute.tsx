@@ -21,6 +21,8 @@ import { useStockCount } from '@/hooks/inventory/stockCounts';
 import { useWriteOff } from '@/hooks/inventory/writeOffs';
 import { useWorkOrderV2 } from '@/hooks/manufacturing/workOrders';
 import { useVendorOrder } from '@/hooks/vendor-orders';
+import { useReturnRequest } from '@/hooks/returns';
+import { ReturnRequestPrint } from '@/components/print/templates/ReturnRequestPrint';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -92,6 +94,7 @@ export default function PrintRoute() {
   const writeOff = useWriteOff(type === 'write_off' ? documentId : undefined);
   const workOrder = useWorkOrderV2(type === 'work_order' ? documentId : undefined);
   const vendorOrder = useVendorOrder(type === 'vendor_order' ? documentId : undefined);
+  const returnRequest = useReturnRequest(type === 'return_request' ? documentId : undefined);
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -99,7 +102,7 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading || vendorOrder.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading || vendorOrder.isLoading || returnRequest.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -146,6 +149,10 @@ export default function PrintRoute() {
     const v = vendorOrder.data.vo;
     docNumber = v.vo_number ?? docNumber;
     body = <VendorOrderPrint vo={v} lines={vendorOrder.data.lines} isDraft={v.status === 'draft'} />;
+  } else if (type === 'return_request' && returnRequest.data) {
+    const r = returnRequest.data;
+    docNumber = r.rt_number ?? docNumber;
+    body = <ReturnRequestPrint rt={r} isDraft={r.request_status === 'draft'} />;
   }
 
   if (loading) {
