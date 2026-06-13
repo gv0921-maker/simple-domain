@@ -45,6 +45,8 @@ import CorrectionOrderDetail from "@/pages/inventory/CorrectionOrderDetail";
 import InternalMovementsList from "@/pages/inventory/InternalMovementsList";
 import InternalMovementDetail from "@/pages/inventory/InternalMovementDetail";
 import InternalMovementForm from "@/pages/inventory/InternalMovementForm";
+import StockCountsList from "@/pages/inventory/StockCountsList";
+import StockCountDetail from "@/pages/inventory/StockCountDetail";
 
 // Sales pages
 import SalesOverview from "@/pages/sales/SalesOverview";
@@ -252,6 +254,8 @@ const App = () => (
             <Route path="/inventory/internal-movements" element={<ProtectedRoute><InternalMovementsList /></ProtectedRoute>} />
             <Route path="/inventory/internal-movements/new" element={<ProtectedRoute><InternalMovementForm /></ProtectedRoute>} />
             <Route path="/inventory/internal-movements/:id" element={<ProtectedRoute><InternalMovementDetail /></ProtectedRoute>} />
+            <Route path="/inventory/stock-counts" element={<ProtectedRoute><StockCountsList /></ProtectedRoute>} />
+            <Route path="/inventory/stock-counts/:id" element={<ProtectedRoute><StockCountDetail /></ProtectedRoute>} />
 
             {/* Barcode module */}
             <Route path="/barcode" element={<ProtectedRoute><ScanQueueDashboard /></ProtectedRoute>} />
