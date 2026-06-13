@@ -98,6 +98,10 @@ import CRMBackupSettings from "@/pages/settings/CRMBackupSettings";
 import CRMDataSchema from "@/pages/settings/CRMDataSchema";
 import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
 import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
+import CompanySettings from "@/pages/settings/CompanySettings";
+
+// Print framework (Phase 1 Batch 4)
+import PrintRoute from "@/pages/print/PrintRoute";
 
 import NotFound from "@/pages/NotFound";
 
@@ -281,6 +285,10 @@ const App = () => (
             <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
+            <Route path="/settings/company" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
+
+            {/* Universal Print routes */}
+            <Route path="/print/:documentType/:documentId" element={<ProtectedRoute><PrintRoute /></ProtectedRoute>} />
 
             {/* Dashboards module */}
             <Route path="/dashboards" element={<ProtectedRoute><DashboardsHome /></ProtectedRoute>} />
