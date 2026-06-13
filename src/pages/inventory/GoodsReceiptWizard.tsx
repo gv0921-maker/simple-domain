@@ -24,6 +24,8 @@ import {
   useCompleteGRLineQC,
 } from '@/hooks/inventory/goodsReceipts';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
+import { useCorrectionOrderForGR } from '@/hooks/inventory/correctionOrders';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { recordLabelPrints, generateLabel } from '@/lib/services/barcode/api';
 import type { GoodsReceiptSerial, GRSourceType } from '@/lib/services/inventory/goodsReceipt';
@@ -302,6 +304,7 @@ export default function GoodsReceiptWizard() {
           <Card>
             <CardHeader><CardTitle>Completed</CardTitle></CardHeader>
             <CardContent className="space-y-2">
+              {id && <CorrectionOrderBanner grId={id} />}
               <p className="text-sm text-muted-foreground">This goods receipt is complete.</p>
               <div className="text-sm">
                 Accepted: <strong>{lines.reduce((s, l) => s + l.accepted_quantity, 0)}</strong>{' '}
