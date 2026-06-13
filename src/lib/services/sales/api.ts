@@ -707,19 +707,6 @@ function mapQuotationLineRich(r: any): QuotationLine {
     discountValue: NOrUndef(r.discount_value),
     discountAmount: NOrUndef(r.discount_amount),
     finalAmount: NOrUndef(r.final_amount),
-    // Phase 2 — sourcing & customization
-    productSource: (r.product_source ?? undefined) as any,
-    customizationSize: r.customization_size ?? undefined,
-    customizationColour: r.customization_colour ?? undefined,
-    customizationFabric: r.customization_fabric ?? undefined,
-    customizationPolish: r.customization_polish ?? undefined,
-    customizationNotes: r.customization_notes ?? undefined,
-    customizationReferenceImages: Array.isArray(r.customization_reference_images)
-      ? r.customization_reference_images
-      : [],
-    lineEta: r.line_eta ?? undefined,
-    vendorId: r.vendor_id ?? undefined,
-    factoryWorkOrderId: r.factory_work_order_id ?? undefined,
   };
 }
 function rowFromQuotationLine(l: QuotationLine, quotationId: string): any {
