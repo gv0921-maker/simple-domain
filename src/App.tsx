@@ -47,6 +47,8 @@ import InternalMovementDetail from "@/pages/inventory/InternalMovementDetail";
 import InternalMovementForm from "@/pages/inventory/InternalMovementForm";
 import StockCountsList from "@/pages/inventory/StockCountsList";
 import StockCountDetail from "@/pages/inventory/StockCountDetail";
+import WriteOffsList from "@/pages/inventory/WriteOffsList";
+import WriteOffDetail from "@/pages/inventory/WriteOffDetail";
 
 // Sales pages
 import SalesOverview from "@/pages/sales/SalesOverview";
@@ -256,6 +258,8 @@ const App = () => (
             <Route path="/inventory/internal-movements/:id" element={<ProtectedRoute><InternalMovementDetail /></ProtectedRoute>} />
             <Route path="/inventory/stock-counts" element={<ProtectedRoute><StockCountsList /></ProtectedRoute>} />
             <Route path="/inventory/stock-counts/:id" element={<ProtectedRoute><StockCountDetail /></ProtectedRoute>} />
+            <Route path="/inventory/write-offs" element={<ProtectedRoute><WriteOffsList /></ProtectedRoute>} />
+            <Route path="/inventory/write-offs/:id" element={<ProtectedRoute><WriteOffDetail /></ProtectedRoute>} />
 
             {/* Barcode module */}
             <Route path="/barcode" element={<ProtectedRoute><ScanQueueDashboard /></ProtectedRoute>} />
