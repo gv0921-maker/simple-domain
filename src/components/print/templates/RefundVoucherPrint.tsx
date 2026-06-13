@@ -8,7 +8,7 @@ interface Props { refund: Refund; isDraft?: boolean }
 export function RefundVoucherPrint({ refund, isDraft = false }: Props) {
   return (
     <PrintableDocument
-      documentType="payment_receipt"
+      documentType="refund_voucher"
       documentNumber={refund.refund_number}
       documentDate={refund.refund_date}
       isDraft={isDraft}

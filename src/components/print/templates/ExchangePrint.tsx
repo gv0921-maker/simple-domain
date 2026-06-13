@@ -16,7 +16,7 @@ interface Props {
 export function ExchangePrint({ exchange, isDraft = false }: Props) {
   return (
     <PrintableDocument
-      documentType="payment_receipt"
+      documentType="exchange"
       documentNumber={exchange.exchange_number}
       documentDate={exchange.created_at}
       isDraft={isDraft}
