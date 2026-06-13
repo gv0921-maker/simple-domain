@@ -339,6 +339,23 @@ function StepBar({ current }: { current: 1 | 2 | 3 | 4 }) {
   );
 }
 
+function CorrectionOrderBanner({ grId }: { grId: string }) {
+  const { data: co } = useCorrectionOrderForGR(grId);
+  if (!co) return null;
+  return (
+    <Alert>
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle>Correction Order {co.co_number} created</AlertTitle>
+      <AlertDescription>
+        QC failures from this receipt were sent to a correction order.{' '}
+        <Link to={`/inventory/correction-orders/${co.id}`} className="underline text-primary">
+          Open correction order
+        </Link>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 function Step2QuantityVerification({
   grId, lines, discrepancyStatus, discrepancyApprovedAt, isAdmin, onSave, onApprove, onNext,
 }: {
