@@ -64,7 +64,7 @@ export async function createITO(salesOrderId: string): Promise<string> {
   const { data: lines } = await supabase
     .from('internal_transfer_order_lines' as any)
     .select('quantity_expected').eq('internal_transfer_order_id', itoId);
-  const expected = ((lines ?? []) as Array<{ quantity_expected: number }>)
+  const expected = ((lines ?? []) as unknown as Array<{ quantity_expected: number }>)
     .reduce((s, l) => s + (l.quantity_expected || 0), 0);
   try {
     await addToScanQueue(
