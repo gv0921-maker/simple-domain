@@ -6960,6 +6960,199 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_order_lines: {
+        Row: {
+          colour_polish_spec: string | null
+          created_at: string
+          customization_notes: string | null
+          fabric_spec: string | null
+          id: string
+          product_id: string
+          quantity_ordered: number
+          quantity_received: number
+          reference_images: Json
+          size_spec: string | null
+          updated_at: string
+          vendor_order_id: string
+        }
+        Insert: {
+          colour_polish_spec?: string | null
+          created_at?: string
+          customization_notes?: string | null
+          fabric_spec?: string | null
+          id?: string
+          product_id: string
+          quantity_ordered: number
+          quantity_received?: number
+          reference_images?: Json
+          size_spec?: string | null
+          updated_at?: string
+          vendor_order_id: string
+        }
+        Update: {
+          colour_polish_spec?: string | null
+          created_at?: string
+          customization_notes?: string | null
+          fabric_spec?: string | null
+          id?: string
+          product_id?: string
+          quantity_ordered?: number
+          quantity_received?: number
+          reference_images?: Json
+          size_spec?: string | null
+          updated_at?: string
+          vendor_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_order_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_order_lines_vendor_order_id_fkey"
+            columns: ["vendor_order_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_orders: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          eta_date: string
+          id: string
+          linked_sales_order_id: string | null
+          linked_sales_order_line_id: string | null
+          notes: string | null
+          order_mode: string
+          placed_at: string | null
+          received_at: string | null
+          status: string
+          updated_at: string
+          vendor_id: string
+          vo_number: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          eta_date: string
+          id?: string
+          linked_sales_order_id?: string | null
+          linked_sales_order_line_id?: string | null
+          notes?: string | null
+          order_mode: string
+          placed_at?: string | null
+          received_at?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id: string
+          vo_number: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          eta_date?: string
+          id?: string
+          linked_sales_order_id?: string | null
+          linked_sales_order_line_id?: string | null
+          notes?: string | null
+          order_mode?: string
+          placed_at?: string | null
+          received_at?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+          vo_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_orders_linked_sales_order_id_fkey"
+            columns: ["linked_sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_orders_linked_sales_order_line_id_fkey"
+            columns: ["linked_sales_order_line_id"]
+            isOneToOne: false
+            referencedRelation: "order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       warehouse_locations: {
         Row: {
           aisle: string | null
@@ -7610,6 +7803,7 @@ export type Database = {
         Args: { p_month: number; p_reason: string; p_year: number }
         Returns: string
       }
+      approve_vendor_order: { Args: { p_vo_id: string }; Returns: undefined }
       approve_work_order: { Args: { p_wo_id: string }; Returns: Json }
       approve_write_off: { Args: { p_wf_id: string }; Returns: Json }
       auto_create_correction_order: {
@@ -7621,6 +7815,10 @@ export type Database = {
         Returns: number
       }
       can_write_inventory: { Args: never; Returns: boolean }
+      cancel_vendor_order: {
+        Args: { p_reason: string; p_vo_id: string }
+        Returns: undefined
+      }
       cancel_work_order: {
         Args: { p_reason: string; p_wo_id: string }
         Returns: Json
@@ -7736,6 +7934,7 @@ export type Database = {
       is_employee_self: { Args: { _employee_id: string }; Returns: boolean }
       is_manager_of: { Args: { target_employee_id: string }; Returns: boolean }
       is_reviewer_for: { Args: { _reviewer_id: string }; Returns: boolean }
+      place_vendor_order: { Args: { p_vo_id: string }; Returns: undefined }
       place_work_order: { Args: { p_wo_id: string }; Returns: Json }
       portal_get_quotation: {
         Args: { _id: string; _token: string }
@@ -7763,6 +7962,10 @@ export type Database = {
       start_polishing: { Args: { p_wo_id: string }; Returns: undefined }
       start_work: { Args: { p_wo_id: string }; Returns: undefined }
       suggest_ito_for_so: { Args: { p_so_id: string }; Returns: Json }
+      validate_so_linked_eta: {
+        Args: { p_proposed_eta: string; p_so_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       activity_type:
