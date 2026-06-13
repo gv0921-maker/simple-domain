@@ -16,7 +16,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Save, XCircle, ShoppingCart, CreditCard, FileText, CheckCircle2, Printer } from 'lucide-react';
-import { RecordPaymentDialog } from '@/components/sales/RecordPaymentDialog';
+import { PaymentsSection } from '@/components/sales/PaymentsSection';
+import { usePaymentSummary } from '@/hooks/sales/payments';
+import { confirmSalesOrder, overrideAdvanceGate } from '@/lib/services/sales/api';
 import { useGenerateInvoiceFromOrder } from '@/hooks/invoicing';
 import { useDeliveryQC } from '@/hooks/qc';
 import { PreDeliveryQCSection } from '@/components/sales/PreDeliveryQCSection';
@@ -107,7 +109,8 @@ export default function SalesOrderForm() {
   const [saving, setSaving] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'cancel' | null>(null);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideReason, setOverrideReason] = useState('');
   const generateInvoiceMut = useGenerateInvoiceFromOrder();
   const { data: deliveryQC } = useDeliveryQC(!isNew ? id : undefined);
   const qcPassed = deliveryQC?.status === 'passed';
@@ -464,14 +467,14 @@ export default function SalesOrderForm() {
                 <Save className="h-4 w-4 mr-2" /> Save
               </Button>
             )}
-            {status === 'confirmed' && !isNew && (
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 shadow-md"
-                onClick={() => setPaymentDialogOpen(true)}
-              >
-                <CreditCard className="h-4 w-4 mr-2" /> Record Payment
-              </Button>
+            {(status === 'draft' || status === 'awaiting_advance') && !isNew && id && (
+              <ConfirmOrderButton
+                orderId={id}
+                grandTotal={formData.grandTotal || formData.total || 0}
+                canOverride={userRole === 'admin' || userRole === 'super_admin'}
+                onOpenOverride={() => setOverrideOpen(true)}
+                onConfirmed={(newStatus) => setFormData((prev) => ({ ...prev, status: newStatus }))}
+              />
             )}
             {status === 'paid' && !isNew && id && (
               <TooltipProvider>
@@ -547,6 +550,13 @@ export default function SalesOrderForm() {
               <OrderStatusChevrons status={status} onStepClick={handleStatusStepClick} />
             </CardContent>
           </Card>
+        )}
+
+        {/* Payments — multi-payment ledger (Phase 2 Batch 2) */}
+        {!isNew && id && (
+          <div className="max-w-4xl mx-auto w-full">
+            <PaymentsSection salesOrderId={id} />
+          </div>
         )}
 
         <div className="max-w-4xl mx-auto flex flex-col gap-3 w-full">
@@ -746,14 +756,119 @@ export default function SalesOrderForm() {
       </AlertDialog>
 
       {!isNew && id && (
-        <RecordPaymentDialog
-          open={paymentDialogOpen}
-          onOpenChange={setPaymentDialogOpen}
+        <OverrideAdvanceDialog
+          open={overrideOpen}
+          onOpenChange={setOverrideOpen}
           orderId={id}
-          customerId={formData.customerId}
-          defaultAmount={formData.grandTotal || formData.total || 0}
+          reason={overrideReason}
+          setReason={setOverrideReason}
+          onSuccess={() => setOverrideOpen(false)}
         />
       )}
     </AppLayout>
+  );
+}
+
+// -------- Confirm Order / Advance Gate helpers --------
+
+function ConfirmOrderButton({
+  orderId, grandTotal, canOverride, onOpenOverride, onConfirmed,
+}: {
+  orderId: string;
+  grandTotal: number;
+  canOverride: boolean;
+  onOpenOverride: () => void;
+  onConfirmed: (newStatus: SalesOrderStatus) => void;
+}) {
+  const { toast } = useToast();
+  const { data: summary } = usePaymentSummary(orderId);
+  const advanceMet = summary?.is_advance_met ?? false;
+  const required = summary?.advance_percent_required ?? 40;
+  const requiredAmount = (required / 100) * (summary?.total_amount ?? grandTotal);
+  const paid = summary?.total_paid ?? 0;
+
+  const handleConfirm = async () => {
+    try {
+      await confirmSalesOrder(orderId);
+      toast({ title: 'Order confirmed' });
+      onConfirmed('confirmed');
+    } catch (e: any) {
+      toast({ title: 'Failed to confirm', description: e?.message ?? String(e), variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="flex gap-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0}>
+              <Button onClick={handleConfirm} disabled={!advanceMet}>
+                <CheckCircle2 className="h-4 w-4 mr-2" />Confirm Order
+              </Button>
+            </span>
+          </TooltipTrigger>
+          {!advanceMet && (
+            <TooltipContent>
+              Advance of ₹{requiredAmount.toFixed(0)} ({required}% of order) required. Current: ₹{paid.toFixed(0)}
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+      {!advanceMet && canOverride && (
+        <Button variant="outline" onClick={onOpenOverride}>
+          Override Advance Gate
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function OverrideAdvanceDialog({
+  open, onOpenChange, orderId, reason, setReason, onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  orderId: string;
+  reason: string;
+  setReason: (r: string) => void;
+  onSuccess: () => void;
+}) {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (reason.trim().length < 3) {
+      toast({ title: 'Reason required', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      await overrideAdvanceGate(orderId, reason);
+      toast({ title: 'Advance gate overridden' });
+      onSuccess();
+    } catch (e: any) {
+      toast({ title: 'Failed', description: e?.message ?? String(e), variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Override Advance Gate</AlertDialogTitle>
+          <AlertDialogDescription>
+            Provide a reason for bypassing the advance requirement. This is logged for audit.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder="" />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={submit} disabled={saving}>
+            {saving ? 'Overriding…' : 'Override'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

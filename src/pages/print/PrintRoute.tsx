@@ -20,6 +20,25 @@ function usePayment(id: string | undefined) {
     queryKey: ['payment', id],
     queryFn: async () => {
       if (!id) return null;
+      // Prefer the new multi-payment ledger
+      const sop = await (supabase as any)
+        .from('sales_order_payments')
+        .select('*, payment_account:payment_accounts(*), sales_order:sales_orders(reference, billing_customer_name, customer:customers(name))')
+        .eq('id', id)
+        .maybeSingle();
+      if (sop.data) {
+        const row = sop.data as any;
+        return {
+          ...row,
+          reference: row.payment_number,
+          method: row.payment_mode,
+          payment_method: row.payment_mode,
+          payment_reference: row.reference_number,
+          customer_name: row.sales_order?.billing_customer_name || row.sales_order?.customer?.name || null,
+          against_reference: row.sales_order?.reference || null,
+        };
+      }
+      // Legacy fallback
       const { data, error } = await supabase
         .from('payments').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
