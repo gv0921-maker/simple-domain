@@ -149,7 +149,7 @@ export async function createGoodsReceipt(input: CreateGoodsReceiptInput): Promis
   }
 
   try {
-    await logRecordCreated('goods_receipt' as any, gr.id, `Goods Receipt ${gr.gr_number} created (source: ${input.source_type})`);
+    await logRecordCreated('goods_receipt' as any, gr.id);
   } catch { /* noop */ }
   return gr as GoodsReceipt;
 }
