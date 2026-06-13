@@ -118,6 +118,8 @@ import PaymentAccountsSettings from "@/pages/settings/PaymentAccountsSettings";
 import VendorsSettings from "@/pages/settings/VendorsSettings";
 import WorkSchedulesSettings from "@/pages/settings/WorkSchedulesSettings";
 import HolidaysSettings from "@/pages/settings/HolidaysSettings";
+import PayrollSettingsPage from "@/pages/settings/PayrollSettings";
+import { SuperAdminRoute } from "@/components/SuperAdminRoute";
 import OrgChartPage from "@/pages/employees/OrgChart";
 import UnifiedCalendarPage from "@/pages/calendar/UnifiedCalendarPage";
 
