@@ -19,7 +19,6 @@ import {
   FileBarChart,
 } from 'lucide-react';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
-import { NotificationsBell } from '@/components/layout/NotificationsBell';
 import { AppNotificationsBell } from '@/components/layout/AppNotificationsBell';
 import { ChatNotificationsBell } from '@/components/chat/ChatNotificationsBell';
 import { useAuth } from '@/contexts/AuthContext';
