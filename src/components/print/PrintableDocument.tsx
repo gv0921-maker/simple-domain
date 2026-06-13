@@ -17,6 +17,7 @@ export type PrintableDocumentType =
   | 'credit_note'
   | 'payslip'
   | 'correction_order'
+  | 'internal_movement'
   | 'stock_count'
   | 'write_off';
 
@@ -34,6 +35,7 @@ const TITLES: Record<PrintableDocumentType, string> = {
   credit_note: 'Credit Note',
   payslip: 'Payslip',
   correction_order: 'Correction Order',
+  internal_movement: 'Internal Movement',
   stock_count: 'Stock Count',
   write_off: 'Write-Off',
 };
