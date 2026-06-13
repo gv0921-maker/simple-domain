@@ -7198,9 +7198,143 @@ export type Database = {
           },
         ]
       }
+      write_off_items: {
+        Row: {
+          created_at: string
+          goods_receipt_serial_id: string
+          id: string
+          item_specific_notes: string | null
+          product_id: string
+          serial_number: string
+          unit_cost_value: number
+          write_off_record_id: string
+        }
+        Insert: {
+          created_at?: string
+          goods_receipt_serial_id: string
+          id?: string
+          item_specific_notes?: string | null
+          product_id: string
+          serial_number: string
+          unit_cost_value?: number
+          write_off_record_id: string
+        }
+        Update: {
+          created_at?: string
+          goods_receipt_serial_id?: string
+          id?: string
+          item_specific_notes?: string | null
+          product_id?: string
+          serial_number?: string
+          unit_cost_value?: number
+          write_off_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "write_off_items_goods_receipt_serial_id_fkey"
+            columns: ["goods_receipt_serial_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_serials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "write_off_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "write_off_items_write_off_record_id_fkey"
+            columns: ["write_off_record_id"]
+            isOneToOne: false
+            referencedRelation: "write_off_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      write_off_records: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string
+          evidence_photos: Json
+          id: string
+          reason: string
+          source_document_id: string | null
+          source_document_reference: string | null
+          source_type: string | null
+          status: string
+          total_value: number
+          updated_at: string
+          wf_number: string
+          write_off_type: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by: string
+          evidence_photos?: Json
+          id?: string
+          reason?: string
+          source_document_id?: string | null
+          source_document_reference?: string | null
+          source_type?: string | null
+          status?: string
+          total_value?: number
+          updated_at?: string
+          wf_number: string
+          write_off_type: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string
+          evidence_photos?: Json
+          id?: string
+          reason?: string
+          source_document_id?: string | null
+          source_document_reference?: string | null
+          source_type?: string | null
+          status?: string
+          total_value?: number
+          updated_at?: string
+          wf_number?: string
+          write_off_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      v_stock_summary: {
+        Row: {
+          product_id: string | null
+          stock_status: string | null
+          total_value: number | null
+          unit_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       appraisal_user_can_access: {
@@ -7211,6 +7345,7 @@ export type Database = {
         Args: { p_month: number; p_reason: string; p_year: number }
         Returns: string
       }
+      approve_write_off: { Args: { p_wf_id: string }; Returns: Json }
       auto_create_correction_order: {
         Args: { p_gr_id: string }
         Returns: string
@@ -7220,6 +7355,10 @@ export type Database = {
         Returns: number
       }
       can_write_inventory: { Args: never; Returns: boolean }
+      cancel_write_off: {
+        Args: { p_reason: string; p_wf_id: string }
+        Returns: Json
+      }
       check_advance_gate: { Args: { p_so_id: string }; Returns: boolean }
       check_so_ready_to_invoice: { Args: { p_so_id: string }; Returns: boolean }
       close_correction_order: { Args: { p_co_id: string }; Returns: Json }
@@ -7261,6 +7400,10 @@ export type Database = {
       get_current_employee_id: { Args: never; Returns: string }
       get_current_fy_label: { Args: never; Returns: string }
       get_dashboard_role: { Args: never; Returns: string }
+      get_product_stock_breakdown: {
+        Args: { p_product_id: string }
+        Returns: Json
+      }
       get_sales_order_payment_summary: {
         Args: { p_so_id: string }
         Returns: Json
