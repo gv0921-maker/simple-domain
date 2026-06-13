@@ -318,6 +318,9 @@ export default function SalesOrdersList() {
                           {order.quotationId && (
                             <Badge variant="outline" className="text-xs">From Quote</Badge>
                           )}
+                          {order.noQuoteFlag && (
+                            <Badge variant="outline" className="text-xs border-warning text-warning">No Quote</Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
