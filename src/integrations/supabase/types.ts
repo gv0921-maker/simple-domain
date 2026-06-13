@@ -2935,6 +2935,7 @@ export type Database = {
           qc_images: Json
           qc_notes: string | null
           qc_status: string
+          reserved_for_so_id: string | null
           serial_number: string
           stock_status: string
           updated_at: string
@@ -2953,6 +2954,7 @@ export type Database = {
           qc_images?: Json
           qc_notes?: string | null
           qc_status?: string
+          reserved_for_so_id?: string | null
           serial_number: string
           stock_status?: string
           updated_at?: string
@@ -2971,6 +2973,7 @@ export type Database = {
           qc_images?: Json
           qc_notes?: string | null
           qc_status?: string
+          reserved_for_so_id?: string | null
           serial_number?: string
           stock_status?: string
           updated_at?: string
@@ -3002,6 +3005,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_serials_reserved_for_so_id_fkey"
+            columns: ["reserved_for_so_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -3104,6 +3114,121 @@ export type Database = {
           is_optional?: boolean
           name?: string
           type?: string
+        }
+        Relationships: []
+      }
+      internal_movement_items: {
+        Row: {
+          created_at: string
+          goods_receipt_serial_id: string
+          id: string
+          internal_movement_id: string
+          notes: string | null
+          product_id: string
+          scanned_at_destination: boolean
+          scanned_at_source: boolean
+          serial_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          goods_receipt_serial_id: string
+          id?: string
+          internal_movement_id: string
+          notes?: string | null
+          product_id: string
+          scanned_at_destination?: boolean
+          scanned_at_source?: boolean
+          serial_number: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          goods_receipt_serial_id?: string
+          id?: string
+          internal_movement_id?: string
+          notes?: string | null
+          product_id?: string
+          scanned_at_destination?: boolean
+          scanned_at_source?: boolean
+          serial_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_movement_items_goods_receipt_serial_id_fkey"
+            columns: ["goods_receipt_serial_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_serials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_movement_items_internal_movement_id_fkey"
+            columns: ["internal_movement_id"]
+            isOneToOne: false
+            referencedRelation: "internal_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_movement_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_movements: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          from_location_id: string | null
+          from_location_type: string | null
+          id: string
+          movement_number: string
+          movement_type: string
+          notes: string | null
+          reason: string | null
+          status: string
+          to_location_id: string | null
+          to_location_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_location_id?: string | null
+          from_location_type?: string | null
+          id?: string
+          movement_number: string
+          movement_type: string
+          notes?: string | null
+          reason?: string | null
+          status?: string
+          to_location_id?: string | null
+          to_location_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_location_id?: string | null
+          from_location_type?: string | null
+          id?: string
+          movement_number?: string
+          movement_type?: string
+          notes?: string | null
+          reason?: string | null
+          status?: string
+          to_location_id?: string | null
+          to_location_type?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6961,6 +7086,10 @@ export type Database = {
           p_passed_serial_ids: string[]
         }
         Returns: undefined
+      }
+      complete_internal_movement: {
+        Args: { p_movement_id: string }
+        Returns: boolean
       }
       create_ito_from_so: {
         Args: { p_confirmed_by: string; p_so_id: string }

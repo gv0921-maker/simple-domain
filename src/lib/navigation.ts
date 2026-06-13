@@ -8,6 +8,7 @@ export const INVENTORY_NAV = [
   { label: 'Delivery Notes', href: '/inventory/delivery-notes' },
   { label: 'Goods Receipts', href: '/inventory/goods-receipts' },
   { label: 'Correction Orders', href: '/inventory/correction-orders' },
+  { label: 'Internal Movements', href: '/inventory/internal-movements' },
   { label: 'Warehouses', href: '/inventory/warehouses' },
   { label: 'Locations', href: '/inventory/locations' },
   { label: 'Adjustments', href: '/inventory/adjustments' },

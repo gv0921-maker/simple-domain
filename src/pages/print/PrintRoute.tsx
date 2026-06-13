@@ -7,10 +7,12 @@ import { InvoicePrint } from '@/components/print/templates/InvoicePrint';
 import { DeliveryNotePrint } from '@/components/print/templates/DeliveryNotePrint';
 import { PaymentReceiptPrint } from '@/components/print/templates/PaymentReceiptPrint';
 import { CorrectionOrderPrint } from '@/components/print/templates/CorrectionOrderPrint';
+import { InternalMovementPrint } from '@/components/print/templates/InternalMovementPrint';
 import { useSalesOrderRich, useQuotationRich } from '@/hooks/sales';
 import { useInvoice } from '@/hooks/invoicing';
 import { useDeliveryNote } from '@/hooks/inventory/deliveryNotes';
 import { useCorrectionOrder } from '@/hooks/inventory/correctionOrders';
+import { useInternalMovement } from '@/hooks/inventory/internalMovements';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -62,6 +64,7 @@ export default function PrintRoute() {
   const note = useDeliveryNote(type === 'delivery_note' ? documentId : undefined);
   const payment = usePayment(type === 'payment_receipt' ? documentId : undefined);
   const correction = useCorrectionOrder(type === 'correction_order' ? documentId : undefined);
+  const movement = useInternalMovement(type === 'internal_movement' ? documentId : undefined);
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -69,7 +72,7 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -94,6 +97,10 @@ export default function PrintRoute() {
     const c = correction.data.co as any;
     docNumber = c.co_number ?? docNumber;
     body = <CorrectionOrderPrint co={c} items={correction.data.items} isDraft={c.status === 'draft'} />;
+  } else if (type === 'internal_movement' && movement.data?.movement) {
+    const m = movement.data.movement as any;
+    docNumber = m.movement_number ?? docNumber;
+    body = <InternalMovementPrint movement={m} items={movement.data.items} isDraft={m.status === 'draft'} />;
   }
 
   if (loading) {
