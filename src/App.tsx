@@ -99,6 +99,7 @@ import CRMDataSchema from "@/pages/settings/CRMDataSchema";
 import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
 import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 import CompanySettings from "@/pages/settings/CompanySettings";
+import PaymentAccountsSettings from "@/pages/settings/PaymentAccountsSettings";
 
 // Print framework (Phase 1 Batch 4)
 import PrintRoute from "@/pages/print/PrintRoute";

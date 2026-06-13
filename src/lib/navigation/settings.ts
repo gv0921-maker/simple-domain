@@ -11,6 +11,7 @@ export const SETTINGS_NAV = [
   { label: 'Accessibility', href: '/settings/accessibility' },
   { label: 'Price Approvals', href: '/settings/price-approvals' },
   { label: 'Numbering', href: '/settings/numbering' },
+  { label: 'Payment Accounts', href: '/settings/payment-accounts' },
   { label: 'Audit Logs', href: '/settings/audit' },
   { label: 'Backups', href: '/settings/backups' },
 ];
