@@ -23,6 +23,11 @@ import { useWorkOrderV2 } from '@/hooks/manufacturing/workOrders';
 import { useVendorOrder } from '@/hooks/vendor-orders';
 import { useReturnRequest } from '@/hooks/returns';
 import { ReturnRequestPrint } from '@/components/print/templates/ReturnRequestPrint';
+import { useCreditNote } from '@/hooks/credit-notes';
+import { useRefund } from '@/hooks/refunds';
+import { CreditNotePrint } from '@/components/print/templates/CreditNotePrint';
+import { RefundVoucherPrint } from '@/components/print/templates/RefundVoucherPrint';
+import { ExchangePrint } from '@/components/print/templates/ExchangePrint';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { PrintableDocumentType } from '@/components/print/PrintableDocument';
@@ -95,6 +100,20 @@ export default function PrintRoute() {
   const workOrder = useWorkOrderV2(type === 'work_order' ? documentId : undefined);
   const vendorOrder = useVendorOrder(type === 'vendor_order' ? documentId : undefined);
   const returnRequest = useReturnRequest(type === 'return_request' ? documentId : undefined);
+  const creditNote = useCreditNote(type === 'credit_note' ? documentId : undefined);
+  const refund = useRefund(type === 'refund_voucher' ? documentId : undefined);
+  const exchange = useQuery({
+    queryKey: ['print-exchange', documentId, type],
+    enabled: type === 'exchange' && !!documentId,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('exchanges')
+        .select('*, replacement_product:products!exchanges_replacement_product_id_fkey(id,name,sku), customer:customers(name), source_return:return_requests(rt_number), source_invoice:invoices(reference)')
+        .eq('id', documentId)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   useEffect(() => {
     document.title = `${type.replace(/_/g, ' ')} ${documentId ?? ''}`.trim();
@@ -102,7 +121,8 @@ export default function PrintRoute() {
 
   const loading =
     order.isLoading || quotation.isLoading || invoice.isLoading ||
-    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading || vendorOrder.isLoading || returnRequest.isLoading;
+    note.isLoading || payment.isLoading || correction.isLoading || movement.isLoading || stockCount.isLoading || writeOff.isLoading || workOrder.isLoading || vendorOrder.isLoading || returnRequest.isLoading ||
+    creditNote.isLoading || refund.isLoading || exchange.isLoading;
 
   let body: React.ReactNode = null;
   let docNumber = documentId ?? '';
@@ -153,6 +173,24 @@ export default function PrintRoute() {
     const r = returnRequest.data;
     docNumber = r.rt_number ?? docNumber;
     body = <ReturnRequestPrint rt={r} isDraft={r.request_status === 'draft'} />;
+  } else if (type === 'credit_note' && creditNote.data?.cn) {
+    const c = creditNote.data.cn;
+    docNumber = c.cn_number ?? docNumber;
+    body = <CreditNotePrint cn={c} />;
+  } else if (type === 'refund_voucher' && refund.data) {
+    const r = refund.data;
+    docNumber = r.refund_number ?? docNumber;
+    body = <RefundVoucherPrint refund={r} />;
+  } else if (type === 'exchange' && exchange.data) {
+    const e: any = exchange.data;
+    docNumber = e.exchange_number ?? docNumber;
+    const enriched = {
+      ...e,
+      customer_name: e.customer?.name ?? null,
+      source_rt_number: e.source_return?.rt_number ?? null,
+      source_invoice_ref: e.source_invoice?.reference ?? null,
+    };
+    body = <ExchangePrint exchange={enriched} />;
   }
 
   if (loading) {

@@ -1675,6 +1675,146 @@ export type Database = {
           },
         ]
       }
+      credit_note_redemptions: {
+        Row: {
+          amount_applied: number
+          applied_at: string
+          applied_by: string
+          applied_to_invoice_id: string | null
+          applied_to_sales_order_id: string | null
+          credit_note_id: string
+          id: string
+        }
+        Insert: {
+          amount_applied: number
+          applied_at?: string
+          applied_by: string
+          applied_to_invoice_id?: string | null
+          applied_to_sales_order_id?: string | null
+          credit_note_id: string
+          id?: string
+        }
+        Update: {
+          amount_applied?: number
+          applied_at?: string
+          applied_by?: string
+          applied_to_invoice_id?: string | null
+          applied_to_sales_order_id?: string | null
+          credit_note_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_note_redemptions_applied_to_invoice_id_fkey"
+            columns: ["applied_to_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_note_redemptions_applied_to_sales_order_id_fkey"
+            columns: ["applied_to_sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_note_redemptions_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_notes: {
+        Row: {
+          amount: number
+          amount_remaining: number
+          amount_used: number
+          cn_number: string
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          customer_name_snapshot: string | null
+          expiry_date: string
+          id: string
+          issue_date: string
+          notes: string | null
+          source_invoice_id: string
+          source_return_request_id: string
+          status: string
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount: number
+          amount_remaining?: number
+          amount_used?: number
+          cn_number: string
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          customer_name_snapshot?: string | null
+          expiry_date: string
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          source_invoice_id: string
+          source_return_request_id: string
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount?: number
+          amount_remaining?: number
+          amount_used?: number
+          cn_number?: string
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          customer_name_snapshot?: string | null
+          expiry_date?: string
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          source_invoice_id?: string
+          source_return_request_id?: string
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_source_invoice_id_fkey"
+            columns: ["source_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_source_return_request_id_fkey"
+            columns: ["source_return_request_id"]
+            isOneToOne: false
+            referencedRelation: "return_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_activities: {
         Row: {
           attachments: Json | null
@@ -2929,6 +3069,129 @@ export type Database = {
             columns: ["reports_to"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exchanges: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          exchange_number: string
+          id: string
+          notes: string | null
+          original_serial_id: string
+          original_unit_price: number
+          payment_received_id: string | null
+          price_difference: number
+          price_difference_settled: boolean
+          processed_by: string
+          replacement_product_id: string
+          replacement_serial_id: string | null
+          replacement_unit_price: number
+          return_request_item_id: string
+          source_invoice_id: string
+          source_return_request_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          exchange_number: string
+          id?: string
+          notes?: string | null
+          original_serial_id: string
+          original_unit_price: number
+          payment_received_id?: string | null
+          price_difference?: number
+          price_difference_settled?: boolean
+          processed_by: string
+          replacement_product_id: string
+          replacement_serial_id?: string | null
+          replacement_unit_price: number
+          return_request_item_id: string
+          source_invoice_id: string
+          source_return_request_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          exchange_number?: string
+          id?: string
+          notes?: string | null
+          original_serial_id?: string
+          original_unit_price?: number
+          payment_received_id?: string | null
+          price_difference?: number
+          price_difference_settled?: boolean
+          processed_by?: string
+          replacement_product_id?: string
+          replacement_serial_id?: string | null
+          replacement_unit_price?: number
+          return_request_item_id?: string
+          source_invoice_id?: string
+          source_return_request_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchanges_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_original_serial_id_fkey"
+            columns: ["original_serial_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_serials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_payment_received_id_fkey"
+            columns: ["payment_received_id"]
+            isOneToOne: false
+            referencedRelation: "sales_order_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_replacement_product_id_fkey"
+            columns: ["replacement_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_replacement_serial_id_fkey"
+            columns: ["replacement_serial_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_serials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_return_request_item_id_fkey"
+            columns: ["return_request_item_id"]
+            isOneToOne: false
+            referencedRelation: "return_request_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_source_invoice_id_fkey"
+            columns: ["source_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchanges_source_return_request_id_fkey"
+            columns: ["source_return_request_id"]
+            isOneToOne: false
+            referencedRelation: "return_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -5392,6 +5655,86 @@ export type Database = {
           },
         ]
       }
+      refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string | null
+          customer_name_snapshot: string | null
+          id: string
+          notes: string | null
+          payment_account_id: string
+          processed_by: string
+          reference_number: string | null
+          refund_date: string
+          refund_mode: string
+          refund_number: string
+          source_invoice_id: string
+          source_return_request_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id?: string | null
+          customer_name_snapshot?: string | null
+          id?: string
+          notes?: string | null
+          payment_account_id: string
+          processed_by: string
+          reference_number?: string | null
+          refund_date?: string
+          refund_mode: string
+          refund_number: string
+          source_invoice_id: string
+          source_return_request_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          customer_name_snapshot?: string | null
+          id?: string
+          notes?: string | null
+          payment_account_id?: string
+          processed_by?: string
+          reference_number?: string | null
+          refund_date?: string
+          refund_mode?: string
+          refund_number?: string
+          source_invoice_id?: string
+          source_return_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_source_invoice_id_fkey"
+            columns: ["source_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_source_return_request_id_fkey"
+            columns: ["source_return_request_id"]
+            isOneToOne: false
+            referencedRelation: "return_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reorder_rules: {
         Row: {
           created_at: string
@@ -5810,7 +6153,7 @@ export type Database = {
           id: string
           is_voided: boolean
           notes: string | null
-          payment_account_id: string
+          payment_account_id: string | null
           payment_date: string
           payment_mode: string
           payment_number: string
@@ -5827,7 +6170,7 @@ export type Database = {
           id?: string
           is_voided?: boolean
           notes?: string | null
-          payment_account_id: string
+          payment_account_id?: string | null
           payment_date?: string
           payment_mode: string
           payment_number: string
@@ -5844,7 +6187,7 @@ export type Database = {
           id?: string
           is_voided?: boolean
           notes?: string | null
-          payment_account_id?: string
+          payment_account_id?: string | null
           payment_date?: string
           payment_mode?: string
           payment_number?: string
@@ -8139,6 +8482,7 @@ export type Database = {
       }
     }
     Functions: {
+      apply_stock_action: { Args: { p_item_id: string }; Returns: Json }
       appraisal_user_can_access: {
         Args: { _appraisal_id: string }
         Returns: boolean
@@ -8199,6 +8543,7 @@ export type Database = {
         Args: { p_movement_id: string }
         Returns: boolean
       }
+      complete_return_request: { Args: { p_rt_id: string }; Returns: Json }
       complete_stock_count: { Args: { p_count_id: string }; Returns: Json }
       confirm_delivery: {
         Args: { p_dn_id: string; p_signature_received?: boolean }
@@ -8235,6 +8580,7 @@ export type Database = {
         Args: { p_entries: Json; p_wo_id: string }
         Returns: undefined
       }
+      expire_credit_notes: { Args: never; Returns: number }
       generate_document_number: {
         Args: { p_document_type: string }
         Returns: string
@@ -8329,6 +8675,24 @@ export type Database = {
         Args: { p_document_type: string }
         Returns: string
       }
+      process_credit_note_resolution: {
+        Args: { p_item_id: string; p_notes: string }
+        Returns: string
+      }
+      process_exchange_resolution: {
+        Args: { p_item_id: string; p_replacement_product_id: string }
+        Returns: string
+      }
+      process_refund_resolution: {
+        Args: {
+          p_amount: number
+          p_item_id: string
+          p_mode: string
+          p_payment_account_id: string
+          p_reference: string
+        }
+        Returns: string
+      }
       reconcile_stock_count: {
         Args: { p_count_id: string; p_item_reconciliations: Json }
         Returns: Json
@@ -8341,6 +8705,15 @@ export type Database = {
           p_notes: string
         }
         Returns: undefined
+      }
+      redeem_credit_note: {
+        Args: {
+          p_amount_to_apply: number
+          p_cn_id: string
+          p_invoice_id: string
+          p_sales_order_id: string
+        }
+        Returns: string
       }
       reject_return_request: {
         Args: { p_reason: string; p_rt_id: string }
@@ -8364,6 +8737,10 @@ export type Database = {
       validate_so_linked_eta: {
         Args: { p_proposed_eta: string; p_so_id: string }
         Returns: Json
+      }
+      void_credit_note: {
+        Args: { p_cn_id: string; p_reason: string }
+        Returns: undefined
       }
     }
     Enums: {

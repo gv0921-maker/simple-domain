@@ -26,6 +26,7 @@ import {
 import { RT_STATUS_LABEL, type ReturnStatus, type ConditionGrade } from '@/lib/services/returns';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
 import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
+import { ResolutionSection } from '@/components/returns/ResolutionSection';
 
 const STATUS_COLORS: Record<ReturnStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -330,6 +331,7 @@ export default function ReturnDetail() {
         )}
 
         <LogNotesPanel recordType="return_request" recordId={rt.id} />
+        <ResolutionSection rt={rt} />
       </div>
 
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>

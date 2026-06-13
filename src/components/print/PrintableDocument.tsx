@@ -15,6 +15,8 @@ export type PrintableDocumentType =
   | 'payment_receipt'
   | 'return_request'
   | 'credit_note'
+  | 'refund_voucher'
+  | 'exchange'
   | 'payslip'
   | 'correction_order'
   | 'internal_movement'
@@ -33,6 +35,8 @@ const TITLES: Record<PrintableDocumentType, string> = {
   payment_receipt: 'Payment Receipt',
   return_request: 'Return Request',
   credit_note: 'Credit Note',
+  refund_voucher: 'Refund Voucher',
+  exchange: 'Exchange Record',
   payslip: 'Payslip',
   correction_order: 'Correction Order',
   internal_movement: 'Internal Movement',
