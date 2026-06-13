@@ -3434,6 +3434,42 @@ export type Database = {
           },
         ]
       }
+      payment_accounts: {
+        Row: {
+          account_name: string
+          account_number_last4: string | null
+          account_type: string
+          bank_name: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number_last4?: string | null
+          account_type: string
+          bank_name?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number_last4?: string | null
+          account_type?: string
+          bank_name?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -4632,6 +4668,75 @@ export type Database = {
           txn_type?: string
         }
         Relationships: []
+      }
+      sales_order_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          is_voided: boolean
+          notes: string | null
+          payment_account_id: string
+          payment_date: string
+          payment_mode: string
+          payment_number: string
+          received_by: string
+          reference_number: string | null
+          sales_order_id: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          is_voided?: boolean
+          notes?: string | null
+          payment_account_id: string
+          payment_date?: string
+          payment_mode: string
+          payment_number: string
+          received_by: string
+          reference_number?: string | null
+          sales_order_id: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_voided?: boolean
+          notes?: string | null
+          payment_account_id?: string
+          payment_date?: string
+          payment_mode?: string
+          payment_number?: string
+          received_by?: string
+          reference_number?: string | null
+          sales_order_id?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_payments_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_payments_sales_order_id_fkey"
+            columns: ["sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_orders: {
         Row: {
@@ -6265,6 +6370,10 @@ export type Database = {
       get_current_employee_id: { Args: never; Returns: string }
       get_current_fy_label: { Args: never; Returns: string }
       get_dashboard_role: { Args: never; Returns: string }
+      get_sales_order_payment_summary: {
+        Args: { p_so_id: string }
+        Returns: Json
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
