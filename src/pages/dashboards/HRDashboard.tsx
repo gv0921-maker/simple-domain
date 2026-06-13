@@ -9,11 +9,13 @@ import { useEmployees, useRangeAttendance } from '@/hooks/hr';
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
 
 export default function HRDashboard() {
   const { data: role } = useDashboardRole();
   const { data, isLoading } = useHRManagerMetrics();
   const { data: employees = [] } = useEmployees();
+  const { isAdmin: isSuperAdmin } = useIsSuperAdmin();
   const today = new Date().toISOString().slice(0, 10);
   const { data: todaySessions = [] } = useRangeAttendance(employees.map((e) => e.id), today, today);
 
@@ -112,16 +114,18 @@ export default function HRDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard title="Pending Appraisals" value={data?.pendingAppraisals ?? '—'} icon={FileText} loading={isLoading} viewHref="/appraisals" />
-      </div>
+      {isSuperAdmin && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard title="Pending Appraisals" value={data?.pendingAppraisals ?? '—'} icon={FileText} loading={isLoading} viewHref="/appraisals" />
+        </div>
+      )}
 
       <div>
         <h3 className="text-sm font-semibold mb-3">Quick Actions</h3>
         <QuickActionGrid actions={[
           { label: 'Add Employee', href: '/employees/new', icon: Plus, variant: 'primary' },
           { label: 'Approve Leaves', href: '/leave/admin/requests', icon: ClipboardList },
-          { label: 'Run Payroll', href: '/payroll/periods', icon: Cake },
+          ...(isSuperAdmin ? [{ label: 'Run Payroll', href: '/payroll/periods', icon: Cake } as const] : []),
         ]} />
       </div>
     </DashboardLayout>
