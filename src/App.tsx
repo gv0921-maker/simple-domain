@@ -190,6 +190,9 @@ import AdminBalances from "@/pages/leave/AdminBalances";
 import AdminEntitlements from "@/pages/leave/AdminEntitlements";
 import AdminLeaveTypes from "@/pages/leave/AdminLeaveTypes";
 import AdminCompOff from "@/pages/leave/AdminCompOff";
+import AdminApprovals from "@/pages/leave/AdminApprovals";
+import WorkSchedulePage from "@/pages/work-schedule/WorkSchedulePage";
+import AdminWorkSchedule from "@/pages/work-schedule/AdminWorkSchedule";
 
 // Payroll pages (HR Batch 4)
 import PayrollDashboard from "@/pages/payroll/PayrollDashboard";
@@ -407,11 +410,16 @@ const App = () => (
             <Route path="/leave/team" element={<ProtectedRoute><TeamLeaves /></ProtectedRoute>} />
             <Route path="/leave/calendar" element={<ProtectedRoute><LeaveCalendar /></ProtectedRoute>} />
             <Route path="/leave/admin/requests" element={<ProtectedRoute><AdminRequests /></ProtectedRoute>} />
+            <Route path="/leave/admin/approvals" element={<ProtectedRoute><AdminApprovals /></ProtectedRoute>} />
             <Route path="/leave/admin/balances" element={<ProtectedRoute><AdminBalances /></ProtectedRoute>} />
             <Route path="/leave/admin/entitlements" element={<ProtectedRoute><AdminEntitlements /></ProtectedRoute>} />
             <Route path="/leave/admin/types" element={<ProtectedRoute><AdminLeaveTypes /></ProtectedRoute>} />
             <Route path="/leave/admin/comp-off" element={<ProtectedRoute><AdminCompOff /></ProtectedRoute>} />
             <Route path="/leave/:id" element={<ProtectedRoute><LeaveDetail /></ProtectedRoute>} />
+
+            {/* Work schedule (Phase 7 Batch 2) */}
+            <Route path="/work-schedule" element={<ProtectedRoute><WorkSchedulePage /></ProtectedRoute>} />
+            <Route path="/work-schedule/admin" element={<ProtectedRoute><AdminWorkSchedule /></ProtectedRoute>} />
 
             {/* Payroll routes (HR Batch 4) */}
             <Route path="/payroll" element={<ProtectedRoute><PayrollDashboard /></ProtectedRoute>} />

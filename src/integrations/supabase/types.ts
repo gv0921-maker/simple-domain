@@ -2918,12 +2918,65 @@ export type Database = {
           },
         ]
       }
+      employee_monthly_leave_allotments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          month: number
+          notes: string | null
+          paid_leaves_allotted: number
+          paid_leaves_used: number
+          unpaid_leaves_used: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          month: number
+          notes?: string | null
+          paid_leaves_allotted?: number
+          paid_leaves_used?: number
+          unpaid_leaves_used?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          month?: number
+          notes?: string | null
+          paid_leaves_allotted?: number
+          paid_leaves_used?: number
+          unpaid_leaves_used?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_monthly_leave_allotments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_rosters: {
         Row: {
           comp_off_reason: string | null
+          compensatory_off_for_date: string | null
           created_at: string
           employee_id: string
           id: string
+          is_sunday_duty: boolean
+          is_working_day: boolean
           notes: string | null
           original_off_date: string | null
           planned_by: string | null
@@ -2933,9 +2986,12 @@ export type Database = {
         }
         Insert: {
           comp_off_reason?: string | null
+          compensatory_off_for_date?: string | null
           created_at?: string
           employee_id: string
           id?: string
+          is_sunday_duty?: boolean
+          is_working_day?: boolean
           notes?: string | null
           original_off_date?: string | null
           planned_by?: string | null
@@ -2945,9 +3001,12 @@ export type Database = {
         }
         Update: {
           comp_off_reason?: string | null
+          compensatory_off_for_date?: string | null
           created_at?: string
           employee_id?: string
           id?: string
+          is_sunday_duty?: boolean
+          is_working_day?: boolean
           notes?: string | null
           original_off_date?: string | null
           planned_by?: string | null
@@ -4266,6 +4325,7 @@ export type Database = {
           half_day_session: string | null
           id: string
           is_half_day: boolean
+          leave_type_code: string | null
           leave_type_id: string
           notes: string | null
           reason: string | null
@@ -4288,6 +4348,7 @@ export type Database = {
           half_day_session?: string | null
           id?: string
           is_half_day?: boolean
+          leave_type_code?: string | null
           leave_type_id: string
           notes?: string | null
           reason?: string | null
@@ -4310,6 +4371,7 @@ export type Database = {
           half_day_session?: string | null
           id?: string
           is_half_day?: boolean
+          leave_type_code?: string | null
           leave_type_id?: string
           notes?: string | null
           reason?: string | null
@@ -8578,9 +8640,21 @@ export type Database = {
       approve_vendor_order: { Args: { p_vo_id: string }; Returns: undefined }
       approve_work_order: { Args: { p_wo_id: string }; Returns: Json }
       approve_write_off: { Args: { p_wf_id: string }; Returns: Json }
+      assign_sunday_duty: {
+        Args: {
+          p_comp_off_date: string
+          p_employee_id: string
+          p_sunday_date: string
+        }
+        Returns: Json
+      }
       auto_create_correction_order: {
         Args: { p_gr_id: string }
         Returns: string
+      }
+      bulk_set_monthly_allotments: {
+        Args: { p_employee_allotments: Json; p_month: number; p_year: number }
+        Returns: number
       }
       calculate_attendance_metrics: {
         Args: { p_date: string; p_employee_id: string }
@@ -8679,6 +8753,10 @@ export type Database = {
       get_current_employee_id: { Args: never; Returns: string }
       get_current_fy_label: { Args: never; Returns: string }
       get_dashboard_role: { Args: never; Returns: string }
+      get_employee_leave_balance: {
+        Args: { p_employee_id: string; p_month: number; p_year: number }
+        Returns: Json
+      }
       get_employee_schedule_for_date: {
         Args: { p_date: string; p_employee_id: string }
         Returns: {

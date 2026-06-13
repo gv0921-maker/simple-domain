@@ -3,6 +3,9 @@ import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as hr from '@/lib/services/hr/api';
 
+export * from './leaveAllotments';
+export * from './sundayRoster';
+
 export const hrKeys = {
   all: ['hr'] as const,
   departments: () => [...hrKeys.all, 'departments'] as const,
