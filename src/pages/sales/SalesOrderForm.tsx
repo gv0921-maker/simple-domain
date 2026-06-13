@@ -66,12 +66,18 @@ const PAYMENT_TERMS = [
 const STATUS_CONFIG: Record<SalesOrderStatus, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },
   estimate: { label: 'Estimate', className: 'bg-muted text-muted-foreground' },
+  awaiting_advance: { label: 'Awaiting Advance', className: 'bg-warning/20 text-warning-foreground border-warning' },
   confirmed: { label: 'Confirmed', className: 'bg-success/20 text-success border-success' },
+  fulfilling: { label: 'Fulfilling', className: 'bg-info/20 text-info border-info' },
+  ready_to_invoice: { label: 'Ready to Invoice', className: 'bg-info/20 text-info border-info' },
+  invoicing: { label: 'Invoicing', className: 'bg-primary/20 text-primary border-primary' },
   paid: { label: 'Paid', className: 'bg-success/20 text-success border-success' },
   invoiced: { label: 'Invoiced', className: 'bg-primary/20 text-primary border-primary' },
   ready_to_pick: { label: 'Ready to Pick', className: 'bg-info/20 text-info border-info' },
   dispatched: { label: 'Dispatched', className: 'bg-primary/20 text-primary border-primary' },
+  delivering: { label: 'Delivering', className: 'bg-info/20 text-info border-info' },
   delivered: { label: 'Delivered', className: 'bg-success/20 text-success border-success' },
+  closed: { label: 'Closed', className: 'bg-muted text-muted-foreground' },
   locked: { label: 'Locked', className: 'bg-primary/20 text-primary border-primary' },
   cancelled: { label: 'Cancelled', className: 'bg-destructive/20 text-destructive border-destructive' },
 };

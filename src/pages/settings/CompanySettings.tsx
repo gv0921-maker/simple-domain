@@ -44,6 +44,7 @@ export default function CompanySettings() {
           letterhead_footer: form.letterhead_footer ?? null,
           standard_terms: form.standard_terms ?? null,
           thermal_width_mm: Number(form.thermal_width_mm ?? data.thermal_width_mm ?? 80),
+          default_advance_percent: Number(form.default_advance_percent ?? data.default_advance_percent ?? 40),
         },
       });
       toast.success('Company settings saved');
@@ -115,6 +116,20 @@ export default function CompanySettings() {
               onChange={(v) => update_('thermal_width_mm', Number(v))}
               disabled={readOnly}
             />
+            <div>
+              <Label className="text-xs">Default Advance Percentage Required (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={String(form.default_advance_percent ?? 40)}
+                onChange={(e) => update_('default_advance_percent', Number(e.target.value))}
+                disabled={readOnly}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Seeds the advance % gate on every new Sales Order (0–100).
+              </p>
+            </div>
           </CardContent>
         </Card>
 

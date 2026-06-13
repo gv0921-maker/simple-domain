@@ -16,6 +16,7 @@ export interface CompanySettings {
   letterhead_footer: string | null;
   standard_terms: string | null;
   thermal_width_mm: number;
+  default_advance_percent: number | null;
   updated_at: string;
   updated_by: string | null;
 }

@@ -1062,6 +1062,17 @@ function rowFromOrderLine(l: SalesOrderLine, orderId: string): any {
     discount_value: l.discountValue ?? null,
     discount_amount: l.discountAmount ?? null,
     final_amount: l.finalAmount ?? null,
+    // Phase 2 — sourcing & customization
+    product_source: l.productSource ?? 'warehouse',
+    customization_size: l.customizationSize ?? null,
+    customization_colour: l.customizationColour ?? null,
+    customization_fabric: l.customizationFabric ?? null,
+    customization_polish: l.customizationPolish ?? null,
+    customization_notes: l.customizationNotes ?? null,
+    customization_reference_images: l.customizationReferenceImages ?? [],
+    line_eta: l.lineEta ?? null,
+    vendor_id: uuidOrNull(l.vendorId),
+    factory_work_order_id: uuidOrNull(l.factoryWorkOrderId),
   };
 }
 
@@ -1137,6 +1148,17 @@ function mapSalesOrderRich(r: any): SalesOrder {
     pointsRedeemed: NOrUndef(r.points_redeemed),
     pointsEarned: NOrUndef(r.points_earned),
     redemptionAmount: NOrUndef(r.redemption_amount),
+    // Phase 2 — enhanced SO workflow fields
+    noQuoteFlag: !!r.no_quote_flag,
+    advancePercentRequired: NOrUndef(r.advance_percent_required),
+    advancePercentReceived: NOrUndef(r.advance_percent_received),
+    advanceOverrideBy: r.advance_override_by ?? undefined,
+    advanceOverrideReason: r.advance_override_reason ?? undefined,
+    advanceOverrideAt: r.advance_override_at ?? undefined,
+    termsAndConditions: r.terms_and_conditions ?? undefined,
+    customerSignatureReceived: !!r.customer_signature_received,
+    customerSignatureDate: r.customer_signature_date ?? undefined,
+    etaOverall: r.eta_overall ?? undefined,
   } as SalesOrder;
 }
 
@@ -1187,6 +1209,14 @@ function rowFromSalesOrder(o: Partial<SalesOrder> & { reference: string }): any 
     points_redeemed: o.pointsRedeemed ?? null,
     points_earned: o.pointsEarned ?? null,
     redemption_amount: o.redemptionAmount ?? null,
+    // Phase 2 — enhanced SO workflow fields
+    no_quote_flag: !!o.noQuoteFlag,
+    advance_percent_required: o.advancePercentRequired ?? null,
+    advance_percent_received: o.advancePercentReceived ?? null,
+    terms_and_conditions: o.termsAndConditions ?? null,
+    customer_signature_received: !!o.customerSignatureReceived,
+    customer_signature_date: o.customerSignatureDate ?? null,
+    eta_overall: o.etaOverall ?? null,
   };
 }
 
@@ -1492,4 +1522,73 @@ export async function convertQuotationToOrderRich(
   // Link the order id back onto the quotation and mark it converted
   await saveQuotationRich({ ...q, convertedToOrderId: saved.id, status: 'converted' });
   return saved;
+}
+
+// =====================================================================
+// Phase 2 — Sales Order workflow helpers
+// =====================================================================
+
+/** Recalculate and persist `advance_percent_received` from recorded payments. */
+export async function recomputeAdvancePercent(orderId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('calculate_so_advance_percent' as any, { p_so_id: orderId });
+  if (error) throw error;
+  const pct = Number(data ?? 0);
+  await supabase
+    .from('sales_orders' as any)
+    .update({ advance_percent_received: pct })
+    .eq('id', orderId);
+  return pct;
+}
+
+/** Check whether the configured advance gate is satisfied. */
+export async function checkAdvanceGate(orderId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('check_advance_gate' as any, { p_so_id: orderId });
+  if (error) throw error;
+  return !!data;
+}
+
+/**
+ * Confirm a Sales Order. Refuses unless the advance gate is satisfied
+ * (>= advance_percent_required, or an override has been recorded).
+ */
+export async function confirmSalesOrder(
+  orderId: string,
+  _options?: { overrideReason?: string },
+): Promise<SalesOrder> {
+  await recomputeAdvancePercent(orderId);
+  const passed = await checkAdvanceGate(orderId);
+  if (!passed) {
+    throw new Error('Advance percentage requirement not met. Record payment or request an override.');
+  }
+  const { error } = await supabase
+    .from('sales_orders' as any)
+    .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
+    .eq('id', orderId);
+  if (error) throw error;
+  return (await getSalesOrderRich(orderId))!;
+}
+
+/** Admin-only: record an override on the advance gate. */
+export async function overrideAdvanceGate(orderId: string, reason: string): Promise<SalesOrder> {
+  const uid = await currentUserId();
+  if (!uid) throw new Error('Not authenticated');
+  if (!reason || reason.trim().length < 3) {
+    throw new Error('A reason is required to override the advance gate.');
+  }
+  const { error } = await supabase
+    .from('sales_orders' as any)
+    .update({
+      advance_override_by: uid,
+      advance_override_reason: reason.trim(),
+      advance_override_at: new Date().toISOString(),
+    })
+    .eq('id', orderId);
+  if (error) throw error;
+  return (await getSalesOrderRich(orderId))!;
+}
+
+/** Convenience: fetch predefined customization options for a product. */
+export async function getProductCustomizationOptions(productId: string) {
+  const { listProductCustomizationOptions } = await import('@/lib/services/products/customizationOptions');
+  return listProductCustomizationOptions(productId);
 }

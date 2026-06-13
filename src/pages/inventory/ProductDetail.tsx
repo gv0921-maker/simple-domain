@@ -42,6 +42,8 @@ import type { Product, ProductVariant } from '@/lib/services/inventory';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useStudioConfig } from '@/hooks/useStudioConfig';
+import { useInventoryAccess } from '@/hooks/useInventoryPermissions';
+import { ProductCustomizationOptionsTab } from '@/components/products/ProductCustomizationOptionsTab';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -64,6 +66,7 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const isNew = id === 'new';
   const studio = useStudioConfig('inventory', 'Product');
+  const { isAdmin } = useInventoryAccess();
   const { data: existingProduct } = useProduct(!isNew ? id : undefined);
   const { data: serials = [] } = useSerialsByProduct(!isNew ? id : undefined);
   const { data: productReservations = [] } = useReservationsByProduct(!isNew ? id : undefined);
@@ -338,6 +341,7 @@ export default function ProductDetail() {
                 <SelectItem value="pricing">Pricing & Inventory</SelectItem>
                 <SelectItem value="variants">Variants</SelectItem>
                 {!isNew && <SelectItem value="qc">QC History</SelectItem>}
+                {!isNew && isAdmin && <SelectItem value="customization">Customization Options</SelectItem>}
               </SelectContent>
             </Select>
           </div>
@@ -346,6 +350,9 @@ export default function ProductDetail() {
             <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
             <TabsTrigger value="variants">Variants</TabsTrigger>
             {!isNew && <TabsTrigger value="qc">QC History</TabsTrigger>}
+            {!isNew && isAdmin && (
+              <TabsTrigger value="customization">Customization Options</TabsTrigger>
+            )}
           </TabsList>
 
           {/* General Tab */}
@@ -710,6 +717,12 @@ export default function ProductDetail() {
           {!isNew && id && (
             <TabsContent value="qc" className="space-y-6 animate-fade-in">
               <QCHistoryList productId={id} />
+            </TabsContent>
+          )}
+
+          {!isNew && id && isAdmin && (
+            <TabsContent value="customization" className="space-y-6 animate-fade-in">
+              <ProductCustomizationOptionsTab productId={id} />
             </TabsContent>
           )}
         </Tabs>

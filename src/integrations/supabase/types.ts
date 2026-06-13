@@ -1288,6 +1288,7 @@ export type Database = {
           city: string | null
           company_name: string
           country: string
+          default_advance_percent: number | null
           email: string | null
           gstin: string | null
           id: string
@@ -1307,6 +1308,7 @@ export type Database = {
           city?: string | null
           company_name?: string
           country?: string
+          default_advance_percent?: number | null
           email?: string | null
           gstin?: string | null
           id?: string
@@ -1326,6 +1328,7 @@ export type Database = {
           city?: string | null
           company_name?: string
           country?: string
+          default_advance_percent?: number | null
           email?: string | null
           gstin?: string | null
           id?: string
@@ -3290,22 +3293,31 @@ export type Database = {
           cgst_amount: number | null
           created_at: string
           customization: string | null
+          customization_colour: string | null
+          customization_fabric: string | null
+          customization_notes: string | null
+          customization_polish: string | null
+          customization_reference_images: Json | null
+          customization_size: string | null
           delivered_qty: number
           description: string | null
           discount: number
           discount_amount: number | null
           discount_type: string
           discount_value: number | null
+          factory_work_order_id: string | null
           final_amount: number | null
           gst_rate: number | null
           id: string
           igst_amount: number | null
           invoiced_qty: number
+          line_eta: string | null
           net_amount: number | null
           order_id: string
           per_line_discount_type: string | null
           product_id: string | null
           product_name: string | null
+          product_source: string | null
           quantity: number
           reserved_stock: boolean
           sgst_amount: number | null
@@ -3317,28 +3329,38 @@ export type Database = {
           unit_price: number
           units: number | null
           updated_at: string
+          vendor_id: string | null
         }
         Insert: {
           barcode?: string | null
           cgst_amount?: number | null
           created_at?: string
           customization?: string | null
+          customization_colour?: string | null
+          customization_fabric?: string | null
+          customization_notes?: string | null
+          customization_polish?: string | null
+          customization_reference_images?: Json | null
+          customization_size?: string | null
           delivered_qty?: number
           description?: string | null
           discount?: number
           discount_amount?: number | null
           discount_type?: string
           discount_value?: number | null
+          factory_work_order_id?: string | null
           final_amount?: number | null
           gst_rate?: number | null
           id?: string
           igst_amount?: number | null
           invoiced_qty?: number
+          line_eta?: string | null
           net_amount?: number | null
           order_id: string
           per_line_discount_type?: string | null
           product_id?: string | null
           product_name?: string | null
+          product_source?: string | null
           quantity?: number
           reserved_stock?: boolean
           sgst_amount?: number | null
@@ -3350,28 +3372,38 @@ export type Database = {
           unit_price?: number
           units?: number | null
           updated_at?: string
+          vendor_id?: string | null
         }
         Update: {
           barcode?: string | null
           cgst_amount?: number | null
           created_at?: string
           customization?: string | null
+          customization_colour?: string | null
+          customization_fabric?: string | null
+          customization_notes?: string | null
+          customization_polish?: string | null
+          customization_reference_images?: Json | null
+          customization_size?: string | null
           delivered_qty?: number
           description?: string | null
           discount?: number
           discount_amount?: number | null
           discount_type?: string
           discount_value?: number | null
+          factory_work_order_id?: string | null
           final_amount?: number | null
           gst_rate?: number | null
           id?: string
           igst_amount?: number | null
           invoiced_qty?: number
+          line_eta?: string | null
           net_amount?: number | null
           order_id?: string
           per_line_discount_type?: string | null
           product_id?: string | null
           product_name?: string | null
+          product_source?: string | null
           quantity?: number
           reserved_stock?: boolean
           sgst_amount?: number | null
@@ -3383,6 +3415,7 @@ export type Database = {
           unit_price?: number
           units?: number | null
           updated_at?: string
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -3836,6 +3869,50 @@ export type Database = {
             columns: ["parent_pricelist_id"]
             isOneToOne: false
             referencedRelation: "pricelists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_customization_options: {
+        Row: {
+          additional_price: number
+          created_at: string
+          id: string
+          is_active: boolean
+          option_type: string
+          option_value: string
+          product_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          additional_price?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          option_type: string
+          option_value: string
+          product_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          additional_price?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          option_type?: string
+          option_value?: string
+          product_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_customization_options_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -4558,6 +4635,11 @@ export type Database = {
       }
       sales_orders: {
         Row: {
+          advance_override_at: string | null
+          advance_override_by: string | null
+          advance_override_reason: string | null
+          advance_percent_received: number | null
+          advance_percent_required: number | null
           billing_address: string | null
           billing_address_line_1: string | null
           billing_address_line_2: string | null
@@ -4589,6 +4671,8 @@ export type Database = {
           currency: string
           customer_id: string | null
           customer_name: string | null
+          customer_signature_date: string | null
+          customer_signature_received: boolean | null
           delivery_address: string | null
           delivery_address_line_1: string | null
           delivery_address_line_2: string | null
@@ -4611,6 +4695,7 @@ export type Database = {
           delivery_status: string | null
           delivery_zip: string | null
           discount_amount: number
+          eta_overall: string | null
           fiscal_position_id: string | null
           grand_total: number | null
           gst_type: string | null
@@ -4620,6 +4705,7 @@ export type Database = {
           invoice_status: string | null
           locked_at: string | null
           locked_by: string | null
+          no_quote_flag: boolean | null
           notes: string | null
           order_date: string
           order_discount_amount: number | null
@@ -4642,6 +4728,7 @@ export type Database = {
           status: string
           subtotal: number
           tax_amount: number
+          terms_and_conditions: string | null
           total: number
           total_cgst: number | null
           total_gst: number | null
@@ -4651,6 +4738,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          advance_override_at?: string | null
+          advance_override_by?: string | null
+          advance_override_reason?: string | null
+          advance_percent_received?: number | null
+          advance_percent_required?: number | null
           billing_address?: string | null
           billing_address_line_1?: string | null
           billing_address_line_2?: string | null
@@ -4682,6 +4774,8 @@ export type Database = {
           currency?: string
           customer_id?: string | null
           customer_name?: string | null
+          customer_signature_date?: string | null
+          customer_signature_received?: boolean | null
           delivery_address?: string | null
           delivery_address_line_1?: string | null
           delivery_address_line_2?: string | null
@@ -4704,6 +4798,7 @@ export type Database = {
           delivery_status?: string | null
           delivery_zip?: string | null
           discount_amount?: number
+          eta_overall?: string | null
           fiscal_position_id?: string | null
           grand_total?: number | null
           gst_type?: string | null
@@ -4713,6 +4808,7 @@ export type Database = {
           invoice_status?: string | null
           locked_at?: string | null
           locked_by?: string | null
+          no_quote_flag?: boolean | null
           notes?: string | null
           order_date?: string
           order_discount_amount?: number | null
@@ -4735,6 +4831,7 @@ export type Database = {
           status?: string
           subtotal?: number
           tax_amount?: number
+          terms_and_conditions?: string | null
           total?: number
           total_cgst?: number | null
           total_gst?: number | null
@@ -4744,6 +4841,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          advance_override_at?: string | null
+          advance_override_by?: string | null
+          advance_override_reason?: string | null
+          advance_percent_received?: number | null
+          advance_percent_required?: number | null
           billing_address?: string | null
           billing_address_line_1?: string | null
           billing_address_line_2?: string | null
@@ -4775,6 +4877,8 @@ export type Database = {
           currency?: string
           customer_id?: string | null
           customer_name?: string | null
+          customer_signature_date?: string | null
+          customer_signature_received?: boolean | null
           delivery_address?: string | null
           delivery_address_line_1?: string | null
           delivery_address_line_2?: string | null
@@ -4797,6 +4901,7 @@ export type Database = {
           delivery_status?: string | null
           delivery_zip?: string | null
           discount_amount?: number
+          eta_overall?: string | null
           fiscal_position_id?: string | null
           grand_total?: number | null
           gst_type?: string | null
@@ -4806,6 +4911,7 @@ export type Database = {
           invoice_status?: string | null
           locked_at?: string | null
           locked_by?: string | null
+          no_quote_flag?: boolean | null
           notes?: string | null
           order_date?: string
           order_discount_amount?: number | null
@@ -4828,6 +4934,7 @@ export type Database = {
           status?: string
           subtotal?: number
           tax_amount?: number
+          terms_and_conditions?: string | null
           total?: number
           total_cgst?: number | null
           total_gst?: number | null
@@ -6145,7 +6252,12 @@ export type Database = {
         Args: { _appraisal_id: string }
         Returns: boolean
       }
+      calculate_so_advance_percent: {
+        Args: { p_so_id: string }
+        Returns: number
+      }
       can_write_inventory: { Args: never; Returns: boolean }
+      check_advance_gate: { Args: { p_so_id: string }; Returns: boolean }
       generate_document_number: {
         Args: { p_document_type: string }
         Returns: string
