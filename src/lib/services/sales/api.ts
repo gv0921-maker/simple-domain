@@ -1523,3 +1523,72 @@ export async function convertQuotationToOrderRich(
   await saveQuotationRich({ ...q, convertedToOrderId: saved.id, status: 'converted' });
   return saved;
 }
+
+// =====================================================================
+// Phase 2 — Sales Order workflow helpers
+// =====================================================================
+
+/** Recalculate and persist `advance_percent_received` from recorded payments. */
+export async function recomputeAdvancePercent(orderId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('calculate_so_advance_percent' as any, { p_so_id: orderId });
+  if (error) throw error;
+  const pct = Number(data ?? 0);
+  await supabase
+    .from('sales_orders' as any)
+    .update({ advance_percent_received: pct })
+    .eq('id', orderId);
+  return pct;
+}
+
+/** Check whether the configured advance gate is satisfied. */
+export async function checkAdvanceGate(orderId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('check_advance_gate' as any, { p_so_id: orderId });
+  if (error) throw error;
+  return !!data;
+}
+
+/**
+ * Confirm a Sales Order. Refuses unless the advance gate is satisfied
+ * (>= advance_percent_required, or an override has been recorded).
+ */
+export async function confirmSalesOrder(
+  orderId: string,
+  _options?: { overrideReason?: string },
+): Promise<SalesOrder> {
+  await recomputeAdvancePercent(orderId);
+  const passed = await checkAdvanceGate(orderId);
+  if (!passed) {
+    throw new Error('Advance percentage requirement not met. Record payment or request an override.');
+  }
+  const { error } = await supabase
+    .from('sales_orders' as any)
+    .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
+    .eq('id', orderId);
+  if (error) throw error;
+  return (await getSalesOrderRich(orderId))!;
+}
+
+/** Admin-only: record an override on the advance gate. */
+export async function overrideAdvanceGate(orderId: string, reason: string): Promise<SalesOrder> {
+  const uid = await currentUserId();
+  if (!uid) throw new Error('Not authenticated');
+  if (!reason || reason.trim().length < 3) {
+    throw new Error('A reason is required to override the advance gate.');
+  }
+  const { error } = await supabase
+    .from('sales_orders' as any)
+    .update({
+      advance_override_by: uid,
+      advance_override_reason: reason.trim(),
+      advance_override_at: new Date().toISOString(),
+    })
+    .eq('id', orderId);
+  if (error) throw error;
+  return (await getSalesOrderRich(orderId))!;
+}
+
+/** Convenience: fetch predefined customization options for a product. */
+export async function getProductCustomizationOptions(productId: string) {
+  const { listProductCustomizationOptions } = await import('@/lib/services/products/customizationOptions');
+  return listProductCustomizationOptions(productId);
+}
