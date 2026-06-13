@@ -4531,6 +4531,99 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          browser_push_enabled: boolean
+          browser_push_subscription: Json | null
+          categories_enabled: Json
+          chat_sound_enabled: boolean
+          chat_sound_url: string
+          id: string
+          in_app_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          browser_push_enabled?: boolean
+          browser_push_subscription?: Json | null
+          categories_enabled?: Json
+          chat_sound_enabled?: boolean
+          chat_sound_url?: string
+          id?: string
+          in_app_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          browser_push_enabled?: boolean
+          browser_push_subscription?: Json | null
+          categories_enabled?: Json
+          chat_sound_enabled?: boolean
+          chat_sound_url?: string
+          id?: string
+          in_app_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          category: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          link_url: string | null
+          notification_type: string
+          priority: string
+          read_at: string | null
+          recipient_user_id: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          category: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          link_url?: string | null
+          notification_type: string
+          priority?: string
+          read_at?: string | null
+          recipient_user_id: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          link_url?: string | null
+          notification_type?: string
+          priority?: string
+          read_at?: string | null
+          recipient_user_id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       numbering_sequences: {
         Row: {
           document_type: string
@@ -8694,6 +8787,20 @@ export type Database = {
         Args: { p_gr_id: string }
         Returns: string
       }
+      broadcast_app_notification: {
+        Args: {
+          p_body: string
+          p_category: string
+          p_entity_id?: string
+          p_entity_type?: string
+          p_link?: string
+          p_priority: string
+          p_recipients: string[]
+          p_title: string
+          p_type: string
+        }
+        Returns: number
+      }
       bulk_set_monthly_allotments: {
         Args: { p_employee_allotments: Json; p_month: number; p_year: number }
         Returns: number
@@ -8751,6 +8858,20 @@ export type Database = {
       confirm_delivery: {
         Args: { p_dn_id: string; p_signature_received?: boolean }
         Returns: Json
+      }
+      create_app_notification: {
+        Args: {
+          p_body: string
+          p_category: string
+          p_entity_id?: string
+          p_entity_type?: string
+          p_link?: string
+          p_priority: string
+          p_recipient: string
+          p_title: string
+          p_type: string
+        }
+        Returns: string
       }
       create_ito_from_so: {
         Args: { p_confirmed_by: string; p_so_id: string }
@@ -8824,6 +8945,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_factory_recipients: { Args: never; Returns: string[] }
+      get_hr_recipients: { Args: never; Returns: string[] }
       get_invoice_delivery_summary: {
         Args: { p_invoice_id: string }
         Returns: Json
@@ -8845,6 +8968,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_users_with_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: string[]
+      }
+      get_warehouse_recipients: { Args: never; Returns: string[] }
+      get_workflow_recipients: { Args: { p_so_id: string }; Returns: string[] }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -8900,6 +9029,8 @@ export type Database = {
       is_manager_of: { Args: { target_employee_id: string }; Returns: boolean }
       is_reviewer_for: { Args: { _reviewer_id: string }; Returns: boolean }
       is_super_admin: { Args: { _uid: string }; Returns: boolean }
+      mark_all_notifications_read: { Args: never; Returns: number }
+      mark_notification_read: { Args: { p_id: string }; Returns: undefined }
       payslip_self_view_enabled: { Args: never; Returns: boolean }
       place_vendor_order: { Args: { p_vo_id: string }; Returns: undefined }
       place_work_order: { Args: { p_wo_id: string }; Returns: Json }
