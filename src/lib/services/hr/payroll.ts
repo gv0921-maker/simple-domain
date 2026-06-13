@@ -342,7 +342,10 @@ async function savePayslipFromCalc(periodId: string, employeeId: string, calc: C
     employer_contributions: calc.employerContrib,
     ctc_for_period: Number(contract?.ctc || 0) / 12,
     status: 'draft' as const,
-  };
+    esi_applicable: calc.esi_applicable ?? false,
+    pt_applicable: calc.pt_applicable ?? true,
+    payroll_settings_snapshot: (calc.settings_snapshot ?? null) as any,
+  } as any;
 
   let payslipId: string;
   if (existing) {
