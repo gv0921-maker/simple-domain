@@ -21,8 +21,10 @@ import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
-import { CRMSearchBar } from '@/components/crm/CRMSearchBar';
-import { applyActiveFilters, groupOpportunities, type ActiveFilter } from '@/lib/crm/searchFilters';
+import { FilterBar } from '@/components/filters/FilterBar';
+import { crmOpportunitiesFilterConfig } from '@/lib/filters/modules/crmOpportunities';
+import { applyFilterState, groupByField } from '@/lib/filters/clientFilter';
+import { EMPTY_FILTER_STATE, type FilterState } from '@/lib/filters/types';
 import { displayRevenue, canViewSensitive } from '@/lib/crm/fieldMask';
 
 interface CRMPipelineListViewProps {
@@ -43,22 +45,13 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
 
   const { data: allOpportunities = [], isFetching } = useOpportunities();
   const opportunities = useMemo(() => filterByScope(allOpportunities), [allOpportunities, filterByScope]);
-  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  const [groupBy, setGroupBy] = useState<string | null>(null);
-  const [liveSearch, setLiveSearch] = useState('');
+  const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER_STATE);
   const [sortField, setSortField] = useState<SortField>('expectedRevenue');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { data: allActivities = [] } = useActivities();
   const { data: allContacts = [] } = useContacts();
-  const activitiesByOpp = useMemo(() => {
-    const m: Record<string, typeof allActivities> = {};
-    for (const a of allActivities) {
-      if (a.relatedTo === 'opportunity' && a.relatedId) (m[a.relatedId] ||= []).push(a);
-    }
-    return m;
-  }, [allActivities]);
   const contactsById = useMemo(() => {
     const m: Record<string, typeof allContacts[number]> = {};
     for (const c of allContacts) m[c.id] = c;
@@ -66,10 +59,9 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
   }, [allContacts]);
 
   const filteredByFilters = useMemo(
-    () => applyActiveFilters(opportunities, activeFilters, {
-      userId: user?.id, userName: user?.name, activitiesByOpp, contactsById,
-    }, liveSearch),
-    [opportunities, activeFilters, user, activitiesByOpp, contactsById, liveSearch],
+    () => applyFilterState(opportunities as unknown as Record<string, unknown>[], filterState,
+      ['name','contactName','companyName','phone','email']) as unknown as typeof opportunities,
+    [opportunities, filterState],
   );
 
   const filtered = useMemo(() => {
@@ -96,10 +88,14 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
     return m;
   }, [pipeline.stages]);
 
-  const groupedView = useMemo(
-    () => groupOpportunities(filtered, groupBy, contactsById, stageNames),
-    [filtered, groupBy, contactsById, stageNames],
-  );
+  const groupedView = useMemo(() => {
+    if (!filterState.group_by) return null;
+    return groupByField(
+      filtered as unknown as Record<string, unknown>[],
+      filterState.group_by,
+      (k) => filterState.group_by === 'stage' ? (stageNames[k] || k) : k,
+    ).map(g => ({ label: g.label, opps: g.records as unknown as typeof filtered }));
+  }, [filtered, filterState.group_by, stageNames]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -132,14 +128,9 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
             {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
-          <CRMSearchBar
-            activeFilters={activeFilters}
-            onActiveFiltersChange={setActiveFilters}
-            groupBy={groupBy}
-            onGroupByChange={setGroupBy}
-            liveSearch={liveSearch}
-            onLiveSearchChange={setLiveSearch}
-          />
+          <div className="flex-1 max-w-3xl">
+            <FilterBar config={crmOpportunitiesFilterConfig} value={filterState} onChange={setFilterState} />
+          </div>
 
           <div className="flex items-center gap-1">
             {[
