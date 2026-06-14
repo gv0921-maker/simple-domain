@@ -304,9 +304,25 @@ let _rolesCache: Role[] = [...DEFAULT_ROLES];
 let _userRolesCache: UserRole[] = [];
 let _auditCache: AuditLog[] = [];
 let _hydrated = false;
+// Set of auth user IDs that have the canonical 'super_admin' role in the
+// public.user_roles table. This is the source of truth that `useRoleCheck`
+// uses, mirrored here so the synchronous RBAC API agrees with it.
+let _superAdminIds: Set<string> = new Set();
 
 export function isRbacHydrated(): boolean {
   return _hydrated;
+}
+
+// Simple subscription so React can re-render once hydration finishes.
+const _hydrationListeners = new Set<() => void>();
+export function onRbacHydrated(fn: () => void): () => void {
+  _hydrationListeners.add(fn);
+  return () => _hydrationListeners.delete(fn);
+}
+function notifyHydrated() {
+  _hydrationListeners.forEach((fn) => {
+    try { fn(); } catch { /* ignore */ }
+  });
 }
 
 // Map a Supabase app_roles row + permissions into a Role.
