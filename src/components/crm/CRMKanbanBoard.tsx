@@ -73,6 +73,24 @@ import {
 } from '@/lib/crm/searchFilters';
 import { displayRevenue } from '@/lib/crm/fieldMask';
 
+// Map a pipeline stage (whose name may be customized, e.g. "Follow-Up",
+// "Estimate/Quotation", "Sales/Billing") to the OpportunityStage enum
+// stored in the DB. The DB enum only accepts: new | qualified | proposition | won | lost.
+export function stageEnumFromStage(s: { name?: string; probability?: number }): OpportunityStage {
+  const n = (s?.name || '').toLowerCase();
+  if (n.includes('lost')) return 'lost';
+  if (n.includes('won') || n.includes('bill') || n.includes('sale')) return 'won';
+  if (n.includes('quot') || n.includes('estim') || n.includes('propos')) return 'proposition';
+  if (n.includes('qual') || n.includes('follow')) return 'qualified';
+  if (typeof s?.probability === 'number') {
+    if (s.probability >= 100) return 'won';
+    if (s.probability <= 0) return 'lost';
+    if (s.probability >= 75) return 'proposition';
+    if (s.probability >= 25) return 'qualified';
+  }
+  return 'new';
+}
+
 // Star rating (Odoo-style — golden stars)
 export function StarRating({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
   return (
