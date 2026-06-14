@@ -8889,7 +8889,7 @@ export type Database = {
       check_advance_gate: { Args: { p_so_id: string }; Returns: boolean }
       check_so_closure_ready: { Args: { p_so_id: string }; Returns: boolean }
       check_so_ready_to_invoice: { Args: { p_so_id: string }; Returns: boolean }
-      close_correction_order: { Args: { p_co_id: string }; Returns: Json }
+      close_correction_order: { Args: { p_co_id: string }; Returns: undefined }
       complete_correction_qc_cycle: {
         Args: {
           p_co_item_id: string
@@ -8911,10 +8911,10 @@ export type Database = {
       }
       complete_internal_movement: {
         Args: { p_movement_id: string }
-        Returns: boolean
+        Returns: undefined
       }
       complete_return_request: { Args: { p_rt_id: string }; Returns: Json }
-      complete_stock_count: { Args: { p_count_id: string }; Returns: Json }
+      complete_stock_count: { Args: { p_count_id: string }; Returns: undefined }
       confirm_delivery: {
         Args: { p_dn_id: string; p_signature_received?: boolean }
         Returns: Json
@@ -8933,10 +8933,7 @@ export type Database = {
         }
         Returns: string
       }
-      create_ito_from_so: {
-        Args: { p_confirmed_by: string; p_so_id: string }
-        Returns: string
-      }
+      create_ito_from_so: { Args: { p_so_id: string }; Returns: string }
       create_partial_delivery_note: {
         Args: { p_invoice_id: string; p_line_items: Json }
         Returns: string
@@ -9048,15 +9045,16 @@ export type Database = {
         }
         Returns: boolean
       }
-      initialize_stock_count: { Args: { p_count_id: string }; Returns: number }
+      initialize_stock_count: {
+        Args: { p_count_id: string }
+        Returns: undefined
+      }
       insert_audit_log: {
         Args: {
           _action: string
           _details?: string
-          _ip_address?: string
           _resource: string
-          _resource_id?: string
-          _user_id: string
+          _resource_id: string
           _user_name: string
         }
         Returns: string
