@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import { useToast } from '@/hooks/use-toast';
 import {
   usePaymentAccounts, useSavePaymentAccount, useDeletePaymentAccount,
@@ -24,7 +25,7 @@ import type { PaymentAccount } from '@/lib/services/sales/payments';
 
 export default function PaymentAccountsSettings() {
   const { user } = useAuth();
-  const isSuperAdmin = (user as any)?.role === 'super_admin';
+  const { isSuperAdmin, loading: rolesLoading } = useRoleCheck();
   const { toast } = useToast();
   const { data: accounts = [] } = usePaymentAccounts(false);
   const saveMut = useSavePaymentAccount();
@@ -32,6 +33,7 @@ export default function PaymentAccountsSettings() {
 
   const [editing, setEditing] = useState<Partial<PaymentAccount> | null>(null);
 
+  if (rolesLoading) return null;
   if (!isSuperAdmin) return <Navigate to="/" replace />;
 
   const handleToggleActive = async (a: PaymentAccount) => {

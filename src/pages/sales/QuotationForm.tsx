@@ -37,6 +37,7 @@ import {
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import { useStudioConfig } from '@/hooks/useStudioConfig';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -118,8 +119,8 @@ export default function QuotationForm() {
     [formData.billingCity, formData.billingState],
   );
 
-  const userRole = (user as any)?.role as string | undefined;
-  const canApplyOrderDiscount = userRole === 'admin' || userRole === 'manager' || userRole === 'super_admin';
+  const { isAdminOrSuper, hasAnyRole } = useRoleCheck();
+  const canApplyOrderDiscount = isAdminOrSuper || hasAnyRole(['manager', 'sales_manager']);
 
   // Load existing quotation
   useEffect(() => {

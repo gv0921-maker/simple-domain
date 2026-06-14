@@ -45,6 +45,7 @@ import {
 import { SALES_NAV } from '@/lib/navigation/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import { useStudioConfig } from '@/hooks/useStudioConfig';
 import { format, parseISO, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -141,8 +142,8 @@ export default function SalesOrderForm() {
     [formData.billingCity, formData.billingState],
   );
 
-  const userRole = (user as any)?.role as string | undefined;
-  const canApplyOrderDiscount = userRole === 'admin' || userRole === 'manager' || userRole === 'super_admin';
+  const { roles: userRoles, isAdminOrSuper, hasAnyRole } = useRoleCheck();
+  const canApplyOrderDiscount = isAdminOrSuper || hasAnyRole(['manager', 'sales_manager']);
 
   // Load existing order
   useEffect(() => {
@@ -354,7 +355,7 @@ export default function SalesOrderForm() {
   const handleStatusStepClick = useCallback(async (next: SalesOrderStatus) => {
     const current = (formData.status || 'estimate') as SalesOrderStatus;
     if (current === next) return;
-    if (!canTransition(current, next, userRole)) {
+    if (!canTransition(current, next, userRoles)) {
       toast({
         title: 'Status change not allowed',
         description: `You don't have permission to advance to "${next}".`,
@@ -398,7 +399,7 @@ export default function SalesOrderForm() {
       toast({ title: 'Status update failed', description: e?.message ?? String(e), variant: 'destructive' });
     }
     // Phase 4: stock reservation on confirmed wired next.
-  }, [formData, lines, userRole, validate, persist, toast]);
+  }, [formData, lines, userRoles, validate, persist, toast]);
 
   const handleConfirmAction = useCallback(() => {
     if (confirmAction === 'cancel') handleSave('cancelled');
@@ -473,7 +474,7 @@ export default function SalesOrderForm() {
               <ConfirmOrderButton
                 orderId={id}
                 grandTotal={formData.grandTotal || formData.total || 0}
-                canOverride={userRole === 'admin' || userRole === 'super_admin'}
+                canOverride={isAdminOrSuper}
                 onOpenOverride={() => setOverrideOpen(true)}
                 onConfirmed={(newStatus) => {
                   setFormData((prev) => ({ ...prev, status: newStatus }));

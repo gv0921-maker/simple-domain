@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { CreditCard, Printer, Ban, Banknote, Landmark, Smartphone, FileText, Wallet } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import {
   usePaymentAccounts, usePaymentSummary, useSalesOrderPayments,
   useRecordPayment, useVoidPayment,
@@ -57,8 +57,7 @@ interface Props {
 
 export function PaymentsSection({ salesOrderId }: Props) {
   const { toast } = useToast();
-  const { user } = useAuth();
-  const isSuperAdmin = (user as any)?.role === 'super_admin';
+  const { isSuperAdmin } = useRoleCheck();
 
   const { data: summary } = usePaymentSummary(salesOrderId);
   const { data: payments = [] } = useSalesOrderPayments(salesOrderId);

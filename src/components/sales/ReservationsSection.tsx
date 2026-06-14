@@ -7,7 +7,7 @@ import type { SalesOrderLine } from '@/lib/data/sales/types';
 import { useReservationsBySalesOrder, useReleaseReservation } from '@/hooks/inventory/reservations';
 import { ReserveStockDialog } from './ReserveStockDialog';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 
 interface Props {
   salesOrderId: string;
@@ -18,10 +18,8 @@ export function ReservationsSection({ salesOrderId, lines }: Props) {
   const { data: reservations = [] } = useReservationsBySalesOrder(salesOrderId);
   const releaseMut = useReleaseReservation();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const role = (user as any)?.role as string | undefined;
-  const canRelease = role === 'admin' || role === 'super_admin'
-    || role === 'warehouse_operator' || role === 'sales_manager';
+  const { isAdminOrSuper, hasAnyRole } = useRoleCheck();
+  const canRelease = isAdminOrSuper || hasAnyRole(['warehouse_operator', 'sales_manager']);
 
   const [dialog, setDialog] = useState<{
     open: boolean; line?: SalesOrderLine;
