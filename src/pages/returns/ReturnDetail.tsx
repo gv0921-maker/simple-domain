@@ -25,7 +25,7 @@ import {
 } from '@/hooks/returns';
 import { RT_STATUS_LABEL, type ReturnStatus, type ConditionGrade } from '@/lib/services/returns';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
-import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { ResolutionSection } from '@/components/returns/ResolutionSection';
 
 const STATUS_COLORS: Record<ReturnStatus, string> = {
@@ -330,7 +330,7 @@ export default function ReturnDetail() {
           </Card>
         )}
 
-        <LogNotesPanel recordType="return_request" recordId={rt.id} />
+        <ActivityChatter recordType="return_request" recordId={rt.id} />
         <ResolutionSection rt={rt} />
       </div>
 

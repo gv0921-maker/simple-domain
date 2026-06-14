@@ -55,7 +55,7 @@ import { OrderStatusChevrons, canTransition } from '@/components/sales/OrderStat
 import { getContact, saveContact } from '@/lib/services/crm';
 import { processOrderDelivery, tierLabel } from '@/lib/sales/loyaltyService';
 import { ReservationsSection, useOrderReservationBadge } from '@/components/sales/ReservationsSection';
-import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { logRecordCreated, logStatusChange } from '@/lib/services/activityLog';
 import { trackChanges } from '@/lib/services/activityLogHelpers';
 
@@ -718,7 +718,7 @@ export default function SalesOrderForm() {
             </Card>
 
             {!isNew && id && (
-              <LogNotesPanel recordType="sales_order" recordId={id} />
+              <ActivityChatter recordType="sales_order" recordId={id} />
             )}
         </div>
       </div>

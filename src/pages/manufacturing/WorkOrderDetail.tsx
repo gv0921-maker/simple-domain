@@ -18,7 +18,7 @@ import {
   useAssignableUsers, useAssignFactoryIncharge,
 } from '@/hooks/manufacturing/workOrders';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
-import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import type { WorkOrderStage } from '@/lib/services/manufacturing/workOrders';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -225,7 +225,7 @@ export default function WorkOrderDetail() {
           )}
 
           <TabsContent value="activity">
-            <LogNotesPanel recordType="work_order" recordId={wo.id} defaultOpen />
+            <ActivityChatter recordType="work_order" recordId={wo.id} />
           </TabsContent>
         </Tabs>
 

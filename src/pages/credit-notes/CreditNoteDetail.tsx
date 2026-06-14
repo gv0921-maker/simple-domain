@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { useCreditNote, useVoidCreditNote } from '@/hooks/credit-notes';
 import { CN_STATUS_LABEL } from '@/lib/services/creditNotes';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
-import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 
 const fmtINR = (n: number) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
@@ -116,7 +116,7 @@ export default function CreditNoteDetail() {
           </Card>
         )}
 
-        <LogNotesPanel recordType="credit_note" recordId={cn.id} />
+        <ActivityChatter recordType="credit_note" recordId={cn.id} />
       </div>
 
       <Dialog open={voidOpen} onOpenChange={setVoidOpen}>
