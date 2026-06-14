@@ -267,6 +267,8 @@ export default function VendorOrderDetail() {
           )}
         </div>
 
+        {id && <ActivityChatter recordType="vendor_order" recordId={id} />}
+
         <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
           <DialogContent>
             <DialogHeader>
