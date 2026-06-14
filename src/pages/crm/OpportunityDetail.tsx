@@ -878,14 +878,6 @@ export default function OpportunityDetail() {
                 </TabsContent>
               </Tabs>
 
-              {/* Activity Log (audit trail backed by activity_log) */}
-              <div className="mt-6">
-                <ActivityChatter
-                  recordType="crm_opportunities"
-                  recordId={opportunity.id}
-                />
-              </div>
-
               {/* Related Records — rounded cards linking to records of the same contact */}
               <div className="mt-6 pt-4 border-t border-border">
                 <div className="flex items-center justify-between mb-3">
