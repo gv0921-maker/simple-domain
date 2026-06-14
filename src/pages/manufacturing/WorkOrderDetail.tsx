@@ -225,7 +225,7 @@ export default function WorkOrderDetail() {
           )}
 
           <TabsContent value="activity">
-            <ActivityChatter recordType="work_order" recordId={wo.id} defaultOpen />
+            <ActivityChatter recordType="work_order" recordId={wo.id} />
           </TabsContent>
         </Tabs>
 
