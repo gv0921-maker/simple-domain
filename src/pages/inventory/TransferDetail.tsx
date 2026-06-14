@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { FormHeader } from '@/components/forms/FormHeader';
 import { WorkflowStatus, WorkflowStep } from '@/components/forms/WorkflowStatus';
-import { ActivityTimeline } from '@/components/forms/ActivityTimeline';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { DetailField, DetailGrid } from '@/components/forms/DetailField';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -255,8 +255,7 @@ export default function TransferDetail() {
 
         {/* Right panel - Activity timeline */}
         <div className="w-80 border-l border-border bg-card overflow-auto p-4">
-          <h3 className="text-sm font-medium text-foreground mb-4">Activity</h3>
-          <ActivityTimeline activities={transfer.activities} />
+          <ActivityChatter recordType="internal_transfer" recordId={transfer.id} />
         </div>
       </div>
     </AppLayout>
