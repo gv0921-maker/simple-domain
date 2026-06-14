@@ -108,6 +108,14 @@ function ChatterAvatar({ name }: { name: string }) {
   );
 }
 
+function chatterTimestamp(iso: string): string {
+  try {
+    return format(parseISO(iso), 'dd-MM-yyyy h:mm a');
+  } catch {
+    return iso;
+  }
+}
+
 const FIELD_LABELS: Record<string, string> = {
   name: 'Opportunity Name',
   expectedRevenue: 'Expected Revenue',
@@ -310,7 +318,7 @@ export default function OpportunityDetail() {
       relatedTo: 'opportunity',
       relatedId: opportunity.id,
       userId: user?.id || '1',
-      userName: 'System',
+      userName: user?.name || user?.email?.split('@')[0] || 'User',
       visibility: 'team',
     } as any);
     refreshChatter();
@@ -325,7 +333,7 @@ export default function OpportunityDetail() {
       relatedTo: 'opportunity',
       relatedId: opportunity.id,
       userId: user?.id || '1',
-      userName: 'System',
+      userName: user?.name || user?.email?.split('@')[0] || 'User',
       visibility: 'team',
     } as any);
     refreshChatter();
@@ -341,7 +349,7 @@ export default function OpportunityDetail() {
       relatedTo: 'opportunity',
       relatedId: opportunity.id,
       userId: user?.id || '1',
-      userName: 'System',
+      userName: user?.name || user?.email?.split('@')[0] || 'User',
       visibility: 'team',
     } as any);
     refreshChatter();
@@ -384,7 +392,7 @@ export default function OpportunityDetail() {
         relatedTo: 'opportunity',
         relatedId: opportunity.id,
         userId: user?.id || '1',
-        userName: 'System',
+        userName: user?.name || user?.email?.split('@')[0] || 'User',
         visibility: 'team',
       } as any);
     }
