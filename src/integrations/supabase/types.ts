@@ -8762,6 +8762,7 @@ export type Database = {
       }
     }
     Functions: {
+      _can_see_all_sales: { Args: never; Returns: boolean }
       apply_stock_action: { Args: { p_item_id: string }; Returns: Json }
       appraisal_user_can_access: {
         Args: { _appraisal_id: string }
@@ -9011,6 +9012,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_admin_or_hr: { Args: never; Returns: boolean }
+      is_admin_or_super: { Args: never; Returns: boolean }
       is_app_admin: { Args: { _user_id: string }; Returns: boolean }
       is_assigned_or_admin: { Args: { p_wo_id: string }; Returns: boolean }
       is_chat_channel_admin: {
@@ -9028,6 +9030,10 @@ export type Database = {
       is_employee_self: { Args: { _employee_id: string }; Returns: boolean }
       is_manager_of: { Args: { target_employee_id: string }; Returns: boolean }
       is_reviewer_for: { Args: { _reviewer_id: string }; Returns: boolean }
+      is_sales_rep_for_record: {
+        Args: { p_salesperson_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _uid: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: number }
       mark_notification_read: { Args: { p_id: string }; Returns: undefined }
