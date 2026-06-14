@@ -18,6 +18,7 @@ import {
 } from '@/lib/sales/promotionStorage';
 import { useProducts } from '@/hooks/inventory';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 
@@ -37,8 +38,8 @@ const emptyPromo = (): Partial<SeasonalPromotion> => ({
 export default function PromotionsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const role = (user as any)?.role as string | undefined;
-  const canManage = role === 'admin' || role === 'manager' || role === 'super_admin';
+  const { isAdminOrSuper, hasAnyRole } = useRoleCheck();
+  const canManage = isAdminOrSuper || hasAnyRole(['manager', 'sales_manager']);
 
   const { data: products = [] } = useProducts();
   const [items, setItems] = useState<SeasonalPromotion[]>(() => getPromotions());
