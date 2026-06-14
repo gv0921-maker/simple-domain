@@ -52,7 +52,7 @@ export async function createITO(salesOrderId: string): Promise<string> {
   const uid = u.user?.id;
   if (!uid) throw new Error('Not signed in');
   const { data, error } = await supabase.rpc('create_ito_from_so' as any, {
-    p_so_id: salesOrderId, p_confirmed_by: uid,
+    p_so_id: salesOrderId,
   });
   if (error) throw error;
   const itoId = data as string;
