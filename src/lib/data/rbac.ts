@@ -304,9 +304,25 @@ let _rolesCache: Role[] = [...DEFAULT_ROLES];
 let _userRolesCache: UserRole[] = [];
 let _auditCache: AuditLog[] = [];
 let _hydrated = false;
+// Set of auth user IDs that have the canonical 'super_admin' role in the
+// public.user_roles table. This is the source of truth that `useRoleCheck`
+// uses, mirrored here so the synchronous RBAC API agrees with it.
+let _superAdminIds: Set<string> = new Set();
 
 export function isRbacHydrated(): boolean {
   return _hydrated;
+}
+
+// Simple subscription so React can re-render once hydration finishes.
+const _hydrationListeners = new Set<() => void>();
+export function onRbacHydrated(fn: () => void): () => void {
+  _hydrationListeners.add(fn);
+  return () => _hydrationListeners.delete(fn);
+}
+function notifyHydrated() {
+  _hydrationListeners.forEach((fn) => {
+    try { fn(); } catch { /* ignore */ }
+  });
 }
 
 // Map a Supabase app_roles row + permissions into a Role.
@@ -336,11 +352,12 @@ function rowToRole(row: any, permRows: any[]): Role {
 
 export async function hydrateRbacFromSupabase(): Promise<void> {
   try {
-    const [rolesRes, permsRes, assignsRes, auditRes] = await Promise.all([
+    const [rolesRes, permsRes, assignsRes, auditRes, userRolesRes] = await Promise.all([
       supabase.from('app_roles').select('*'),
       supabase.from('app_role_permissions').select('*'),
       supabase.from('app_user_role_assignments').select('*'),
       supabase.from('app_audit_logs').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('user_roles' as any).select('user_id, role'),
     ]);
     if (rolesRes.error) throw rolesRes.error;
     if (permsRes.error) throw permsRes.error;
@@ -371,10 +388,23 @@ export async function hydrateRbacFromSupabase(): Promise<void> {
       }));
     }
 
+    if (!userRolesRes.error && userRolesRes.data) {
+      const ids = new Set<string>();
+      for (const r of userRolesRes.data as unknown as Array<{ user_id: string; role: string }>) {
+        if (r.role === 'super_admin' && r.user_id) ids.add(r.user_id);
+      }
+      _superAdminIds = ids;
+    }
+
     _hydrated = true;
+    notifyHydrated();
   } catch (e) {
     // Keep defaults if hydration fails (e.g. unauthenticated)
     console.warn('[rbac] hydration failed:', e);
+    // Still mark hydrated so guards don't hang forever; downstream checks
+    // simply fall back to the in-memory defaults.
+    _hydrated = true;
+    notifyHydrated();
   }
 }
 
@@ -540,6 +570,9 @@ export async function setUserRoles(userId: string, roleIds: string[]): Promise<v
 }
 
 export function isSuperAdminUser(userId: string): boolean {
+  if (!userId) return false;
+  // Canonical source: public.user_roles (also used by useRoleCheck).
+  if (_superAdminIds.has(userId)) return true;
   const userRole = getUserRole(userId);
   if (!userRole) return false;
   // Match against new system role names AND legacy enum-style ids

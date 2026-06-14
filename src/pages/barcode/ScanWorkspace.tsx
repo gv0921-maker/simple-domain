@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Camera, CheckCircle2, XCircle, Repeat, AlertTriangle, ScanLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import {
   useScanQueueItem, useScanRecords, useRecordScan, useCompleteScanQueue,
 } from '@/hooks/barcode';
@@ -30,6 +31,7 @@ export default function ScanWorkspace() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isAdminOrSuper } = useRoleCheck();
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('');
   const [flash, setFlash] = useState<'success' | 'error' | 'warn' | null>(null);
@@ -42,8 +44,7 @@ export default function ScanWorkspace() {
   const recordScan = useRecordScan(queueId ?? '');
   const completeMut = useCompleteScanQueue();
 
-  const isAdmin = (user?.role ?? '').toLowerCase() === 'admin'
-    || (user?.role ?? '').toLowerCase() === 'super_admin';
+  const isAdmin = isAdminOrSuper;
 
   const validScans = useMemo(() => records.filter((r) => r.scan_result === 'valid'), [records]);
 

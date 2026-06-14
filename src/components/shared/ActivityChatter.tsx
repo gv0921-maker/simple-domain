@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import {
   useActivityLog, useAddManualNote, useSoftDeleteLogEntry,
 } from '@/hooks/useActivityLog';
@@ -138,7 +139,7 @@ export function ActivityChatter({ recordType, recordId, className }: Props) {
   const [limit, setLimit] = useState(20);
   const [draft, setDraft] = useState('');
 
-  const isSuperAdmin = (user?.role ?? '').toLowerCase() === 'super_admin';
+  const { isSuperAdmin } = useRoleCheck();
 
   const q = useActivityLog(recordType, recordId, limit);
   const addNote = useAddManualNote(recordType, recordId ?? '');
