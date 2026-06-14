@@ -240,6 +240,10 @@ function Toolbar({ editor }: { editor: Editor }) {
 // Renderer for saved tiptap HTML (read-only)
 export function TiptapNotesContent({ html, className }: { html?: string; className?: string }) {
   if (!html) return null;
+  const safe = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p','b','i','ul','ol','li','strong','em','br','span','a','s','u','div','h1','h2','h3','table','tr','td','th','thead','tbody','blockquote','code','pre'],
+    ALLOWED_ATTR: ['href','class','target','rel','data-user-id'],
+  });
   return (
     <div
       className={cn(
@@ -252,7 +256,7 @@ export function TiptapNotesContent({ html, className }: { html?: string; classNa
         '[&_a]:text-primary [&_a]:underline [&_strong]:font-semibold',
         className,
       )}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: safe }}
     />
   );
 }
