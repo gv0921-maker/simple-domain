@@ -387,14 +387,11 @@ function KanbanColumn({
   });
   const [quickPriority, setQuickPriority] = useState(0);
   const totalValue = opportunities.reduce((sum, o) => sum + o.expectedRevenue, 0);
-  const stageMap: Record<string, OpportunityStage> = {
-    new: 'new', qualified: 'qualified', proposition: 'proposition', won: 'won',
-  };
   const saveOpportunityMutation = useSaveOpportunity();
 
   const handleQuickAdd = () => {
     if (quickData.name.trim() || quickData.company.trim()) {
-      const oppStage = stageMap[stage.id] || 'new';
+      const oppStage = stageEnumFromStage(stage);
       saveOpportunityMutation.mutate({
         name: quickData.name || quickData.company,
         contactName: quickData.contact,
@@ -410,6 +407,15 @@ function KanbanColumn({
           toast({ title: 'Opportunity created' });
           onQuickCreate(stage.id, oppStage);
         },
+        onError: (err: unknown) => {
+          const e = err as { message?: string; code?: string };
+          const isRls = e?.code === '42501' || (e?.message || '').toLowerCase().includes('row-level security');
+          toast({
+            title: isRls ? "You don't have permission to create opportunities" : 'Failed to create opportunity',
+            description: isRls ? 'Check your role assignment.' : e?.message,
+            variant: 'destructive',
+          });
+        },
       });
       setShowQuickAdd(false);
       setQuickData({ company: '', contact: '', name: '', email: '', phone: '', revenue: '' });
@@ -420,8 +426,9 @@ function KanbanColumn({
   const handleEditClick = async () => {
     // Save as draft then navigate to detail
     if (quickData.name.trim() || quickData.company.trim()) {
-      const oppStage = stageMap[stage.id] || 'new';
-      const opp = await saveOpportunityMutation.mutateAsync({
+      const oppStage = stageEnumFromStage(stage);
+      try {
+        const opp = await saveOpportunityMutation.mutateAsync({
         name: quickData.name || quickData.company,
         contactName: quickData.contact,
         companyName: quickData.company,
@@ -431,8 +438,18 @@ function KanbanColumn({
         priority: quickPriority as 0 | 1 | 2 | 3,
         stageId: stage.id,
         stage: oppStage,
-      });
-      navigate(`/crm/opportunities/${opp.id}`);
+        });
+        navigate(`/crm/opportunities/${opp.id}`);
+      } catch (err) {
+        const e = err as { message?: string; code?: string };
+        const isRls = e?.code === '42501' || (e?.message || '').toLowerCase().includes('row-level security');
+        toast({
+          title: isRls ? "You don't have permission to create opportunities" : 'Failed to create opportunity',
+          description: isRls ? 'Check your role assignment.' : e?.message,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
     setShowQuickAdd(false);
     setQuickData({ company: '', contact: '', name: '', email: '', phone: '', revenue: '' });
@@ -451,7 +468,7 @@ function KanbanColumn({
         e.preventDefault();
         setIsDragOver(false);
         const oppId = e.dataTransfer.getData('text/plain');
-        if (oppId) onDrop(oppId, stage.id, stageMap[stage.id] || 'new');
+        if (oppId) onDrop(oppId, stage.id, stageEnumFromStage(stage));
       }}
     >
       {/* Column header — Odoo style */}
