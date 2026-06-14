@@ -390,7 +390,7 @@ export async function hydrateRbacFromSupabase(): Promise<void> {
 
     if (!userRolesRes.error && userRolesRes.data) {
       const ids = new Set<string>();
-      for (const r of userRolesRes.data as Array<{ user_id: string; role: string }>) {
+      for (const r of userRolesRes.data as unknown as Array<{ user_id: string; role: string }>) {
         if (r.role === 'super_admin' && r.user_id) ids.add(r.user_id);
       }
       _superAdminIds = ids;
