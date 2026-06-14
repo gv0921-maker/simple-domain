@@ -682,9 +682,22 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   const handleDrop = useCallback(
     (oppId: string, stageId: string, stage: OpportunityStage) => {
       if (!canEditOpportunities) return;
-      updateStageMutation.mutate({ id: oppId, stageId, stage });
       const stageName = pipeline.stages.find((s) => s.id === stageId)?.name;
-      toast({ title: `Moved to ${stageName}` });
+      updateStageMutation.mutate(
+        { id: oppId, stageId, stage },
+        {
+          onSuccess: () => toast({ title: `Moved to ${stageName}` }),
+          onError: (err: unknown) => {
+            const e = err as { message?: string; code?: string };
+            const isRls = e?.code === '42501' || (e?.message || '').toLowerCase().includes('row-level security');
+            toast({
+              title: isRls ? "You don't have permission to move this opportunity" : 'Failed to move opportunity',
+              description: isRls ? undefined : e?.message,
+              variant: 'destructive',
+            });
+          },
+        },
+      );
     },
     [canEditOpportunities, pipeline.stages, toast, updateStageMutation]
   );
@@ -725,10 +738,6 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     }
   }, []);
 
-  const stageMap: Record<string, OpportunityStage> = {
-    new: 'new', qualified: 'qualified', proposition: 'proposition', won: 'won', lost: 'lost' as OpportunityStage,
-  };
-
   const handleKeyboardMove = useCallback(
     (oppId: string, dir: 'left' | 'right' | 'up' | 'down') => {
       const opp = allOpportunities.find(o => o.id === oppId);
@@ -754,7 +763,7 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
       const nextStageIdx = dir === 'left' ? stageIdx - 1 : stageIdx + 1;
       const nextStage = activeStages[nextStageIdx];
       if (!nextStage) return;
-      const nextStageType = stageMap[nextStage.id] || 'new';
+      const nextStageType = stageEnumFromStage(nextStage);
       updateStageMutation.mutate({ id: oppId, stageId: nextStage.id, stage: nextStageType });
       toast({ title: `Moved to ${nextStage.name}` });
       // Re-focus the same card after re-render
