@@ -67,10 +67,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useCRMPermissions } from '@/hooks/useCRMPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { CRMSearchBar } from '@/components/crm/CRMSearchBar';
-import {
-  applyActiveFilters, groupOpportunities, type ActiveFilter,
-} from '@/lib/crm/searchFilters';
+import { FilterBar } from '@/components/filters/FilterBar';
+import { crmOpportunitiesFilterConfig } from '@/lib/filters/modules/crmOpportunities';
+import { applyFilterState, groupByField } from '@/lib/filters/clientFilter';
+import { EMPTY_FILTER_STATE, type FilterState } from '@/lib/filters/types';
 import { displayRevenue } from '@/lib/crm/fieldMask';
 
 // Map a pipeline stage (whose name may be customized, e.g. "Follow-Up",
@@ -608,21 +608,10 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
 
   // Fallback empty pipeline while loading so hooks below remain stable
   const pipeline: Pipeline = pipelineData ?? { id: '', name: '', description: '', stages: [], isDefault: false, createdAt: '', updatedAt: '' };
-  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  const [groupBy, setGroupBy] = useState<string | null>(null);
-  const [liveSearch, setLiveSearch] = useState('');
+  const [filterState, setFilterState] = useState<FilterState>(EMPTY_FILTER_STATE);
 
   const { data: allActivities = [] } = useActivities();
   const { data: allContacts = [] } = useContacts();
-  const activitiesByOpp = useMemo(() => {
-    const m: Record<string, typeof allActivities> = {};
-    for (const a of allActivities) {
-      if (a.relatedTo === 'opportunity' && a.relatedId) {
-        (m[a.relatedId] ||= []).push(a);
-      }
-    }
-    return m;
-  }, [allActivities]);
   const contactsById = useMemo(() => {
     const m: Record<string, typeof allContacts[number]> = {};
     for (const c of allContacts) m[c.id] = c;
@@ -632,15 +621,11 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   // Always show all pipeline stages (including Lost)
   const activeStages = useMemo(() => pipeline.stages, [pipeline.stages]);
 
-  // Apply all active filters + live search
+  // Apply the new module-agnostic filter state to in-memory list
   const filteredOpportunities = useMemo(
-    () => applyActiveFilters(opportunities, activeFilters, {
-      userId: user?.id,
-      userName: user?.name,
-      activitiesByOpp,
-      contactsById,
-    }, liveSearch),
-    [opportunities, activeFilters, user, activitiesByOpp, contactsById, liveSearch],
+    () => applyFilterState(opportunities as unknown as Record<string, unknown>[], filterState,
+      ['name','contactName','companyName','phone','email']) as unknown as typeof opportunities,
+    [opportunities, filterState],
   );
 
   const stageNames = useMemo(() => {
@@ -649,10 +634,14 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     return m;
   }, [pipeline.stages]);
 
-  const groupedView = useMemo(
-    () => groupOpportunities(filteredOpportunities, groupBy, contactsById, stageNames),
-    [filteredOpportunities, groupBy, contactsById, stageNames],
-  );
+  const groupedView = useMemo(() => {
+    if (!filterState.group_by) return null;
+    return groupByField(
+      filteredOpportunities as unknown as Record<string, unknown>[],
+      filterState.group_by,
+      (k) => filterState.group_by === 'stage' ? (stageNames[k] || k) : k,
+    ).map(g => ({ label: g.label, opps: g.records as unknown as typeof filteredOpportunities }));
+  }, [filteredOpportunities, filterState.group_by, stageNames]);
 
   const opportunitiesByStage = useMemo(() => {
     const grouped: Record<string, Opportunity[]> = {};
@@ -792,14 +781,9 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
             {isFetching && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </div>
 
-          <CRMSearchBar
-            activeFilters={activeFilters}
-            onActiveFiltersChange={setActiveFilters}
-            groupBy={groupBy}
-            onGroupByChange={setGroupBy}
-            liveSearch={liveSearch}
-            onLiveSearchChange={setLiveSearch}
-          />
+          <div className="flex-1 max-w-3xl">
+            <FilterBar config={crmOpportunitiesFilterConfig} value={filterState} onChange={setFilterState} />
+          </div>
 
           {/* Right: View toggle icons */}
           <div className="flex items-center gap-1">
