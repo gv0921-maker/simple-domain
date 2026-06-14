@@ -1125,7 +1125,11 @@ export default function OpportunityDetail() {
                 .slice(0, 20)
                 .map((item) => {
                   const isNoteItem = 'content' in item;
-                  const userName = (item as any).userName || 'System';
+                  const itemUserId = (item as any).userId;
+                  const storedUserName = (item as any).userName;
+                  const userName = itemUserId === user?.id && storedUserName === 'System'
+                    ? (user?.name || user?.email?.split('@')[0] || 'User')
+                    : (storedUserName || user?.name || 'User');
                   const html = isNoteItem ? (item as Note).content : ((item as any).description || (item as Activity).subject);
                   const attachments = (item as any).attachments;
                   return (
@@ -1134,7 +1138,7 @@ export default function OpportunityDetail() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-bold text-foreground">{userName}</span>
-                          <span className="text-xs text-muted-foreground">{format(parseISO(item.createdAt), 'h:mm a')}</span>
+                          <span className="text-xs text-muted-foreground">{chatterTimestamp(item.createdAt)}</span>
                         </div>
                         <div className="mt-0.5">
                           <RichContent html={html} attachments={attachments} />
@@ -1150,7 +1154,7 @@ export default function OpportunityDetail() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="font-bold text-foreground">Management</span>
-                      <span className="text-xs text-muted-foreground">{format(parseISO(opportunity.createdAt), 'h:mm a')}</span>
+                        <span className="text-xs text-muted-foreground">{chatterTimestamp(opportunity.createdAt)}</span>
                     </div>
                     <p className="text-sm text-foreground mt-0.5">Lead/Opportunity created</p>
                   </div>
