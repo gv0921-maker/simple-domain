@@ -1,19 +1,20 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { bootstrapRbac } from '@/lib/data/rbac';
+import { bootstrapRbac, isRbacHydrated, onRbacHydrated } from '@/lib/data/rbac';
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'manager' | 'user' | string;
   avatar?: string;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
+  // True once the initial Supabase session probe + RBAC hydration finish.
+  authReady: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
@@ -28,7 +29,6 @@ function mapUser(su: SupabaseUser | null | undefined): User | null {
     id: su.id,
     email,
     name: (meta.name as string) || (meta.full_name as string) || email.split('@')[0] || 'User',
-    role: ((meta.role as string) ?? 'user'),
     avatar: meta.avatar_url as string | undefined,
   };
 }
@@ -36,8 +36,11 @@ function mapUser(su: SupabaseUser | null | undefined): User | null {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [rbacReady, setRbacReady] = useState(isRbacHydrated());
 
   useEffect(() => {
+    const unsub = onRbacHydrated(() => setRbacReady(true));
     // Register listener FIRST to avoid missing events.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
       const mapped = mapUser(session?.user);
@@ -45,7 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(!!session);
       if (mapped) {
         // Fire-and-forget: hydrate RBAC cache after sign-in.
-        void bootstrapRbac(mapped.id);
+        setRbacReady(false);
+        void bootstrapRbac(mapped.id).then(() => setRbacReady(true));
+      } else {
+        // No user → nothing to hydrate; guards can proceed (to /login).
+        setRbacReady(true);
       }
     });
 
@@ -54,13 +61,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mapped = mapUser(session?.user);
       setUser(mapped);
       setIsAuthenticated(!!session);
+      setSessionReady(true);
       if (mapped) {
-        void bootstrapRbac(mapped.id);
+        setRbacReady(false);
+        void bootstrapRbac(mapped.id).then(() => setRbacReady(true));
+      } else {
+        setRbacReady(true);
       }
     });
 
     return () => {
       sub.subscription.unsubscribe();
+      unsub();
     };
   }, []);
 
@@ -76,7 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, authReady: sessionReady && rbacReady, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
