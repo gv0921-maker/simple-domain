@@ -8974,6 +8974,32 @@ export type Database = {
         Args: { p_gr_line_id: string }
         Returns: string[]
       }
+      get_activity_log_with_users: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_record_id: string
+          p_record_type: string
+        }
+        Returns: {
+          action_type: string
+          changed_at: string
+          changed_by: string
+          changed_by_email: string
+          changed_by_name: string
+          deleted_at: string
+          deleted_by: string
+          field_name: string
+          id: string
+          is_deleted: boolean
+          new_value: string
+          note_text: string
+          old_value: string
+          record_id: string
+          record_type: string
+          total_count: number
+        }[]
+      }
       get_current_employee_id: { Args: never; Returns: string }
       get_current_fy_label: { Args: never; Returns: string }
       get_dashboard_role: { Args: never; Returns: string }

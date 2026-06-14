@@ -38,16 +38,32 @@ export async function fetchActivityLog(
   limit = 20,
   offset = 0,
 ): Promise<{ entries: ActivityLogEntry[]; total: number }> {
-  const { data, error, count } = await supabase
-    .from('activity_log' as any)
-    .select('*', { count: 'exact' })
-    .eq('record_type', recordType)
-    .eq('record_id', recordId)
-    .eq('is_deleted', false)
-    .order('changed_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  const { data, error } = await supabase.rpc('get_activity_log_with_users' as any, {
+    p_record_type: recordType,
+    p_record_id: recordId,
+    p_limit: limit,
+    p_offset: offset,
+  });
   if (error) throw error;
-  return { entries: ((data ?? []) as unknown) as ActivityLogEntry[], total: count ?? 0 };
+  const rows = (data ?? []) as any[];
+  const total = rows[0]?.total_count ? Number(rows[0].total_count) : rows.length;
+  const entries: ActivityLogEntry[] = rows.map((r) => ({
+    id: r.id,
+    record_type: r.record_type,
+    record_id: r.record_id,
+    action_type: r.action_type,
+    field_name: r.field_name,
+    old_value: r.old_value,
+    new_value: r.new_value,
+    note_text: r.note_text,
+    changed_by: r.changed_by,
+    changed_at: r.changed_at,
+    is_deleted: r.is_deleted,
+    deleted_by: r.deleted_by,
+    deleted_at: r.deleted_at,
+    changed_by_name: r.changed_by_name,
+  }));
+  return { entries, total };
 }
 
 function stringify(v: unknown): string | null {
