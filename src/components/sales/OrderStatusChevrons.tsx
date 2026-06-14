@@ -46,10 +46,11 @@ export function OrderStatusChevrons({ status, onStepClick }: Props) {
 }
 
 /** Allowed manual transitions. Keeps the workflow strictly forward (or cancel). */
-export function canTransition(from: SalesOrderStatus, to: SalesOrderStatus, role?: string): boolean {
-  const isAdmin = role === 'admin' || role === 'super_admin';
-  const isManager = role === 'manager' || isAdmin;
-  const isWarehouse = role === 'warehouse' || isAdmin || isManager;
+export function canTransition(from: SalesOrderStatus, to: SalesOrderStatus, roles: string[] = []): boolean {
+  const has = (r: string) => roles.includes(r);
+  const isAdmin = has('admin') || has('super_admin');
+  const isManager = has('manager') || has('sales_manager') || isAdmin;
+  const isWarehouse = has('warehouse') || has('warehouse_operator') || isAdmin || isManager;
 
   if (to === 'cancelled') return isManager;
 
