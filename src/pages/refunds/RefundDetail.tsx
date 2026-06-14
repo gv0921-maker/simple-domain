@@ -8,6 +8,7 @@ import { ArrowLeft, Printer } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useRefund } from '@/hooks/refunds';
 import { REFUND_MODE_LABEL } from '@/lib/services/refunds';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 
 const fmtINR = (n: number) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
@@ -60,6 +61,8 @@ export default function RefundDetail() {
             {r.notes && <div className="text-muted-foreground mt-2">{r.notes}</div>}
           </CardContent>
         </Card>
+
+        <ActivityChatter recordType="refund" recordId={r.id} />
       </div>
     </AppLayout>
   );

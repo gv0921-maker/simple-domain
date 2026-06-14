@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import {
   useCorrectionOrder,
@@ -304,6 +305,8 @@ export default function CorrectionOrderDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        <ActivityChatter recordType="correction_order" recordId={id} />
       </div>
 
       <QCDialog

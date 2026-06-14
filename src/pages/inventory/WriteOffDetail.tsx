@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -304,6 +305,8 @@ export default function WriteOffDetail() {
             </div>
           )}
         </div>
+
+        {id && <ActivityChatter recordType="write_off" recordId={id} />}
 
         {/* Add items dialog */}
         <Dialog open={addOpen} onOpenChange={setAddOpen}>

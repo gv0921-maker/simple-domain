@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { INVOICING_NAV } from '@/lib/navigation/invoicing';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -331,6 +332,8 @@ export default function InvoiceDetail() {
         />
 
         <InvoiceReturnsSection invoiceId={invoice.id} />
+
+        <ActivityChatter recordType="invoice" recordId={invoice.id} />
       </div>
     </AppLayout>
   );

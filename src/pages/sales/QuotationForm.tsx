@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -631,6 +632,12 @@ export default function QuotationForm() {
             )}
         </div>
       </div>
+
+      {!isNew && id && (
+        <div className="px-6 pb-6">
+          <ActivityChatter recordType="quotation" recordId={id} />
+        </div>
+      )}
 
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>

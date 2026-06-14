@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -726,6 +727,7 @@ export default function ProductDetail() {
             </TabsContent>
           )}
         </Tabs>
+        {!isNew && id && <ActivityChatter recordType="product" recordId={id} />}
       </div>
     </AppLayout>
   );

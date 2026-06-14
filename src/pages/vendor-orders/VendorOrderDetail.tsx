@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -265,6 +266,8 @@ export default function VendorOrderDetail() {
             </Button>
           )}
         </div>
+
+        {id && <ActivityChatter recordType="vendor_order" recordId={id} />}
 
         <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
           <DialogContent>

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { INVENTORY_NAV } from '@/lib/navigation';
 import { useDeliveryNote, useMarkDeliveryNoteDelivered } from '@/hooks/inventory/deliveryNotes';
 import { useConfirmDelivery } from '@/hooks/sales/deliveryNotes';
@@ -185,6 +186,8 @@ export default function DeliveryNoteDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        <ActivityChatter recordType="delivery_note" recordId={note.id} />
       </div>
     </AppLayout>
   );

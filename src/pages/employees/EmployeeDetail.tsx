@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -337,6 +338,7 @@ export default function EmployeeDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+        {id && <ActivityChatter recordType="employee" recordId={id} />}
       </div>
     </AppLayout>
   );

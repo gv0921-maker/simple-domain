@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ActivityChatter } from '@/components/shared/ActivityChatter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -508,6 +509,7 @@ export default function CRMContactDetail() {
             )}
           </div>
         </div>
+        {id && <ActivityChatter recordType="crm_contact" recordId={id} />}
       </div>
     </AppLayout>
     </>
