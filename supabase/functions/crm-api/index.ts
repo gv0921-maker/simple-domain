@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
       if (ie) { logServerError("insert", ie); return err("Internal server error", 500); }
       // Audit log
       await supabase.rpc("insert_audit_log", {
-        _user_id: claimsData.user.id,
+        
         _user_name: claimsData.user.email || "",
         _action: "create",
         _resource: table,
@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
       const { data, error: ue } = await supabase.from(table).update(body).eq("id", resourceId).select().single();
       if (ue) { logServerError("update", ue); return err("Internal server error", 500); }
       await supabase.rpc("insert_audit_log", {
-        _user_id: claimsData.user.id,
+        
         _user_name: claimsData.user.email || "",
         _action: "update",
         _resource: table,
@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
       const { error: de } = await supabase.from(table).delete().eq("id", resourceId);
       if (de) { logServerError("delete", de); return err("Internal server error", 500); }
       await supabase.rpc("insert_audit_log", {
-        _user_id: claimsData.user.id,
+        
         _user_name: claimsData.user.email || "",
         _action: "delete",
         _resource: table,
