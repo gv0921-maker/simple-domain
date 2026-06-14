@@ -186,6 +186,8 @@ export default function DeliveryNoteDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        <ActivityChatter recordType="delivery_note" recordId={note.id} />
       </div>
     </AppLayout>
   );
