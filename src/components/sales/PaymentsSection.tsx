@@ -57,8 +57,7 @@ interface Props {
 
 export function PaymentsSection({ salesOrderId }: Props) {
   const { toast } = useToast();
-  const { user } = useAuth();
-  const isSuperAdmin = (user as any)?.role === 'super_admin';
+  const { isSuperAdmin } = useRoleCheck();
 
   const { data: summary } = usePaymentSummary(salesOrderId);
   const { data: payments = [] } = useSalesOrderPayments(salesOrderId);
