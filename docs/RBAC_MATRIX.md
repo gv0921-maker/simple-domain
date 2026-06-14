@@ -102,3 +102,39 @@ Legend: **R**=SELECT, **C**=INSERT, **U**=UPDATE, **D**=DELETE, **—**=no acces
 - Helper functions live in `public` schema, SECURITY DEFINER, `SET search_path = public`, STABLE.
 - Always use `public.has_any_role(auth.uid(), ARRAY[...])` — never re-query `user_roles` inline (recursion risk).
 - DELETE-blocking policy template: `CREATE POLICY "<table>_no_delete" ON public.<table> FOR DELETE USING (false);`
+---
+
+## UI gating in place (Phase 8 Batch 2)
+
+The following route guards are enforced in `src/App.tsx`. Component-level
+gating uses `<RoleGate>` (see `src/components/auth/RoleGate.tsx`) and the
+`useRoleCheck()` hook (see `src/hooks/auth/useRoleCheck.ts`) as the single
+source of truth for capability flags.
+
+| Route prefix                       | Required roles                       |
+| ---------------------------------- | ------------------------------------ |
+| `/payroll/*`                       | super_admin                          |
+| `/appraisals/*`                    | super_admin                          |
+| `/settings/payroll`                | super_admin                          |
+| `/settings/company`                | super_admin                          |
+| `/settings/numbering`              | super_admin                          |
+| `/settings/payment-accounts`       | super_admin                          |
+| `/settings/work-schedules`         | super_admin                          |
+| `/settings/holidays`               | super_admin                          |
+| `/settings/audit`, `/audit-logs`   | super_admin                          |
+| `/settings/vendors`                | admin, super_admin                   |
+| `/leave/admin/*`                   | super_admin                          |
+| `/attendance/admin/*`              | admin, super_admin, hr_manager       |
+| `/shop-floor/*`                    | factory_incharge, admin, super_admin |
+
+Capabilities exposed by `useRoleCheck()` (consume these from `<RoleGate capability=… />`
+or directly in components):
+
+`isSuperAdmin`, `isAdminOrSuper`, `isAdminOrHR`, `isFactoryIncharge`,
+`canAccessPayroll`, `canAccessAppraisals`, `canAccessAuditLogs`,
+`canManageSettings`, `canManagePayrollSettings`, `canManageCompanySettings`,
+`canManageNumbering`, `canManageHolidays`, `canManageWorkSchedules`,
+`canManagePaymentAccounts`, `canManageVendors`, `canAccessShopFloor`,
+`canApproveLeave`, `canVoidInvoice`, `canVoidCreditNote`,
+`canProcessRefund`, `canApproveReturn`, `canApproveWriteOff`,
+`canApproveSkipStockCount`, `canOverrideAdvanceGate`.

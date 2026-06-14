@@ -120,6 +120,7 @@ import WorkSchedulesSettings from "@/pages/settings/WorkSchedulesSettings";
 import HolidaysSettings from "@/pages/settings/HolidaysSettings";
 import PayrollSettingsPage from "@/pages/settings/PayrollSettings";
 import { SuperAdminRoute } from "@/components/SuperAdminRoute";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 import OrgChartPage from "@/pages/employees/OrgChart";
 import UnifiedCalendarPage from "@/pages/calendar/UnifiedCalendarPage";
 
@@ -307,6 +308,7 @@ const App = () => (
             <Route path="/sales/quotations" element={<ProtectedRoute><QuotationsList /></ProtectedRoute>} />
             <Route path="/sales/quotations/new" element={<ProtectedRoute><QuotationForm /></ProtectedRoute>} />
             <Route path="/sales/quotations/:id" element={<ProtectedRoute><QuotationForm /></ProtectedRoute>} />
+            <Route path="/sales/quotations/:id/edit" element={<ProtectedRoute><QuotationForm /></ProtectedRoute>} />
             <Route path="/sales/orders" element={<ProtectedRoute><SalesOrdersList /></ProtectedRoute>} />
             <Route path="/sales/orders/new" element={<ProtectedRoute><SalesOrderForm /></ProtectedRoute>} />
             <Route path="/sales/orders/:id" element={<ProtectedRoute><SalesOrderForm /></ProtectedRoute>} />
@@ -335,19 +337,20 @@ const App = () => (
             <Route path="/settings/studio" element={<ProtectedRoute><StudioEditor /></ProtectedRoute>} />
             <Route path="/settings/users" element={<ProtectedRoute><UsersManagement /></ProtectedRoute>} />
             <Route path="/settings/roles" element={<ProtectedRoute><RolesManagement /></ProtectedRoute>} />
-            <Route path="/settings/audit" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
+            <Route path="/settings/audit" element={<RouteGuard superAdmin denyMessage="Audit Logs are restricted to Super Admin."><AuditLogs /></RouteGuard>} />
+            <Route path="/audit-logs" element={<RouteGuard superAdmin denyMessage="Audit Logs are restricted to Super Admin."><AuditLogs /></RouteGuard>} />
             <Route path="/settings/backups" element={<ProtectedRoute><BackupsSettings /></ProtectedRoute>} />
-            <Route path="/settings/numbering" element={<ProtectedRoute><NumberingSettings /></ProtectedRoute>} />
+            <Route path="/settings/numbering" element={<RouteGuard superAdmin denyMessage="Numbering settings are restricted to Super Admin."><NumberingSettings /></RouteGuard>} />
             <Route path="/settings/crm-pipelines" element={<ProtectedRoute><CRMPipelinesSettings /></ProtectedRoute>} />
             <Route path="/settings/crm-backup" element={<ProtectedRoute><CRMBackupSettings /></ProtectedRoute>} />
             <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
-            <Route path="/settings/company" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
-            <Route path="/settings/payment-accounts" element={<ProtectedRoute><PaymentAccountsSettings /></ProtectedRoute>} />
-            <Route path="/settings/vendors" element={<ProtectedRoute><VendorsSettings /></ProtectedRoute>} />
-            <Route path="/settings/work-schedules" element={<ProtectedRoute><WorkSchedulesSettings /></ProtectedRoute>} />
-            <Route path="/settings/holidays" element={<ProtectedRoute><HolidaysSettings /></ProtectedRoute>} />
+            <Route path="/settings/company" element={<RouteGuard superAdmin denyMessage="Company settings are restricted to Super Admin."><CompanySettings /></RouteGuard>} />
+            <Route path="/settings/payment-accounts" element={<RouteGuard superAdmin denyMessage="Payment Accounts are restricted to Super Admin."><PaymentAccountsSettings /></RouteGuard>} />
+            <Route path="/settings/vendors" element={<RouteGuard adminOrSuper denyMessage="Vendors require Admin access."><VendorsSettings /></RouteGuard>} />
+            <Route path="/settings/work-schedules" element={<RouteGuard superAdmin denyMessage="Work Schedules are restricted to Super Admin."><WorkSchedulesSettings /></RouteGuard>} />
+            <Route path="/settings/holidays" element={<RouteGuard superAdmin denyMessage="Holidays are restricted to Super Admin."><HolidaysSettings /></RouteGuard>} />
             <Route path="/settings/payroll" element={<SuperAdminRoute label="Payroll Settings"><PayrollSettingsPage /></SuperAdminRoute>} />
 
             {/* Vendor Orders module */}
@@ -409,8 +412,8 @@ const App = () => (
             <Route path="/attendance/clock-in" element={<ProtectedRoute><ClockIn /></ProtectedRoute>} />
             <Route path="/attendance/my" element={<ProtectedRoute><MyAttendance /></ProtectedRoute>} />
             <Route path="/attendance/team" element={<ProtectedRoute><TeamAttendance /></ProtectedRoute>} />
-            <Route path="/attendance/admin" element={<ProtectedRoute><AdminAttendance /></ProtectedRoute>} />
-            <Route path="/attendance/admin/import" element={<ProtectedRoute><AdminImport /></ProtectedRoute>} />
+            <Route path="/attendance/admin" element={<RouteGuard requiredRoles={["admin","super_admin","hr_manager"]} denyMessage="Attendance admin requires Admin or HR."><AdminAttendance /></RouteGuard>} />
+            <Route path="/attendance/admin/import" element={<RouteGuard requiredRoles={["admin","super_admin","hr_manager"]} denyMessage="Attendance admin requires Admin or HR."><AdminImport /></RouteGuard>} />
             <Route path="/attendance/locations" element={<ProtectedRoute><LocationsPage /></ProtectedRoute>} />
             <Route path="/attendance/holidays" element={<ProtectedRoute><HolidaysPage /></ProtectedRoute>} />
             <Route path="/attendance/work-schedules" element={<ProtectedRoute><WorkSchedulesPage /></ProtectedRoute>} />
@@ -422,12 +425,12 @@ const App = () => (
             <Route path="/leave/apply" element={<ProtectedRoute><ApplyLeave /></ProtectedRoute>} />
             <Route path="/leave/team" element={<ProtectedRoute><TeamLeaves /></ProtectedRoute>} />
             <Route path="/leave/calendar" element={<ProtectedRoute><LeaveCalendar /></ProtectedRoute>} />
-            <Route path="/leave/admin/requests" element={<ProtectedRoute><AdminRequests /></ProtectedRoute>} />
-            <Route path="/leave/admin/approvals" element={<ProtectedRoute><AdminApprovals /></ProtectedRoute>} />
-            <Route path="/leave/admin/balances" element={<ProtectedRoute><AdminBalances /></ProtectedRoute>} />
-            <Route path="/leave/admin/entitlements" element={<ProtectedRoute><AdminEntitlements /></ProtectedRoute>} />
-            <Route path="/leave/admin/types" element={<ProtectedRoute><AdminLeaveTypes /></ProtectedRoute>} />
-            <Route path="/leave/admin/comp-off" element={<ProtectedRoute><AdminCompOff /></ProtectedRoute>} />
+            <Route path="/leave/admin/requests" element={<RouteGuard superAdmin denyMessage="Leave admin is restricted to Super Admin."><AdminRequests /></RouteGuard>} />
+            <Route path="/leave/admin/approvals" element={<RouteGuard superAdmin denyMessage="Leave admin is restricted to Super Admin."><AdminApprovals /></RouteGuard>} />
+            <Route path="/leave/admin/balances" element={<RouteGuard superAdmin denyMessage="Leave admin is restricted to Super Admin."><AdminBalances /></RouteGuard>} />
+            <Route path="/leave/admin/entitlements" element={<RouteGuard superAdmin denyMessage="Leave admin is restricted to Super Admin."><AdminEntitlements /></RouteGuard>} />
+            <Route path="/leave/admin/types" element={<RouteGuard superAdmin denyMessage="Leave admin is restricted to Super Admin."><AdminLeaveTypes /></RouteGuard>} />
+            <Route path="/leave/admin/comp-off" element={<RouteGuard superAdmin denyMessage="Leave admin is restricted to Super Admin."><AdminCompOff /></RouteGuard>} />
             <Route path="/leave/:id" element={<ProtectedRoute><LeaveDetail /></ProtectedRoute>} />
 
             {/* Work schedule (Phase 7 Batch 2) */}
@@ -478,9 +481,9 @@ const App = () => (
             <Route path="/manufacturing/work-centers/new" element={<ProtectedRoute><WorkCenterForm /></ProtectedRoute>} />
             <Route path="/manufacturing/work-centers/:id/edit" element={<ProtectedRoute><WorkCenterForm /></ProtectedRoute>} />
             <Route path="/manufacturing/planning" element={<ProtectedRoute><ProductionPlanning /></ProtectedRoute>} />
-            <Route path="/shop-floor" element={<ProtectedRoute><ShopFloorHome /></ProtectedRoute>} />
-            <Route path="/shop-floor/work-orders/:id" element={<ProtectedRoute><ShopFloorWorkOrderDetail /></ProtectedRoute>} />
-            <Route path="/shop-floor/factory-inventory" element={<ProtectedRoute><FactoryInventoryPage /></ProtectedRoute>} />
+            <Route path="/shop-floor" element={<RouteGuard requiredRoles={["factory_incharge","admin","super_admin"]} denyMessage="Shop Floor requires Factory Incharge or Admin."><ShopFloorHome /></RouteGuard>} />
+            <Route path="/shop-floor/work-orders/:id" element={<RouteGuard requiredRoles={["factory_incharge","admin","super_admin"]} denyMessage="Shop Floor requires Factory Incharge or Admin."><ShopFloorWorkOrderDetail /></RouteGuard>} />
+            <Route path="/shop-floor/factory-inventory" element={<RouteGuard requiredRoles={["factory_incharge","admin","super_admin"]} denyMessage="Shop Floor requires Factory Incharge or Admin."><FactoryInventoryPage /></RouteGuard>} />
             <Route path="/manufacturing/shop-floor" element={<ProtectedRoute><ShopFloor /></ProtectedRoute>} />
 
             {/* Invoices module */}

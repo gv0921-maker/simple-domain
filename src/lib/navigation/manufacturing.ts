@@ -8,11 +8,3 @@ export const MANUFACTURING_NAV = [
   { label: 'Shop Floor', href: '/manufacturing/shop-floor' },
   { label: 'Reports', href: '/manufacturing/reports' },
 ];
-
-// PLM Module navigation
-export const PLM_NAV = [
-  { label: 'Overview', href: '/plm' },
-  { label: 'Products', href: '/plm/products' },
-  { label: 'ECOs', href: '/plm/eco' },
-  { label: 'Versions', href: '/plm/versions' },
-];
