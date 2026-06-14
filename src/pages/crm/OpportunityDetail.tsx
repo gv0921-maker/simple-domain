@@ -76,6 +76,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { StarRating } from '@/components/crm/CRMKanbanBoard';
 import { CRM_NAV } from '@/lib/navigation/crm';
+import { LogNotesPanel } from '@/components/shared/LogNotesPanel';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
