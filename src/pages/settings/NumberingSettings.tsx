@@ -15,6 +15,7 @@ import {
 } from '@/hooks/numbering';
 import { previewNextNumber, type DocumentType } from '@/lib/services/numbering/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import { Navigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -47,8 +48,7 @@ function fyDisplay(label: string): string {
 
 export default function NumberingSettings() {
   const { user } = useAuth();
-  const isSuperAdmin = (user as any)?.role === 'super_admin'
-    || (Array.isArray((user as any)?.roles) && (user as any).roles.includes('super_admin'));
+  const { isSuperAdmin } = useRoleCheck();
   const { toast } = useToast();
 
   const { data: fy } = useCurrentFY();
