@@ -15,6 +15,7 @@ import { Navigate } from 'react-router-dom';
 import { Pencil, Users, History } from 'lucide-react';
 import { SETTINGS_NAV } from '@/lib/navigation/settings';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleCheck } from '@/hooks/auth/useRoleCheck';
 import { useToast } from '@/hooks/use-toast';
 import {
   useAllEmployeeSchedules, useEmployeeScheduleHistory,
@@ -40,7 +41,7 @@ const fmtDays = (days: number[]) =>
 
 export default function WorkSchedulesSettings() {
   const { user } = useAuth();
-  const isSuperAdmin = (user as any)?.role === 'super_admin';
+  const { isSuperAdmin, loading: rolesLoading } = useRoleCheck();
 
   const { data: rows = [], isLoading } = useAllEmployeeSchedules();
 
@@ -48,6 +49,7 @@ export default function WorkSchedulesSettings() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [historyTarget, setHistoryTarget] = useState<EmployeeWithSchedule | null>(null);
 
+  if (rolesLoading) return null;
   if (!isSuperAdmin) return <Navigate to="/" replace />;
 
   return (
