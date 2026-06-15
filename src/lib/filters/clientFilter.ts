@@ -1,7 +1,7 @@
 // Apply a FilterState to an in-memory array of records.
 // Used by CRM pipeline (already fetches all opportunities client-side).
 
-import type { FilterState, FilterGroup, SortSpec } from './types';
+import type { FilterState, FilterGroup, SortSpec, TokenContext } from './types';
 
 function getField(rec: Record<string, unknown>, key: string): unknown {
   // Support a small set of virtual computed fields.
@@ -21,6 +21,20 @@ function getField(rec: Record<string, unknown>, key: string): unknown {
 function startOfWeek(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - x.getDay()); return x; }
 function startOfMonth(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(1); return x; }
 function startOfToday() { const x = new Date(); x.setHours(0,0,0,0); return x; }
+
+function resolveToken(v: unknown, ctx: TokenContext | undefined): unknown {
+  if (!ctx) return v;
+  if (v === '__current_user__') return ctx.currentUserName ?? ctx.currentUserId ?? '';
+  if (v === '__current_user_id__') return ctx.currentUserId ?? '';
+  if (v === '__today__') return new Date().toISOString().slice(0, 10);
+  if (Array.isArray(v)) return v.map((x) => resolveToken(x, ctx));
+  return v;
+}
+
+export function resolveGroupTokens(groups: FilterGroup[], ctx?: TokenContext): FilterGroup[] {
+  if (!ctx) return groups;
+  return groups.map((g) => ({ ...g, value: resolveToken(g.value, ctx) as FilterGroup['value'] }));
+}
 
 function matchOne(rec: Record<string, unknown>, g: FilterGroup): boolean {
   const v = getField(rec, g.field);
@@ -79,6 +93,7 @@ export function applyFilterState<T extends Record<string, unknown>>(
   records: T[],
   state: FilterState,
   textSearchFields: string[] = [],
+  tokenCtx?: TokenContext,
 ): T[] {
   let out = records;
 
@@ -91,7 +106,8 @@ export function applyFilterState<T extends Record<string, unknown>>(
   }
 
   if (state.groups?.length) {
-    out = out.filter(r => state.groups.every(g => matchOne(r, g)));
+    const resolved = resolveGroupTokens(state.groups, tokenCtx);
+    out = out.filter(r => resolved.every(g => matchOne(r, g)));
   }
 
   if (state.sort_by) {
@@ -127,4 +143,29 @@ export function groupByField<T extends Record<string, unknown>>(
       label: key === '__none__' ? 'Undefined' : (labelFor ? labelFor(key) : key),
       records: recs,
     }));
+}
+
+export interface NestedGroup<T> {
+  label: string;
+  key: string;
+  field: string;
+  records: T[];
+  children?: NestedGroup<T>[];
+}
+
+export function groupByFieldsNested<T extends Record<string, unknown>>(
+  records: T[],
+  fields: string[],
+  labelFor?: (field: string, key: string) => string,
+): NestedGroup<T>[] {
+  if (!fields.length) return [];
+  const [first, ...rest] = fields;
+  const top = groupByField(records, first, (k) => labelFor ? labelFor(first, k) : k);
+  return top.map((g) => ({
+    label: g.label,
+    key: g.key,
+    field: first,
+    records: g.records,
+    children: rest.length ? groupByFieldsNested(g.records, rest, labelFor) : undefined,
+  }));
 }

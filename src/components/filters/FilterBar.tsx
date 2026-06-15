@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, X, Star, Trash2, Check, ArrowUpDown, Group, ChevronDown } from 'lucide-react';
+import { Search, X, Star, Trash2, Check, ArrowUpDown, Group, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -72,9 +72,6 @@ export function FilterBar({ config, value, onChange }: Props) {
     config.fields.find(f => f.key === k)?.label
       ?? config.groupByFields?.find(x => x === k) ?? k, [config]);
 
-  const addGroup = useCallback((g: FilterGroup) => {
-    onChange({ ...value, groups: [...(value.groups || []), g] });
-  }, [value, onChange]);
   const removeGroup = useCallback((id: string) => {
     onChange({ ...value, groups: value.groups.filter(g => g.id !== id) });
   }, [value, onChange]);
@@ -83,13 +80,29 @@ export function FilterBar({ config, value, onChange }: Props) {
   }, [onChange]);
 
   const setSort = (s?: SortSpec) => onChange({ ...value, sort_by: s });
-  const setGroupBy = (g?: string) => onChange({ ...value, group_by: g });
   const setSearch = (q: string) => onChange({ ...value, search: q });
+
+  // Multi-level group-by helpers — `group_by_fields` is the source of truth;
+  // legacy `group_by` is treated as a single-element chain.
+  const groupChain = useMemo<string[]>(() => {
+    if (value.group_by_fields && value.group_by_fields.length) return value.group_by_fields;
+    return value.group_by ? [value.group_by] : [];
+  }, [value.group_by_fields, value.group_by]);
+
+  const setGroupChain = (chain: string[]) => {
+    onChange({ ...value, group_by_fields: chain.length ? chain : undefined, group_by: undefined });
+  };
+  const addGroupBy = (k: string) => {
+    if (groupChain.includes(k)) return;
+    setGroupChain([...groupChain, k]);
+  };
+  const removeGroupBy = (k: string) => setGroupChain(groupChain.filter(x => x !== k));
+  const clearGroupBy = () => setGroupChain([]);
 
   const sortFields = useMemo(() => config.sortFields ?? config.fields.map(f => f.key), [config]);
   const groupFields = useMemo(() => config.groupByFields ?? [], [config]);
 
-  const activeCount = (value.groups?.length || 0) + (value.sort_by ? 1 : 0) + (value.group_by ? 1 : 0);
+  const activeCount = (value.groups?.length || 0) + (value.sort_by ? 1 : 0) + (groupChain.length ? 1 : 0);
 
   return (
     <div className="space-y-2">
@@ -106,31 +119,92 @@ export function FilterBar({ config, value, onChange }: Props) {
 
         <FilterPopover
           config={config}
+          value={value}
+          onChange={onChange}
           open={filterOpen}
           onOpenChange={setFilterOpen}
-          onAdd={addGroup}
         />
+
+        {/* Inline active-filter chips — sit right next to Filters button */}
+        {value.groups?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {value.groups.map(g => (
+              <Badge
+                key={g.id}
+                variant="secondary"
+                className="gap-1 text-xs h-6"
+                title={`${fieldLabel(g.field)} ${g.operator} ${formatValue(g.value)}`}
+              >
+                <span className="font-medium">{fieldLabel(g.field)}:</span>
+                <span>{formatValue(g.value) || g.operator}</span>
+                <button onClick={() => removeGroup(g.id)} className="hover:text-destructive ml-0.5">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {groupFields.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+              <Button variant="outline" size="sm" className="h-8 gap-1 text-xs max-w-[260px]">
                 <Group className="h-3.5 w-3.5" /> Group By
-                {value.group_by && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{fieldLabel(value.group_by)}</Badge>}
+                {groupChain.length > 0 && (
+                  <span className="flex items-center gap-0.5 ml-1 truncate">
+                    {groupChain.map((k, i) => (
+                      <span key={k} className="flex items-center gap-0.5">
+                        {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                        <Badge variant="secondary" className="h-4 px-1 text-[10px]">{fieldLabel(k)}</Badge>
+                      </span>
+                    ))}
+                  </span>
+                )}
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem onClick={() => setGroupBy(undefined)}>
-                <X className="h-3 w-3 mr-2" /> None
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {groupFields.map(k => (
-                <DropdownMenuItem key={k} onClick={() => setGroupBy(k)}>
-                  {value.group_by === k && <Check className="h-3 w-3 mr-2" />}
-                  <span className={value.group_by === k ? '' : 'ml-5'}>{fieldLabel(k)}</span>
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent align="start" className="w-60">
+              {groupChain.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Active chain
+                  </DropdownMenuLabel>
+                  <div className="px-2 pb-1 space-y-1">
+                    {groupChain.map((k, i) => (
+                      <div key={k} className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-1">
+                          <span className="text-muted-foreground text-[10px]">{i + 1}.</span>
+                          {fieldLabel(k)}
+                        </span>
+                        <button className="text-muted-foreground hover:text-destructive"
+                          onClick={() => removeGroupBy(k)}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <DropdownMenuItem onClick={clearGroupBy} className="text-xs">
+                    <X className="h-3 w-3 mr-2" /> Clear all
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                Add level
+              </DropdownMenuLabel>
+              {groupFields.map(k => {
+                const active = groupChain.includes(k);
+                return (
+                  <DropdownMenuItem
+                    key={k}
+                    disabled={active}
+                    onClick={() => addGroupBy(k)}
+                  >
+                    {active && <Check className="h-3 w-3 mr-2" />}
+                    <span className={active ? '' : 'ml-5'}>{fieldLabel(k)}</span>
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -205,21 +279,6 @@ export function FilterBar({ config, value, onChange }: Props) {
           <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clearAll}>Clear all</Button>
         )}
       </div>
-
-      {value.groups?.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {value.groups.map(g => (
-            <Badge key={g.id} variant="secondary" className="gap-1 text-xs">
-              <span className="font-medium">{fieldLabel(g.field)}</span>
-              <span className="text-muted-foreground">{g.operator}</span>
-              <span>{formatValue(g.value)}</span>
-              <button onClick={() => removeGroup(g.id)} className="hover:text-destructive">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
 
       <SaveFilterDialog
         open={saveOpen}
