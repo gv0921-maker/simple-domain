@@ -168,11 +168,11 @@ Deno.serve(async (req) => {
 
     // Activity log (best-effort)
     await admin.from('activity_log').insert([{
-      user_id: userId,
-      action: 'import',
-      entity_type: body.module,
-      entity_id: jobId,
-      details: { total, succeeded, failed, file_name: body.fileName },
+      changed_by: userId,
+      action_type: 'import',
+      record_type: body.module,
+      record_id: jobId ?? '00000000-0000-0000-0000-000000000000',
+      note_text: `Import: ${succeeded}/${total} succeeded, ${failed} failed${body.fileName ? ` (${body.fileName})` : ''}`,
     }]).then(() => null, () => null);
   }
 
