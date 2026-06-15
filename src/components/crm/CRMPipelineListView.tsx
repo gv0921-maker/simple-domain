@@ -120,6 +120,70 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
 
   const totalRevenue = filtered.reduce((s, o) => s + o.expectedRevenue, 0);
 
+  const renderLeafRow = (opp: typeof filtered[number], indent = 0) => {
+    const stageName = pipeline.stages.find(s => s.id === opp.stageId)?.name || opp.stage;
+    const stageColor = pipeline.stages.find(s => s.id === opp.stageId)?.color;
+    return (
+      <TableRow
+        key={opp.id}
+        className={cn('cursor-pointer hover:bg-primary/5 text-[13px]', selected.has(opp.id) && 'bg-primary/5')}
+        onClick={() => navigate(`/crm/opportunities/${opp.id}`)}
+      >
+        <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={selected.has(opp.id)}
+            onCheckedChange={() => {
+              const next = new Set(selected);
+              next.has(opp.id) ? next.delete(opp.id) : next.add(opp.id);
+              setSelected(next);
+            }}
+          />
+        </TableCell>
+        <TableCell style={{ paddingLeft: indent ? `${indent * 16 + 16}px` : undefined }}>
+          <span className="font-medium">{opp.name}</span>
+        </TableCell>
+        <TableCell className="text-muted-foreground">{opp.contactName || '—'}</TableCell>
+        <TableCell className="text-muted-foreground">{opp.salesTeam || '—'}</TableCell>
+        <TableCell className="text-right font-medium">{displayRevenue(opp.expectedRevenue, user?.id, 'crm')}</TableCell>
+        <TableCell>
+          <Badge variant="outline" className="text-[11px] capitalize font-medium border-0 px-2 py-0.5"
+            style={{ backgroundColor: stageColor ? `${stageColor}20` : undefined, color: stageColor || undefined }}>
+            {stageName}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-muted-foreground">
+          {format(parseISO(opp.expectedCloseDate), 'MM/dd/yyyy')}
+        </TableCell>
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <StarRating value={opp.priority} readonly />
+        </TableCell>
+      </TableRow>
+    );
+  };
+
+  const renderNestedGroups = (
+    groups: NestedGroup<typeof filtered[number] & Record<string, unknown>>[],
+    depth: number,
+  ): React.ReactNode => {
+    const shades = ['bg-muted/50', 'bg-muted/35', 'bg-muted/25'];
+    return groups.map((g) => (
+      <React.Fragment key={`grp-${depth}-${g.field}-${g.key}`}>
+        <TableRow className={cn(shades[Math.min(depth, shades.length - 1)], 'hover:bg-muted/40')}>
+          <TableCell
+            colSpan={8}
+            className="py-1.5 text-xs font-semibold"
+            style={{ paddingLeft: `${depth * 16 + 16}px` }}
+          >
+            {g.label} <span className="text-muted-foreground font-normal">({g.records.length})</span>
+          </TableCell>
+        </TableRow>
+        {g.children
+          ? renderNestedGroups(g.children, depth + 1)
+          : (g.records as unknown as typeof filtered).map((opp) => renderLeafRow(opp, depth + 1))}
+      </React.Fragment>
+    ));
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar — matching kanban */}
