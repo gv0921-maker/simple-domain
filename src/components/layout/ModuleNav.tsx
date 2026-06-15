@@ -7,21 +7,44 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import {
+  findSectionForPath,
+  type SettingsNavSection,
+} from '@/lib/navigation/settings';
 
 interface NavItem {
   label: string;
   href: string;
 }
 
+export type ModuleNavInput = NavItem[] | SettingsNavSection[];
+
 interface ModuleNavProps {
-  items: NavItem[];
+  items: ModuleNavInput;
 }
 
-export function ModuleNav({ items }: ModuleNavProps) {
+function isGrouped(items: ModuleNavInput): items is SettingsNavSection[] {
+  return items.length > 0 && (items[0] as any).items !== undefined;
+}
+
+export function ModuleNav({ items: rawItems }: ModuleNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  if (!items || items.length === 0) return null;
+  if (!rawItems || rawItems.length === 0) return null;
+
+  // Grouped (settings sections): render only the items in the section that
+  // contains the active route. Falls back to the first section's items.
+  let items: NavItem[];
+  if (isGrouped(rawItems)) {
+    const section =
+      findSectionForPath(rawItems, location.pathname) ?? rawItems[0];
+    items = section.items.map(({ label, href }) => ({ label, href }));
+  } else {
+    items = rawItems;
+  }
+
+  if (items.length === 0) return null;
 
   // Pick the longest matching href so nested routes like '/crm/contacts'
   // win over the parent index route '/crm'.
