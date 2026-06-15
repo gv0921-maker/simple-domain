@@ -63,6 +63,7 @@ export default function CRMContactsList() {
   const filteredContacts = useMemo(() => applyFilterState(
     scopedContacts as unknown as Record<string, unknown>[], filterState,
     ['firstName','lastName','email','phone','companyName'],
+    { currentUserId: user?.id, currentUserName: user?.name, currentUserEmail: user?.email },
   ) as unknown as typeof scopedContacts, [scopedContacts, filterState]);
 
   const handleDelete = (id: string) => {
