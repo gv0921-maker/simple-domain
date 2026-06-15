@@ -199,56 +199,8 @@ export function CRMPipelineListView({ onNewOpportunity, view, onViewChange }: CR
                   No opportunity found. Let's create one!
                 </TableCell>
               </TableRow>
-            ) : groupedView ? (
-              <>
-                {groupedView.map((g) => (
-                  <React.Fragment key={`grp-${g.label}`}>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableCell colSpan={8} className="pl-4 py-2 text-xs font-semibold">
-                        {g.label} <span className="text-muted-foreground font-normal">({g.opps.length})</span>
-                      </TableCell>
-                    </TableRow>
-                    {g.opps.map((opp) => {
-                      const stageName = pipeline.stages.find(s => s.id === opp.stageId)?.name || opp.stage;
-                      const stageColor = pipeline.stages.find(s => s.id === opp.stageId)?.color;
-                      return (
-                        <TableRow
-                          key={opp.id}
-                          className={cn('cursor-pointer hover:bg-primary/5 text-[13px]', selected.has(opp.id) && 'bg-primary/5')}
-                          onClick={() => navigate(`/crm/opportunities/${opp.id}`)}
-                        >
-                          <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
-                            <Checkbox
-                              checked={selected.has(opp.id)}
-                              onCheckedChange={() => {
-                                const next = new Set(selected);
-                                next.has(opp.id) ? next.delete(opp.id) : next.add(opp.id);
-                                setSelected(next);
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell><span className="font-medium">{opp.name}</span></TableCell>
-                          <TableCell className="text-muted-foreground">{opp.contactName || '—'}</TableCell>
-                          <TableCell className="text-muted-foreground">{opp.salesTeam || '—'}</TableCell>
-                          <TableCell className="text-right font-medium">{displayRevenue(opp.expectedRevenue, user?.id, 'crm')}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-[11px] capitalize font-medium border-0 px-2 py-0.5"
-                              style={{ backgroundColor: stageColor ? `${stageColor}20` : undefined, color: stageColor || undefined }}>
-                              {stageName}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {format(parseISO(opp.expectedCloseDate), 'MM/dd/yyyy')}
-                          </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <StarRating value={opp.priority} readonly />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
-              </>
+            ) : groupedNested ? (
+              <>{renderNestedGroups(groupedNested, 0)}</>
             ) : (
               <>
                 {filtered.map((opp) => {
