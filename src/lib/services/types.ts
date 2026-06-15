@@ -3,7 +3,7 @@
 // Return shapes use `Promise<T> | T` so the current synchronous
 // localStorage impl AND future asynchronous impls both fit.
 
-import type { Contact, Opportunity, Activity, Note, Pipeline, CRMStats } from '@/lib/data/crm';
+import type { Contact, Opportunity, Activity, Note, Pipeline, CRMStats } from '@/lib/crm/types';
 import type {
   Quotation,
   SalesOrder,

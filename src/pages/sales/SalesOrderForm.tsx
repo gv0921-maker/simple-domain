@@ -53,7 +53,7 @@ import { BillingSection } from '@/components/sales/BillingSection';
 import { DeliverySection } from '@/components/sales/DeliverySection';
 import { OrderLinesTable, type OrderSummaryValue } from '@/components/sales/OrderLinesTable';
 import { OrderStatusChevrons, canTransition } from '@/components/sales/OrderStatusChevrons';
-import { getContact, saveContact } from '@/lib/services/crm';
+import { getContact, saveContact } from '@/lib/data/crm-supabase';
 import { processOrderDelivery, tierLabel } from '@/lib/sales/loyaltyService';
 import { ReservationsSection, useOrderReservationBadge } from '@/components/sales/ReservationsSection';
 import { ActivityChatter } from '@/components/shared/ActivityChatter';
@@ -371,7 +371,7 @@ export default function SalesOrderForm() {
     let note = `Status changed: ${STATUS_CONFIG[current].label} → ${STATUS_CONFIG[next].label}`;
 
     if (next === 'delivered' && formData.customerId) {
-      const contact = getContact(formData.customerId);
+      const contact = await getContact(formData.customerId);
       if (contact) {
         const orderForLoyalty = {
           ...formData,
@@ -381,7 +381,7 @@ export default function SalesOrderForm() {
           pointsRedeemed: formData.pointsRedeemed || 0,
         } as any;
         const result = processOrderDelivery(orderForLoyalty, contact);
-        saveContact(result.updatedContact);
+        await saveContact(result.updatedContact);
         const fmt = (n: number) =>
           new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
         const tierBit = result.tierChanged

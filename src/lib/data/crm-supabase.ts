@@ -17,7 +17,7 @@ import type {
   OpportunityStage,
   Pipeline,
   PipelineStage,
-} from './crm';
+} from '@/lib/crm/types';
 
 // ---------- helpers ----------
 

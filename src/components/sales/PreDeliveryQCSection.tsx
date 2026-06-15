@@ -15,7 +15,6 @@ import { useDeliveryQC, useCreateDeliveryQC } from '@/hooks/qc';
 import { uploadDeliveryQCImageAsync, type DeliveryQCStatus } from '@/lib/services/qc/delivery';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { addNotification } from '@/lib/crm/notifications';
 import { format, parseISO } from 'date-fns';
 
 interface Props {
@@ -149,12 +148,6 @@ export function PreDeliveryQCSection({ salesOrderId, orderReference }: Props) {
         qcNotes: notes || undefined,
       });
       if (status === 'failed') {
-        addNotification({
-          type: 'automation',
-          title: `Pre-delivery QC failed${orderReference ? ` · ${orderReference}` : ''}`,
-          description: 'Sales Manager and Admin: resolve issues before invoicing.',
-          link: `/sales/orders/${salesOrderId}`,
-        });
         toast.error('QC marked failed — invoice blocked');
       } else {
         toast.success('Pre-delivery QC passed');
