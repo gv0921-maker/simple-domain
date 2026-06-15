@@ -624,8 +624,9 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
   // Apply the new module-agnostic filter state to in-memory list
   const filteredOpportunities = useMemo(
     () => applyFilterState(opportunities as unknown as Record<string, unknown>[], filterState,
-      ['name','contactName','companyName','phone','email']) as unknown as typeof opportunities,
-    [opportunities, filterState],
+      ['name','contactName','companyName','phone','email'],
+      { currentUserId: user?.id, currentUserName: user?.name, currentUserEmail: user?.email }) as unknown as typeof opportunities,
+    [opportunities, filterState, user?.id, user?.name, user?.email],
   );
 
   const stageNames = useMemo(() => {
@@ -634,14 +635,20 @@ export function CRMKanbanBoard({ onNewOpportunity, view = 'kanban', onViewChange
     return m;
   }, [pipeline.stages]);
 
+  // Kanban supports a single (top-level) group-by column layout.
+  const topGroupField = useMemo(() => {
+    if (filterState.group_by_fields?.length) return filterState.group_by_fields[0];
+    return filterState.group_by;
+  }, [filterState.group_by_fields, filterState.group_by]);
+
   const groupedView = useMemo(() => {
-    if (!filterState.group_by) return null;
+    if (!topGroupField) return null;
     return groupByField(
       filteredOpportunities as unknown as Record<string, unknown>[],
-      filterState.group_by,
-      (k) => filterState.group_by === 'stage' ? (stageNames[k] || k) : k,
+      topGroupField,
+      (k) => topGroupField === 'stage' ? (stageNames[k] || k) : k,
     ).map(g => ({ label: g.label, opps: g.records as unknown as typeof filteredOpportunities }));
-  }, [filteredOpportunities, filterState.group_by, stageNames]);
+  }, [filteredOpportunities, topGroupField, stageNames]);
 
   const opportunitiesByStage = useMemo(() => {
     const grouped: Record<string, Opportunity[]> = {};
