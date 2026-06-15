@@ -3759,6 +3759,51 @@ export type Database = {
         }
         Relationships: []
       }
+      import_export_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_log: Json
+          failed_rows: number
+          file_name: string | null
+          id: string
+          job_type: string
+          module: string
+          status: string
+          succeeded_rows: number
+          total_rows: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json
+          failed_rows?: number
+          file_name?: string | null
+          id?: string
+          job_type: string
+          module: string
+          status?: string
+          succeeded_rows?: number
+          total_rows?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json
+          failed_rows?: number
+          file_name?: string | null
+          id?: string
+          job_type?: string
+          module?: string
+          status?: string
+          succeeded_rows?: number
+          total_rows?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       internal_movement_items: {
         Row: {
           created_at: string
