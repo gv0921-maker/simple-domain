@@ -35,6 +35,7 @@ import { type Contact } from '@/lib/services/crm';
 import { useContacts, useDeleteContact } from '@/hooks/crm/useCRMQueries';
 import { CRM_NAV } from '@/lib/navigation/crm';
 import { CRMImportDialog, CRMExportButton } from '@/components/crm/CRMImportExport';
+import { ImportExportButton } from '@/components/importExport/ImportExportButton';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { crmContactsFilterConfig } from '@/lib/filters/modules/crmContacts';
 import { applyFilterState, groupByField } from '@/lib/filters/clientFilter';
@@ -120,12 +121,11 @@ export default function CRMContactsList() {
               </Button>
             )}
             <CRMExportButton type="contacts" />
-            {canImportData && (
-              <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-            )}
+            <ImportExportButton
+              schema="crm_contacts"
+              currentRecords={filteredContacts as unknown as Record<string, unknown>[]}
+              allRecords={contacts as unknown as Record<string, unknown>[]}
+            />
             {canCreateContacts && (
               <Button onClick={() => navigate('/crm/contacts/new')}>
                 <UserPlus className="h-4 w-4 mr-2" />
