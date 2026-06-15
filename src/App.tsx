@@ -109,7 +109,6 @@ import AuditLogs from "@/pages/settings/AuditLogs";
 import BackupsSettings from "@/pages/settings/BackupsSettings";
 import NumberingSettings from "@/pages/settings/NumberingSettings";
 import CRMPipelinesSettings from "@/pages/settings/CRMPipelinesSettings";
-import CRMDataSchema from "@/pages/settings/CRMDataSchema";
 import AccessibilitySettings from "@/pages/settings/AccessibilitySettings";
 import PriceApprovalsPage from "@/pages/settings/PriceApprovalsPage";
 import CompanySettings from "@/pages/settings/CompanySettings";
@@ -341,7 +340,6 @@ const App = () => (
             <Route path="/settings/backups" element={<ProtectedRoute><BackupsSettings /></ProtectedRoute>} />
             <Route path="/settings/numbering" element={<RouteGuard superAdmin denyMessage="Numbering settings are restricted to Super Admin."><NumberingSettings /></RouteGuard>} />
             <Route path="/settings/crm-pipelines" element={<ProtectedRoute><CRMPipelinesSettings /></ProtectedRoute>} />
-            <Route path="/settings/data-schema" element={<ProtectedRoute><CRMDataSchema /></ProtectedRoute>} />
             <Route path="/settings/accessibility" element={<ProtectedRoute><AccessibilitySettings /></ProtectedRoute>} />
             <Route path="/settings/price-approvals" element={<ProtectedRoute><PriceApprovalsPage /></ProtectedRoute>} />
             <Route path="/settings/company" element={<RouteGuard superAdmin denyMessage="Company settings are restricted to Super Admin."><CompanySettings /></RouteGuard>} />
