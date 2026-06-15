@@ -2,15 +2,16 @@ import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Filter, Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  ChevronRight, ChevronDown, Check, Filter, Group as GroupIcon, Star, Trash2, Plus,
+} from 'lucide-react';
 import type {
   FieldConfig, FieldOption, FilterGroup, FilterState,
   ModuleFilterConfig, Operator, PredefinedFilter, PredefinedFilterSection,
 } from '@/lib/filters/types';
+import type { SavedFilter } from '@/lib/services/savedFilters';
 
 const operatorsFor: Record<FieldConfig['type'], Operator[]> = {
   text: ['contains', 'starts_with', 'is', 'is_not', 'is_empty', 'is_not_empty'],
@@ -29,14 +30,6 @@ const opLabel: Record<Operator, string> = {
   last_n_days: 'last N days', before: 'before', after: 'after',
 };
 
-interface Props {
-  config: ModuleFilterConfig;
-  value: FilterState;
-  onChange: (s: FilterState) => void;
-  open?: boolean;
-  onOpenChange?: (o: boolean) => void;
-}
-
 function filterIds(f: PredefinedFilter): string[] {
   return f.group ? [f.group.id] : (f.groups ?? []).map(g => g.id);
 }
@@ -44,14 +37,192 @@ function sectionIds(s: PredefinedFilterSection): string[] {
   return s.filters.flatMap(filterIds);
 }
 
-export function FilterPopover({ config, value, onChange, open, onOpenChange }: Props) {
+// ============================================================================
+// FILTERS COLUMN
+// ============================================================================
+
+const DATE_QUICK_OPTIONS: { id: string; label: string; build: (field: string) => FilterGroup }[] = [
+  { id: 'today', label: 'Today',
+    build: f => ({ id: `date_${f}_today`, field: f, operator: 'today' }) },
+  { id: 'this_week', label: 'This Week',
+    build: f => ({ id: `date_${f}_week`, field: f, operator: 'this_week' }) },
+  { id: 'this_month', label: 'This Month',
+    build: f => ({ id: `date_${f}_month`, field: f, operator: 'this_month' }) },
+  { id: 'last_7', label: 'Last 7 Days',
+    build: f => ({ id: `date_${f}_l7`, field: f, operator: 'last_n_days', value: 7 }) },
+  { id: 'last_30', label: 'Last 30 Days',
+    build: f => ({ id: `date_${f}_l30`, field: f, operator: 'last_n_days', value: 30 }) },
+];
+
+interface FiltersColumnProps {
+  config: ModuleFilterConfig;
+  value: FilterState;
+  onChange: (s: FilterState) => void;
+}
+
+export function FiltersColumn({ config, value, onChange }: FiltersColumnProps) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [customOpen, setCustomOpen] = useState(false);
+
+  const isFilterActive = (f: PredefinedFilter): boolean => {
+    const ids = filterIds(f);
+    return ids.length > 0 && ids.every(id => value.groups.some(g => g.id === id));
+  };
+
+  const toggleFilter = (section: PredefinedFilterSection, f: PredefinedFilter) => {
+    const ids = filterIds(f);
+    const active = isFilterActive(f);
+    let next = [...value.groups];
+    if (active) {
+      next = next.filter(g => !ids.includes(g.id));
+    } else {
+      if (section.multiSelect === false) {
+        const sIds = sectionIds(section);
+        next = next.filter(g => !sIds.includes(g.id));
+      }
+      const toAdd = f.group ? [f.group] : (f.groups ?? []);
+      next = [...next, ...toAdd];
+    }
+    onChange({ ...value, groups: next });
+  };
+
+  const dateFields = useMemo(
+    () => config.fields.filter(f => f.type === 'date'),
+    [config],
+  );
+
+  const applyDateQuick = (field: string, optId: string) => {
+    const opt = DATE_QUICK_OPTIONS.find(o => o.id === optId);
+    if (!opt) return;
+    const built = opt.build(field);
+    const existing = value.groups.find(g => g.id === built.id);
+    const cleanedOther = value.groups.filter(g => !g.id.startsWith(`date_${field}_`));
+    onChange({
+      ...value,
+      groups: existing ? cleanedOther : [...cleanedOther, built],
+    });
+  };
+
+  const activeDateOption = (field: string): string | null => {
+    const g = value.groups.find(x => x.id.startsWith(`date_${field}_`));
+    if (!g) return null;
+    return g.id.replace(`date_${field}_`, '');
+  };
+
+  const predefined = config.predefinedFilters ?? [];
+
+  return (
+    <div className="flex flex-col min-w-0">
+      <div className="px-3 py-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground border-b">
+        <Filter className="h-3.5 w-3.5" /> Filters
+      </div>
+      <div className="flex-1 overflow-y-auto p-1">
+        {predefined.map(section => (
+          <div key={section.id} className="mb-1">
+            {section.label && (
+              <div className="px-2 pt-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                {section.label}
+              </div>
+            )}
+            {section.filters.map(f => {
+              const checked = isFilterActive(f);
+              return (
+                <button
+                  type="button"
+                  key={f.id}
+                  onClick={() => toggleFilter(section, f)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left hover:bg-muted/60 ${
+                    checked ? 'bg-muted font-medium' : ''
+                  }`}
+                >
+                  <span className="w-4 inline-flex justify-center">
+                    {checked && <Check className="h-3.5 w-3.5 text-primary" />}
+                  </span>
+                  <span className="truncate">{f.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+
+        {dateFields.length > 0 && (
+          <div className="border-t mt-1 pt-1">
+            {dateFields.map(df => {
+              const isOpen = expanded[df.key];
+              const active = activeDateOption(df.key);
+              return (
+                <div key={df.key}>
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(e => ({ ...e, [df.key]: !e[df.key] }))}
+                    className={`w-full flex items-center gap-1 px-2 py-1.5 rounded text-sm hover:bg-muted/60 ${
+                      active ? 'font-medium' : ''
+                    }`}
+                  >
+                    {isOpen
+                      ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                    <span className="truncate">{df.label}</span>
+                    {active && (
+                      <span className="ml-auto text-[10px] text-primary">
+                        {DATE_QUICK_OPTIONS.find(o => o.id === active)?.label}
+                      </span>
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="ml-5 pb-1">
+                      {DATE_QUICK_OPTIONS.map(opt => {
+                        const isActive = active === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => applyDateQuick(df.key, opt.id)}
+                            className={`w-full flex items-center gap-2 px-2 py-1 rounded text-xs text-left hover:bg-muted/60 ${
+                              isActive ? 'bg-muted font-medium' : ''
+                            }`}
+                          >
+                            <span className="w-3 inline-flex justify-center">
+                              {isActive && <Check className="h-3 w-3 text-primary" />}
+                            </span>
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="border-t mt-1 pt-1">
+          <button
+            type="button"
+            onClick={() => setCustomOpen(o => !o)}
+            className="w-full flex items-center gap-1 px-2 py-1.5 rounded text-sm hover:bg-muted/60"
+          >
+            {customOpen
+              ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>Custom Filter</span>
+          </button>
+          {customOpen && <CustomFilterBuilder config={config} value={value} onChange={onChange} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomFilterBuilder({ config, value, onChange }: FiltersColumnProps) {
   const [field, setField] = useState<string>('');
   const [op, setOp] = useState<Operator>('is');
   const [valueA, setValueA] = useState<string>('');
   const [valueB, setValueB] = useState<string>('');
   const [multiValue, setMultiValue] = useState<string[]>([]);
   const [options, setOptions] = useState<FieldOption[]>([]);
-  const [customOpen, setCustomOpen] = useState(false);
 
   const fieldConfig = useMemo(() => config.fields.find(f => f.key === field), [config, field]);
   const ops = fieldConfig ? operatorsFor[fieldConfig.type] : [];
@@ -93,89 +264,9 @@ export function FilterPopover({ config, value, onChange, open, onOpenChange }: P
 
   const showValueInput = !['is_empty', 'is_not_empty', 'today', 'this_week', 'this_month'].includes(op);
 
-  const isFilterActive = (f: PredefinedFilter): boolean => {
-    const ids = filterIds(f);
-    return ids.length > 0 && ids.every(id => value.groups.some(g => g.id === id));
-  };
-
-  const toggleFilter = (section: PredefinedFilterSection, f: PredefinedFilter) => {
-    const ids = filterIds(f);
-    const active = isFilterActive(f);
-    let next = [...value.groups];
-    if (active) {
-      next = next.filter(g => !ids.includes(g.id));
-    } else {
-      if (section.multiSelect === false) {
-        const sIds = sectionIds(section);
-        next = next.filter(g => !sIds.includes(g.id));
-      }
-      const toAdd = f.group ? [f.group] : (f.groups ?? []);
-      next = [...next, ...toAdd];
-    }
-    onChange({ ...value, groups: next });
-  };
-
-  const predefined = config.predefinedFilters ?? [];
-  const activeCount = value.groups.length;
-
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
-          <Filter className="h-3.5 w-3.5" /> Filters
-          {activeCount > 0 && (
-            <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{activeCount}</Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0" align="start">
-        <div className="max-h-[70vh] overflow-y-auto">
-          {/* Predefined sections */}
-          {predefined.length > 0 && (
-            <div className="p-2 space-y-3">
-              {predefined.map(section => (
-                <div key={section.id}>
-                  <div className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {section.label}
-                  </div>
-                  <div className="space-y-0.5">
-                    {section.filters.map(f => {
-                      const checked = isFilterActive(f);
-                      return (
-                        <label
-                          key={f.id}
-                          className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-muted/60 text-sm"
-                        >
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => toggleFilter(section, f)}
-                          />
-                          <span className={checked ? 'font-medium' : ''}>{f.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add custom filter expander */}
-          <div className="border-t">
-            <button
-              type="button"
-              onClick={() => setCustomOpen(o => !o)}
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted/60"
-            >
-              <span className="flex items-center gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Add custom filter
-              </span>
-              {customOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            </button>
-
-            {customOpen && (
-              <div className="p-3 space-y-2 border-t bg-muted/20">
-                <div className="grid gap-1">
+    <div className="p-2 space-y-2 ml-5 border-l">
+      <div className="grid gap-1">
                   <Label className="text-xs">Field</Label>
                   <Select value={field} onValueChange={setField}>
                     <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Choose a field" /></SelectTrigger>
@@ -255,11 +346,178 @@ export function FilterPopover({ config, value, onChange, open, onOpenChange }: P
                     Add filter
                   </Button>
                 </div>
-              </div>
-            )}
+    </div>
+  );
+}
+
+// ============================================================================
+// GROUP BY COLUMN
+// ============================================================================
+
+interface GroupByColumnProps {
+  config: ModuleFilterConfig;
+  fieldLabel: (k: string) => string;
+  chain: string[];
+  onChange: (chain: string[]) => void;
+}
+
+export function GroupByColumn({ config, fieldLabel, chain, onChange }: GroupByColumnProps) {
+  const fields = config.groupByFields ?? [];
+  const toggle = (k: string) => {
+    if (chain.includes(k)) onChange(chain.filter(x => x !== k));
+    else onChange([...chain, k]);
+  };
+  return (
+    <div className="flex flex-col min-w-0">
+      <div className="px-3 py-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground border-b">
+        <GroupIcon className="h-3.5 w-3.5" /> Group By
+      </div>
+      <div className="flex-1 overflow-y-auto p-1">
+        {fields.length === 0 && (
+          <div className="px-2 py-2 text-xs text-muted-foreground">No group-by fields available.</div>
+        )}
+        {fields.map(k => {
+          const active = chain.includes(k);
+          const order = chain.indexOf(k) + 1;
+          return (
+            <button
+              type="button"
+              key={k}
+              onClick={() => toggle(k)}
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left hover:bg-muted/60 ${
+                active ? 'bg-muted font-medium' : ''
+              }`}
+            >
+              <span className="w-4 inline-flex justify-center">
+                {active
+                  ? <span className="text-[10px] text-primary font-semibold">{order}</span>
+                  : null}
+              </span>
+              <span className="truncate">{fieldLabel(k)}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// FAVORITES COLUMN
+// ============================================================================
+
+interface FavoritesColumnProps {
+  saved: SavedFilter[];
+  isSuperAdmin: boolean;
+  onApply: (state: FilterState) => void;
+  onSetDefault: (id: string) => void;
+  onDelete: (id: string) => void;
+  onSave: (args: { name: string; isDefault: boolean; isSystemDefault: boolean }) => void;
+}
+
+export function FavoritesColumn({
+  saved, isSuperAdmin, onApply, onSetDefault, onDelete, onSave,
+}: FavoritesColumnProps) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
+  const [isShared, setIsShared] = useState(false);
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onSave({ name: name.trim(), isDefault, isSystemDefault: isShared });
+    setName(''); setIsDefault(false); setIsShared(false); setOpen(false);
+  };
+
+  return (
+    <div className="flex flex-col min-w-0">
+      <div className="px-3 py-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground border-b">
+        <Star className="h-3.5 w-3.5" /> Favorites
+      </div>
+      <div className="flex-1 overflow-y-auto p-1">
+        {saved.length === 0 && (
+          <div className="px-2 py-2 text-xs text-muted-foreground">No saved searches.</div>
+        )}
+        {saved.map(f => (
+          <div
+            key={f.id}
+            className="flex items-center gap-1 px-2 py-1 rounded text-sm hover:bg-muted/60 group"
+          >
+            <button
+              type="button"
+              className="flex-1 text-left truncate flex items-center gap-1.5"
+              onClick={() => onApply(f.filter_state)}
+            >
+              <Star
+                className={`h-3.5 w-3.5 ${
+                  f.is_default || f.is_system_default
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'text-muted-foreground/40'
+                }`}
+              />
+              <span className="truncate">{f.name}</span>
+              {f.is_system_default && (
+                <span className="text-[10px] text-muted-foreground">(shared)</span>
+              )}
+            </button>
+            <button
+              type="button"
+              title="Set as default"
+              className="p-1 opacity-0 group-hover:opacity-100 hover:text-amber-500"
+              onClick={() => onSetDefault(f.id)}
+            >
+              <Star className={`h-3 w-3 ${f.is_default ? 'fill-amber-400 text-amber-400' : ''}`} />
+            </button>
+            <button
+              type="button"
+              title="Delete"
+              className="p-1 opacity-0 group-hover:opacity-100 hover:text-destructive"
+              onClick={() => onDelete(f.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
           </div>
+        ))}
+
+        <div className="border-t mt-1 pt-1">
+          <button
+            type="button"
+            onClick={() => setOpen(o => !o)}
+            className="w-full flex items-center gap-1 px-2 py-1.5 rounded text-sm hover:bg-muted/60"
+          >
+            {open
+              ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>Save current search</span>
+          </button>
+          {open && (
+            <div className="p-2 ml-5 border-l space-y-2">
+              <Input
+                className="h-8 text-sm"
+                placeholder="Search name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+              />
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <Checkbox checked={isDefault} onCheckedChange={c => setIsDefault(!!c)} />
+                Default filter
+              </label>
+              {isSuperAdmin && (
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <Checkbox checked={isShared} onCheckedChange={c => setIsShared(!!c)} />
+                  Shared with everyone
+                </label>
+              )}
+              <div className="flex justify-end">
+                <Button size="sm" className="h-7 text-xs" disabled={!name.trim()} onClick={submit}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </div>
+    </div>
   );
 }
