@@ -72,6 +72,7 @@ import { crmOpportunitiesFilterConfig } from '@/lib/filters/modules/crmOpportuni
 import { applyFilterState, groupByField } from '@/lib/filters/clientFilter';
 import { EMPTY_FILTER_STATE, type FilterState } from '@/lib/filters/types';
 import { displayRevenue } from '@/lib/crm/fieldMask';
+import { ImportExportButton } from '@/components/importExport/ImportExportButton';
 
 // Map a pipeline stage (whose name may be customized, e.g. "Follow-Up",
 // "Estimate/Quotation", "Sales/Billing") to the OpportunityStage enum
